@@ -1,0 +1,13 @@
+{
+    "name": "formmate",
+    "private": true,
+    "workspaces": [
+        "packages/*"
+    ],
+    "scripts": {
+        "dev:backend": "npm run dev --workspace=@formmate/backend",
+        "dev:frontend": "npm run dev --workspace=@formmate/frontend",
+        "build:shared": "npm run build --workspace=@formmate/shared",
+        "install:all": "npm install"
+    }
+}
