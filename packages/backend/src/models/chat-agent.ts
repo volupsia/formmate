@@ -1,0 +1,27 @@
+import type { ChatMessage } from '@formmate/shared';
+
+import type { FormCMSClient } from '../infrastructures/formcms-client';
+import type { ServiceLogger } from '../types/logger';
+import { EntityCreator } from './entity-creator';
+
+export interface ChatContext {
+    userId: string;
+    externalCookie: string;
+    onNewMessage: (msg: ChatMessage) => void;
+    saveAssistantMessage: (content: string) => Promise<ChatMessage>;
+    logger: ServiceLogger;
+    formCMSClient: FormCMSClient;
+}
+
+export interface ChatAgent {
+    handle(userInput: string, entityName: string, context: ChatContext): Promise<void>;
+}
+
+export type CommandType = 'list' | 'add' | 'edit' | 'delete';
+
+export const AgentMap = {
+    add: EntityCreator,
+    edit: EntityCreator,
+    delete: EntityCreator,
+    list: EntityCreator,
+}
