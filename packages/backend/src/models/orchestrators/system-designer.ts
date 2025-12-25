@@ -81,7 +81,7 @@ export class SystemDesigner implements ChatOrchestrator {
                     await this.formCMSClient.saveEntity(context.externalCookie, {
                         type: 'entity',
                         settings: {
-                            entity: entity as EntityDto
+                            entity
                         }
                     });
                     this.logger.info({ entityName: entity.name }, 'Successfully saved entity to FormCMS');
