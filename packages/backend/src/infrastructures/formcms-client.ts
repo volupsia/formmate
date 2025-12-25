@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { User } from '@formmate/shared';
 
-import type { SchemaDto, SaveEntityPayload } from '../models/cms/dtos';
+import type { SchemaDto, SaveEntityPayload } from '@formmate/shared';
 
 export class FormCMSClient {
     constructor(private readonly baseUrl: string) { }

@@ -1,8 +1,8 @@
 import type { FormCMSClient } from '../../infrastructures/formcms-client';
 import type { ServiceLogger } from '../../types/logger';
-import { type ChatOrchestrator, type ChatContext } from './chat-orchestrator';
+import { type ChatHandler, type ChatContext } from './chat-handler';
 
-export class ModelExplorer implements ChatOrchestrator {
+export class ModelExplorer implements ChatHandler {
     constructor(
         private readonly formCMSClient: FormCMSClient,
         private readonly logger: ServiceLogger,
