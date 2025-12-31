@@ -16,8 +16,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
+  console.log(user);
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/mate/login" replace />;
   }
 
   return <>{children}</>;
@@ -27,26 +28,29 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <StudioPage />
-            </ProtectedRoute>
-          }
-        >
-          <Route path=":type/:id" element={<StudioPage />} />
+        <Route path="/mate">
+          <Route path="login" element={<LoginPage />} />
+          <Route
+            path=""
+            element={
+              <ProtectedRoute>
+                <StudioPage />
+              </ProtectedRoute>
+            }
+          >
+            <Route path=":type/:id" element={<StudioPage />} />
+          </Route>
+          <Route
+            path="ai-logs"
+            element={
+              <ProtectedRoute>
+                <AiLogsPage />
+              </ProtectedRoute>
+            }
+          />
         </Route>
-        <Route
-          path="/ai-logs"
-          element={
-            <ProtectedRoute>
-              <AiLogsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/" element={<Navigate to="/mate" replace />} />
+        <Route path="*" element={<Navigate to="/mate" replace />} />
       </Routes>
     </BrowserRouter>
   );

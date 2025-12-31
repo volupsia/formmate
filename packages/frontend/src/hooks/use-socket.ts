@@ -8,7 +8,7 @@ export function useSocket() {
     const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
-        socketRef.current = io(config.API_BASE_URL, {
+        socketRef.current = io(config.MATE_API_BASE_URL, {
             withCredentials: true,
         });
 

@@ -1,9 +1,16 @@
 import { useMemo } from 'react';
 import useSWRInfinite from 'swr/infinite';
+import axios from 'axios';
 import { type ChatMessage, ENDPOINTS, type ApiResponse } from '@formmate/shared';
 import { config } from '../config';
 
-const fetcher = (url: string) => fetch(url, { credentials: 'include' }).then(r => r.json());
+const fetcher = (url: string) =>
+    axios.get(url, { withCredentials: true })
+        .then(res => res.data)
+        .catch(err => {
+            console.error('Fetch error:', err.response?.data || err.message);
+            throw err;
+        });
 
 export function useChatHistory() {
     const getKey = (pageIndex: number, previousPageData: ApiResponse<ChatMessage[]>) => {
@@ -11,11 +18,11 @@ export function useChatHistory() {
         if (previousPageData && (previousPageData.data === undefined || previousPageData.data.length === 0)) return null;
 
         // first page, we don't have `beforeId`
-        if (pageIndex === 0) return `${config.API_BASE_URL}${ENDPOINTS.CHAT.HISTORY}?limit=10`;
+        if (pageIndex === 0) return `${config.MATE_API_BASE_URL}${ENDPOINTS.CHAT.HISTORY}?limit=10`;
 
         // add `beforeId` to the query, using the last id of the previous page
         const lastMessage = previousPageData.data![previousPageData.data!.length - 1];
-        return `${config.API_BASE_URL}${ENDPOINTS.CHAT.HISTORY}?limit=10&beforeId=${lastMessage.id}`;
+        return `${config.MATE_API_BASE_URL}${ENDPOINTS.CHAT.HISTORY}?limit=10&beforeId=${lastMessage.id}`;
     };
 
     const { data, error, size, setSize, mutate, isValidating } = useSWRInfinite<ApiResponse<ChatMessage[]>>(
@@ -24,6 +31,8 @@ export function useChatHistory() {
         {
             revalidateFirstPage: false,
             persistSize: true,
+            shouldRetryOnError: false,
+            revalidateOnFocus: false,
         }
     );
 

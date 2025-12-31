@@ -1,17 +1,18 @@
 export const ENDPOINTS = {
     CHAT: {
-        HISTORY: '/api/chat/history',
+        HISTORY: '/mateapi/chat/history',
     },
     AUTH: {
-        LOGIN: '/api/auth/login',
-        LOGOUT: '/api/auth/logout',
-        ME: '/api/auth/me',
+        LOGIN: '/api/login',
+        LOGOUT: '/api/logout',
+        ME: '/api/me',
     },
     AI: {
-        AGENTS: '/api/ai/agents',
+        AGENTS: '/mateapi/ai/agents',
+        LOGS: '/mateapi/ai/logs',
     },
     SCHEMA: {
-        ALL: '/api/schemas',
+        ALL: '/api/schemas?type=',
         SAVE: '/api/schemas/save',
     }
 } as const;

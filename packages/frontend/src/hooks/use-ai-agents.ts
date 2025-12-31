@@ -1,12 +1,13 @@
 import useSWR from 'swr';
+import axios from 'axios';
 import { ENDPOINTS, type ApiResponse } from '@formmate/shared';
 import { config } from '../config';
 
-const fetcher = (url: string) => fetch(url, { credentials: 'include' }).then(r => r.json());
+const fetcher = (url: string) => axios.get(url, { withCredentials: true }).then(res => res.data);
 
 export function useAIAgents() {
     const { data, error, isLoading } = useSWR<ApiResponse<string[]>>(
-        `${config.API_BASE_URL}${ENDPOINTS.AI.AGENTS}`,
+        `${config.MATE_API_BASE_URL}${ENDPOINTS.AI.AGENTS}`,
         fetcher,
         {
             revalidateOnFocus: false,
