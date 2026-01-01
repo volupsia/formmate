@@ -1,6 +1,6 @@
 import useSWR from 'swr';
 import axios from 'axios';
-import { ENDPOINTS, type SchemaDto, type SaveEntityPayload } from '@formmate/shared';
+import { ENDPOINTS, type SchemaDto, type SaveSchemaPayload } from '@formmate/shared';
 import { config } from '../config';
 
 const fetcher = (url: string) => axios.get(url, { withCredentials: true }).then(res => res.data);
@@ -15,7 +15,7 @@ export function useSchemas() {
         }
     );
 
-    const saveEntity = async (payload: SaveEntityPayload) => {
+    const saveEntity = async (payload: SaveSchemaPayload) => {
         const resp = await axios.post(`${config.FORMCMS_BASE_URL}${ENDPOINTS.SCHEMA.SAVE}`, payload, {
             withCredentials: true
         });

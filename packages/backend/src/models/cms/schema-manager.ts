@@ -1,4 +1,10 @@
-import { type SchemaSummary, type SaveEntityPayload, type SchemaDto } from '@formmate/shared';
+import {
+    type EntityDto,
+    type RelationshipDto,
+    type SchemaSummary,
+    type SaveSchemaPayload,
+    type SchemaDto
+} from '@formmate/shared';
 import type { FormCMSClient } from '../../infrastructures/formcms-client';
 import type { ServiceLogger } from '../../types/logger';
 import { RelationshipModel } from './relationship-model';
