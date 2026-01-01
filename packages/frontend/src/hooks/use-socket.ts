@@ -9,6 +9,7 @@ export function useSocket() {
 
     useEffect(() => {
         socketRef.current = io(config.MATE_API_BASE_URL, {
+            path: '/mateapi/socket.io',
             withCredentials: true,
         });
 

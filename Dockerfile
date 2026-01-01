@@ -47,9 +47,8 @@ COPY --from=builder /app /app
 
 # Copy Built FormCMS App
 COPY --from=dotnet-builder /app/publish ./formcms
-
-# Copy specific appsettings.json
 COPY formcms/server/FormCMS.Course/appsettings.json ./formcms/
+
 
 # Set Permissions
 RUN chmod +x /app/entrypoint.sh
