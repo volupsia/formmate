@@ -44,7 +44,7 @@ const handlersPlugin: FastifyPluginAsync = async (fastify) => {
             const schemaGenerator = new SchemaGenerator(agent, schemaGeneratorPrompt,
                 entitySchema, attributeSchema, relationshipSchema, formcmsClient, modelLogger);
             const queryGenerator = new QueryGenerator(agent, queryGeneratorPrompt, formcmsClient, modelLogger);
-            const htmlGenerator = new HtmlGenerator(agent, htmlGeneratorPrompt, formcmsClient, modelLogger);
+            const htmlGenerator = new HtmlGenerator(agent, htmlGeneratorPrompt, formcmsClient, modelLogger, config.FORMCMS_PUBLIC_URL);
 
             const intentClassifier = new IntentClassifier(
                 agent,
