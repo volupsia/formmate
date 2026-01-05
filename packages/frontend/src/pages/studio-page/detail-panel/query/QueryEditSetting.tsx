@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { type QueryDto } from '@formmate/shared';
 import { Database } from 'lucide-react';
 
