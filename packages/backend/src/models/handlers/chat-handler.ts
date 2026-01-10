@@ -1,4 +1,4 @@
-import type { ChatMessage, SchemaSummary } from '@formmate/shared';
+import type { ChatMessage, SchemaSummary, SystemMessagePayload } from '@formmate/shared';
 
 export interface ChatContext {
     userId: string;
@@ -7,6 +7,7 @@ export interface ChatContext {
     saveAssistantMessage: (content: string, payload?: any) => Promise<ChatMessage>;
     saveAiResponseLog: (handler: string, response: string) => Promise<void>;
     onConfirmSchemaSummary: (summary: SchemaSummary) => Promise<void>;
+    onSendSystemMessage: (payload: SystemMessagePayload) => Promise<void>;
 }
 
 export interface ChatHandler {

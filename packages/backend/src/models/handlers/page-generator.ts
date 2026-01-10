@@ -64,7 +64,7 @@ export class PageGenerator implements ChatHandler {
                         }
                     }
                 };
-                await this.formCMSClient.savePage(context.externalCookie, payload);
+                await this.formCMSClient.saveSchema(context.externalCookie, payload);
                 this.logger.info({ name }, 'Successfully saved generated page to FormCMS');
             } catch (saveError) {
                 this.logger.error({ error: saveError }, 'Failed to save generated page to FormCMS');
