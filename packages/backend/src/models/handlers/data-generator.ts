@@ -42,13 +42,20 @@ export class DataGenerator implements ChatHandler {
                 return;
             }
 
+            const targetEntity = entities.find(e => e.name === entityName);
+            if (!targetEntity) {
+                await context.saveAssistantMessage(`I could not find the entity "${entityName}" in the schema definition.`);
+                return;
+            }
+
             await context.saveAssistantMessage(`Generated ${data.length} items for "${entityName}". Inserting into FormCMS...`);
 
             // 3. Insert data into FormCMS
             let successCount = 0;
+            const idMaps: Record<string, Record<string, any>> = {};
             for (const item of data) {
                 try {
-                    await this.formCMSClient.insertData(context.externalCookie, entityName, item);
+                    await this.formCMSClient.insertData(context.externalCookie, targetEntity, item, idMaps);
                     successCount++;
                 } catch (e) {
                     this.logger.error({ error: e, item }, 'Failed to insert item');
