@@ -19,7 +19,7 @@ RUN npm run build:shared
 RUN cd packages/frontend && npm run build
 
 # Build Backend
-RUN cd packages/backend && npx prisma generate && npm run build
+RUN cd packages/backend && cp .env.production .env && npx prisma generate && npm run build
 
 # --- Stage 2: Build FormCMS (.NET 8) ---
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS dotnet-builder
@@ -48,13 +48,13 @@ COPY --from=builder /app /app
 # Copy Built FormCMS App
 COPY --from=dotnet-builder /app/publish ./formcms
 COPY formcms/server/FormCMS.Course/appsettings.json ./formcms/
-
+COPY formcms/server/FormCMS.Course/agent.db ./formcms/
 
 # Set Permissions
 RUN chmod +x /app/entrypoint.sh
 
 # Expose Ports
-EXPOSE 3001 5000
+EXPOSE 5000
 
 # Entrypoint
 ENTRYPOINT ["/app/entrypoint.sh"]
