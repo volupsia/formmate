@@ -1,7 +1,7 @@
 import { AuthService } from '../services/auth-service';
 import { ChatService } from '../services/chat-service';
 import { IntentClassifier } from '../models/handlers/intent-classifier';
-import { AIAgent } from '../infrastructures/agent.interface';
+import { AIProvider } from '../infrastructures/agent.interface';
 import { FormCMSClient } from '../infrastructures/formcms-client';
 import type { ServerToClientEvents, ClientToServerEvents, User } from '@formmate/shared';
 import type { SessionStore } from '@fastify/session';
@@ -13,7 +13,7 @@ declare module 'fastify' {
         chatService: ChatService;
         authService: AuthService;
         intentClassifier: Record<string, IntentClassifier>;
-        aiAgent: Record<string, AIAgent>;
+        aiProvider: Record<string, AIProvider>;
         formCMS: FormCMSClient;
         sessionStore: SessionStore;
         authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;

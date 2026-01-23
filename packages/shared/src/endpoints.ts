@@ -8,7 +8,7 @@ export const ENDPOINTS = {
         ME: '/api/me',
     },
     AI: {
-        AGENTS: '/mateapi/ai/agents',
+        PROVIDERS: '/mateapi/ai/providers',
         LOGS: '/mateapi/ai/logs',
     },
     SCHEMA: {
