@@ -11,6 +11,7 @@ export const ENDPOINTS = {
         PROVIDERS: '/mateapi/ai/providers',
         LOGS: '/mateapi/ai/logs',
         ACT_ON_LOG: '/mateapi/ai/logs/:id/act',
+        DELETE_LOG: '/mateapi/ai/logs/:id',
     },
     SCHEMA: {
         ALL: '/api/schemas?type=',
