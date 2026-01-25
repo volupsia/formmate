@@ -122,7 +122,7 @@ const handlersPlugin: FastifyPluginAsync = async (fastify) => {
             const entityGenerator = new EntityGenerator(provider, entityGeneratorPrompt,
                 entitySchema, attributeSchema, relationshipSchema, formcmsClient, modelLogger);
             const queryGenerator = new QueryGenerator(provider, queryGeneratorPrompt, formcmsClient, modelLogger);
-            const pageGenerator = new PageGenerator(provider, pageTypePlanner, modelLogger, templates);
+            const pageGenerator = new PageGenerator(provider, pageTypePlanner, modelLogger, templates, formcmsClient);
             const dataGenerator = new DataGenerator(provider, dataGeneratorPrompt, formcmsClient, modelLogger);
             // removed htmlGenerationHandler instantiation
 

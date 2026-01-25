@@ -1,6 +1,7 @@
 export const ENDPOINTS = {
     CHAT: {
         HISTORY: '/mateapi/chat/history',
+        ENGAGEMENT_BAR: '/mateapi/chat/engagement-bar',
     },
     AUTH: {
         LOGIN: '/api/login',
