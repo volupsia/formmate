@@ -7,7 +7,7 @@ import type { FormCMSClient } from '../../infrastructures/formcms-client';
 import type { ServiceLogger } from '../../types/logger';
 import { RelationshipModel } from './relationship-model';
 
-export class SchemaManager {
+export class EntityManager {
     constructor(
         private readonly formCMSClient: FormCMSClient,
         private readonly logger: ServiceLogger,
