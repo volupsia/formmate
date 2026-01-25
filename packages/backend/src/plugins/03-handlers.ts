@@ -113,7 +113,7 @@ const handlersPlugin: FastifyPluginAsync = async (fastify) => {
             const routerDesignerAgent = new RouterDesignerAgent(provider, routerDesigner, formcmsClient, modelLogger);
             const architectDesignerAgent = new ArchitectDesignerAgent(provider, pageArchitect, formcmsClient, modelLogger);
 
-            const htmlGenerator = new HtmlGenerator(provider, htmlGeneratorPrompt, styleMap, formcmsClient, modelLogger);
+            const htmlGenerator = new HtmlGenerator(provider, htmlGeneratorPrompt, styleMap, formcmsClient, modelLogger, config.FORMCMS_BASE_URL);
 
             const dataDir = path.join(__dirname, '../data');
             const templatesData = await fs.readFile(path.join(dataDir, 'templates.json'), 'utf-8');

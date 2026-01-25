@@ -1,5 +1,5 @@
 import { Info, FileText, Globe } from 'lucide-react';
-import { type PageDto, type ParsedPageDto } from '@formmate/shared';
+import { type ParsedPageDto } from '@formmate/shared';
 import { FormField } from './FormField';
 
 interface PageEditSettingsProps {
