@@ -27,28 +27,13 @@ FormCMS is a cutting-edge, open-source Content Management System designed to rev
 
 ## ⚡ What You Can Do with AI
 
-FormCMS isn't just a place to store content; it's an AI-driven development partner. 
+FormCMS acts as your AI-driven development partner. Describe what you want, and it builds it:
 
-### 1. Generate Entity (Schema)
-Describe your business domain and AI will design normalized database schemas with relationships and appropriate data types.
+- **Generate the Full Stack**: Entities (schemas), Seed Data, GraphQL Queries, and UI Pages from natural language.
+- **Add Engagement Instantly**: "Add a like button" or "Show user avatar" simply works.
+- **Manage & Iterate**: View version history and manage artifacts in the visual portal.
 
-### 2. Generate Data (Seeding)
-Use AI to generate realistic, high-quality sample data that preserves relational integrity.
-
-### 3. Generate Query (API)
-Prompt the AI: "Give me all books published after 2020 by authors with more than 5 stars." It generates the GraphQL query and converts it into a REST endpoint automatically.
-
-### 4. Generate Page (UI)
-Go from prompt to page: "Build a landing page for my library that sections books by genre." AI generates the HTML/CSS and bridges it with your data queries.
-
-### 5. Add Engagement Bar
-Prompt: "Add likes, bookmarks, shares, and view count to my article page." AI integrates interactive social engagement features automatically.
-
-### 6. Add User Avatar
-Prompt: "Show the author's avatar and profile link." AI adds user identity components to your pages.
-
-### 7. View History in Portal
-Access all your generated schemas, queries, and pages in the portal. Compare versions and rollback changes anytime.
+📖 **[See Wiki for full capabilities →](https://github.com/formcms/formcms/wiki/Building-a-System.md)**
 
 ---
 
@@ -113,36 +98,26 @@ Once running, try these prompts:
 - "Add sample data for the book entity"
 - "Create a query to display all available books"
 
-📖 **[See Wiki for detailed setup instructions →](https://github.com/formcms/formmate/blob/main/docs/wiki/Setup.md)**
+📖 **[See Wiki for detailed setup instructions →](https://github.com/formcms/formcms/wiki/Setup.md)**
 
 ---
 
 ## 📚 Documentation
 
-For detailed documentation, please refer to our **[Wiki](https://github.com/formcms/formmate/blob/main/docs/wiki/Home.md)** (source of truth):
+For detailed documentation, please refer to our **[Wiki](https://github.com/formcms/formcms/wiki/Home.md)** (source of truth):
 
 | Documentation | Description |
 |---------------|-------------|
-| [Setup Guide](https://github.com/formcms/formmate/blob/main/docs/wiki/Setup.md) | Development and production environment setup |
-| [Architecture](https://github.com/formcms/formmate/blob/main/docs/wiki/Architecture.md) | Component architecture and system design |
-| [Orchestrator Strategy](https://github.com/formcms/formmate/blob/main/docs/wiki/Orchestrator-Strategy.md) | Multi-agent pipeline design and debugging approach |
-| [Performance & Scalability](https://github.com/formcms/formmate/blob/main/docs/wiki/Performance-Scalability.md) | Benchmarks and scaling strategies |
+| [Setup Guide](https://github.com/formcms/formcms/wiki/Setup.md) | Development and production environment setup |
+| [Architecture](https://github.com/formcms/formcms/wiki/Architecture.md) | Component architecture and system design |
+| [Orchestrator Strategy](https://github.com/formcms/formcms/wiki/Orchestrator-Strategy.md) | Multi-agent pipeline design and debugging approach |
+| [Performance & Scalability](https://github.com/formcms/formcms/wiki/Performance-Scalability.md) | Benchmarks and scaling strategies |
 
 ---
 
 ## 🏗️ Architecture Overview
 
-```mermaid
-graph TD
-    U1[👨‍💻 Developer] -->|Build Schema & UI| A[formmate /mate]
-    U2[👔 Admin] -->|Manage Content| C[AdminApp /admin]
-    U3[👤 End User] -->|View & Engage| D[Portal /portal]
-    
-    A --> B[FormCMS Backend /api]
-    A --> E[AI - Gemini / OpenAI]
-    C --> B
-    D --> B
-```
+
 
 | Component | Description |
 |-----------|-------------|
@@ -151,7 +126,7 @@ graph TD
 | **AdminApp** | React admin panel for content management |
 | **Portal** | User portal for history, likes, and bookmarks |
 
-📖 **[See Wiki for detailed architecture →](https://github.com/formcms/formmate/blob/main/docs/wiki/Architecture.md)**
+📖 **[See Wiki for detailed architecture →](https://github.com/formcms/formcms/wiki/Architecture.md)**
 
 ---
 
@@ -164,4 +139,4 @@ graph TD
 | **Complex Queries** | 5-table joins over 1M rows |
 | **Database Support** | SQLite, PostgreSQL, SQL Server, MySQL |
 
-📖 **[See Wiki for performance details →](https://github.com/formcms/formmate/blob/main/docs/wiki/Performance-Scalability.md)**
+📖 **[See Wiki for performance details →](https://github.com/formcms/formcms/wiki/Performance-Scalability.md)**
