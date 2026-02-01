@@ -1,10 +1,10 @@
 import { Info, FileText, Globe } from 'lucide-react';
-import { type PageDto } from '@formmate/shared';
+import { type ParsedPageDto } from '@formmate/shared';
 import { FormField } from './FormField';
 
 interface PageEditSettingsProps {
-    pageForm: PageDto;
-    onUpdateField: (field: keyof PageDto, value: any) => void;
+    pageForm: ParsedPageDto;
+    onUpdateField: (field: keyof ParsedPageDto, value: any) => void;
 }
 
 export function PageEditSettings({ pageForm, onUpdateField }: PageEditSettingsProps) {

@@ -6,33 +6,22 @@ SRC="readme.md"
 # Destinations
 # Note: Case sensitivity matches the directory names found in parent dir
 DEST_FORMCMS="../formcms/readme.md"
-DEST_ADMIN="../FormCmsAdminApp/README.md"
-DEST_PORTAL="../FormCmsPortal/README.md"
+
+# Function to sync to destination
+sync_to_dest() {
+    local DEST=$1
+    local DIR=$(dirname "$DEST")
+    
+    if [ -d "$DIR" ]; then
+        cp "$SRC" "$DEST"
+        echo "✅ Updated $DEST"
+    else
+        echo "⚠️  Skipped $DEST (Directory not found)"
+    fi
+}
 
 echo "Syncing README.md from formmate to other repositories..."
 
-# Copy to formcms
-if [ -d "../formcms" ]; then
-    cp "$SRC" "$DEST_FORMCMS"
-    echo "✅ Updated $DEST_FORMCMS"
-else
-    echo "⚠️  Skipped $DEST_FORMCMS (Directory not found)"
-fi
-
-# Copy to FormCmsAdminApp
-if [ -d "../FormCmsAdminApp" ]; then
-    cp "$SRC" "$DEST_ADMIN"
-    echo "✅ Updated $DEST_ADMIN"
-else
-    echo "⚠️  Skipped $DEST_ADMIN (Directory not found)"
-fi
-
-# Copy to FormCmsPortal
-if [ -d "../FormCmsPortal" ]; then
-    cp "$SRC" "$DEST_PORTAL"
-    echo "✅ Updated $DEST_PORTAL"
-else
-    echo "⚠️  Skipped $DEST_PORTAL (Directory not found)"
-fi
+sync_to_dest "$DEST_FORMCMS"
 
 echo "Sync complete."

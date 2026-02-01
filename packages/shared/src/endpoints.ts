@@ -1,6 +1,11 @@
 export const ENDPOINTS = {
     CHAT: {
         HISTORY: '/mateapi/chat/history',
+        ENGAGEMENT_BAR: '/mateapi/chat/engagement-bar',
+        USER_AVATAR: '/mateapi/chat/user-avatar',
+        VISIT_TRACK: '/mateapi/chat/visit-track',
+        TOP_LIST: '/mateapi/chat/top-list',
+        STATUS: '/mateapi/chat/status',
     },
     AUTH: {
         LOGIN: '/api/login',
@@ -8,8 +13,10 @@ export const ENDPOINTS = {
         ME: '/api/me',
     },
     AI: {
-        AGENTS: '/mateapi/ai/agents',
+        PROVIDERS: '/mateapi/ai/providers',
         LOGS: '/mateapi/ai/logs',
+        ACT_ON_LOG: '/mateapi/ai/logs/:id/act',
+        DELETE_LOG: '/mateapi/ai/logs/:id',
     },
     SCHEMA: {
         ALL: '/api/schemas?type=',
