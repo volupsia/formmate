@@ -6,8 +6,6 @@ SRC="readme.md"
 # Destinations
 # Note: Case sensitivity matches the directory names found in parent dir
 DEST_FORMCMS="../formcms/readme.md"
-DEST_ADMIN="../FormCmsAdminApp/README.md"
-DEST_PORTAL="../FormCmsPortal/README.md"
 
 # Function to sync to destination
 sync_to_dest() {
@@ -25,7 +23,5 @@ sync_to_dest() {
 echo "Syncing README.md from formmate to other repositories..."
 
 sync_to_dest "$DEST_FORMCMS"
-sync_to_dest "$DEST_ADMIN"
-sync_to_dest "$DEST_PORTAL"
 
 echo "Sync complete."
