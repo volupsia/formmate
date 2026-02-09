@@ -2,7 +2,8 @@ services:
   app:
     build:
       context: ../../
-      dockerfile: formmate/deploy/Dockerfile
+      dockerfile: formmate/standalone-formcms/Dockerfile
+    image: formcms-app:latest
     ports:
       - "5000:5000" # Nginx Gateway
     environment:

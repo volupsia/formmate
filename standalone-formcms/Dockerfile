@@ -21,18 +21,18 @@ RUN cd packages/frontend && npm run build
 # Build Backend
 RUN cd packages/backend && cp .env.production .env && npx prisma generate && npm run build
 
-# --- Stage 2: Build FormCMS (.NET 9) ---
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS dotnet-builder
+# --- Stage 2: Build FormCMS (.NET 10) ---
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dotnet-builder
 WORKDIR /src
 
 # Copy FormCMS source
 COPY formcms/ ./
 
 # Publish the specific project
-RUN dotnet publish examples/PostgresDemo/PostgresWebApp/PostgresWebApp.csproj -c Release -o /app/publish
+RUN dotnet publish server/FormCMS.App/FormCMS.App.csproj -c Release -o /app/publish
 
 # --- Stage 3: Final Runtime ---
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
 # Install Node.js & Nginx
@@ -42,7 +42,7 @@ RUN apt-get update && apt-get install -y curl nginx procps && \
     rm -rf /var/lib/apt/lists/*
 
 # Configure Nginx
-COPY formmate/deploy/nginx.conf /etc/nginx/nginx.conf
+COPY formmate/standalone-formcms/nginx.conf /etc/nginx/nginx.conf
 
 # Copy Built Node.js App
 COPY --from=builder /app /app
@@ -53,7 +53,7 @@ COPY --from=dotnet-builder /app/publish ./formcms
 RUN touch ./formcms/appsettings.json && chmod 666 ./formcms/appsettings.json
 
 # Copy Entrypoint
-COPY formmate/deploy/entrypoint.sh /app/entrypoint.sh
+COPY formmate/standalone-formcms/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # Expose Nginx Port
