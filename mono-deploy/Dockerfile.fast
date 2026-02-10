@@ -1,0 +1,58 @@
+# --- Stage 1: Setup Node.js Middleware ---
+FROM node:24-slim AS node-base
+WORKDIR /app
+
+# Install runtime dependencies for backend (openssl for prisma)
+RUN apt-get update -y && apt-get install -y openssl procps curl && rm -rf /var/lib/apt/lists/*
+
+# 1. Copy package definitions to install dependencies
+COPY formmate/package.json formmate/package-lock.json ./
+COPY formmate/packages/shared/package.json ./packages/shared/
+COPY formmate/packages/backend/package.json ./packages/backend/
+COPY formmate/packages/frontend/package.json ./packages/frontend/
+
+# 2. Install PROD dependencies
+RUN npm ci --omit=dev
+
+# 3. Copy pre-built artifacts from LOCAL machine
+COPY formmate/packages/shared/dist ./packages/shared/dist
+# Copy backend artifacts AND source files (for tsx)
+COPY formmate/packages/backend/dist ./packages/backend/dist
+COPY formmate/packages/backend/src ./packages/backend/src
+COPY formmate/packages/backend/resources ./packages/backend/resources
+COPY formmate/packages/backend/prisma ./packages/backend/prisma
+# Generate Prisma Client
+RUN cd packages/backend && npx prisma generate
+
+# Copy frontend artifacts
+COPY formmate/packages/frontend/dist ./packages/frontend/dist
+
+# --- Stage 2: Final Image (Hybrid .NET + Node) ---
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
+WORKDIR /app
+
+# Install Node.js & Nginx
+RUN apt-get update && apt-get install -y curl nginx procps && \
+    curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g tsx && \
+    rm -rf /var/lib/apt/lists/*
+
+# Configure Nginx
+COPY formmate/mono-deploy/nginx.conf /etc/nginx/nginx.conf
+
+# Copy Node.js App from node-base
+COPY --from=node-base /app /app
+
+# Copy Pre-built .NET App from LOCAL machine
+COPY formcms/publish ./formcms
+# Ensure config files are writable (will be regenerated from env vars at runtime)
+RUN touch ./formcms/appsettings.json && chmod 666 ./formcms/appsettings.json && \
+    touch ./formcms/formcms.settings.json && chmod 666 ./formcms/formcms.settings.json
+
+# Copy Entrypoint
+COPY formmate/mono-deploy/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+EXPOSE 5000
+ENTRYPOINT ["/app/entrypoint.sh"]

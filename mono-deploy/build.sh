@@ -13,7 +13,7 @@ echo "Context: $CONTEXT_ROOT"
 echo "Dockerfile: $SCRIPT_DIR/Dockerfile"
 
 # Build the image
-# We tag it as 'formcms-app:latest' by default
-docker build -t formcms-app:latest -f "$SCRIPT_DIR/Dockerfile" "$CONTEXT_ROOT"
+# We tag it as 'formcms-mono-deploy:latest' by default
+docker build -t formcms-mono-deploy:latest -f "$SCRIPT_DIR/Dockerfile" "$CONTEXT_ROOT"
 
-echo "Build complete! Image tagged as 'formcms-app:latest'"
+echo "Build complete! Image tagged as 'formcms-mono-deploy:latest'"
