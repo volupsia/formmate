@@ -47,8 +47,7 @@ COPY --from=node-base /app /app
 # Copy Pre-built .NET App from LOCAL machine
 COPY formcms/publish ./formcms
 # Ensure config files are writable (will be regenerated from env vars at runtime)
-RUN touch ./formcms/appsettings.json && chmod 666 ./formcms/appsettings.json && \
-    touch ./formcms/formcms.settings.json && chmod 666 ./formcms/formcms.settings.json
+RUN touch ./formcms/appsettings.json && chmod 666 ./formcms/appsettings.json
 
 # Copy Entrypoint
 COPY formmate/mono-deploy/entrypoint.sh /app/entrypoint.sh
