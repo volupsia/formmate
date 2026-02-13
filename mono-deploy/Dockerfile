@@ -6,8 +6,8 @@ WORKDIR /app
 COPY formmate/package.json formmate/package-lock.json ./
 COPY formmate/packages/shared/package.json ./packages/shared/
 COPY formmate/packages/mate-service/package.json ./packages/mate-service/
-COPY formmate/packages/mate-ui/package.json ./packages/mate-ui/
-COPY formmate/packages/mate-ui/tsconfig.json ./packages/mate-ui/tsconfig.json
+COPY formmate/packages/builder/package.json ./packages/builder/
+COPY formmate/packages/builder/tsconfig.json ./packages/builder/tsconfig.json
 RUN npm install
 
 # Copy Formmate source code
@@ -16,8 +16,8 @@ COPY formmate/ .
 # Build Shared Package
 RUN npm run build:shared
 
-# Build Frontend (outputs to packages/mate-ui/dist)
-RUN cd packages/mate-ui && npm run build
+# Build Frontend (outputs to packages/builder/dist)
+RUN cd packages/builder && npm run build
 
 # Build Backend
 RUN cd packages/mate-service && cp .env.production .env && npx prisma generate && npm run build
