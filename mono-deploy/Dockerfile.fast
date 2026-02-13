@@ -9,7 +9,7 @@ RUN apt-get update -y && apt-get install -y openssl procps curl && rm -rf /var/l
 COPY formmate/package.json formmate/package-lock.json ./
 COPY formmate/packages/shared/package.json ./packages/shared/
 COPY formmate/packages/mate-service/package.json ./packages/mate-service/
-COPY formmate/packages/builder/package.json ./packages/builder/
+COPY formmate/packages/mate/package.json ./packages/mate/
 
 # 2. Install PROD dependencies
 RUN npm ci --omit=dev
@@ -25,7 +25,7 @@ COPY formmate/packages/mate-service/prisma ./packages/mate-service/prisma
 RUN cd packages/mate-service && npx prisma generate
 
 # Copy frontend artifacts
-COPY formmate/packages/builder/dist ./packages/builder/dist
+COPY formmate/packages/mate/dist ./packages/mate/dist
 
 # --- Stage 2: Final Image (Hybrid .NET + Node) ---
 FROM mcr.microsoft.com/dotnet/aspnet:10.0

@@ -6,13 +6,13 @@
         "packages/sdk",
         "packages/admin",
         "packages/portal",
-        "packages/builder"
+        "packages/mate"
     ],
     "scripts": {
-        "dev": "concurrently \"npm run dev:service\" \"npm run dev:builder\"",
+        "dev": "concurrently \"npm run dev:service\" \"npm run dev:mate\"",
         "dev:service": "npm run dev --workspace=@formmate/service",
         "debug:service": "npm run debug --workspace=@formmate/service",
-        "dev:builder": "npm run dev --workspace=@formmate/builder",
+        "dev:mate": "npm run dev --workspace=@formmate/mate",
         "dev:admin": "npm run dev --workspace=@formmate/admin",
         "dev:portal": "npm run dev --workspace=@formmate/portal",
         "build:shared": "npm run build --workspace=@formmate/shared",

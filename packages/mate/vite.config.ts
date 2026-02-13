@@ -7,6 +7,10 @@ import monacoEditorPlugin from 'vite-plugin-monaco-editor'
 // https://vite.dev/config/
 export default defineConfig({
   base: '/mate/',
+  build: {
+    outDir: '../mate-service/public/mate',
+    emptyOutDir: true
+  },
   plugins: [
     react(),
     tailwindcss(),

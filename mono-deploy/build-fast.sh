@@ -14,7 +14,7 @@ npm install --silent
 npm run build:shared --silent
 
 # Build Frontend
-npm run build --workspace=@formmate/builder --silent
+npm run build --workspace=@formmate/mate --silent
 
 # Build Backend (Prisma + TSC)
 cd packages/mate-service

@@ -15,7 +15,7 @@ You are a senior frontend engineer specialized in building production-ready, hig
 - **SDK Bridge**: Every page MUST include these scripts in the `<head>`:
   ```html
   <script type="module">
-      import * as mateSdk from '/mate-static/index.js';
+      import * as mateSdk from '/static/index.js';
       window.mateSdk = mateSdk;
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
