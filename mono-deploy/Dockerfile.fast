@@ -8,8 +8,8 @@ RUN apt-get update -y && apt-get install -y openssl procps curl && rm -rf /var/l
 # 1. Copy package definitions to install dependencies
 COPY formmate/package.json formmate/package-lock.json ./
 COPY formmate/packages/shared/package.json ./packages/shared/
-COPY formmate/packages/backend/package.json ./packages/backend/
-COPY formmate/packages/frontend/package.json ./packages/frontend/
+COPY formmate/packages/mate-service/package.json ./packages/mate-service/
+COPY formmate/packages/mate-ui/package.json ./packages/mate-ui/
 
 # 2. Install PROD dependencies
 RUN npm ci --omit=dev
@@ -17,15 +17,15 @@ RUN npm ci --omit=dev
 # 3. Copy pre-built artifacts from LOCAL machine
 COPY formmate/packages/shared/dist ./packages/shared/dist
 # Copy backend artifacts AND source files (for tsx)
-COPY formmate/packages/backend/dist ./packages/backend/dist
-COPY formmate/packages/backend/src ./packages/backend/src
-COPY formmate/packages/backend/resources ./packages/backend/resources
-COPY formmate/packages/backend/prisma ./packages/backend/prisma
+COPY formmate/packages/mate-service/dist ./packages/mate-service/dist
+COPY formmate/packages/mate-service/src ./packages/mate-service/src
+COPY formmate/packages/mate-service/resources ./packages/mate-service/resources
+COPY formmate/packages/mate-service/prisma ./packages/mate-service/prisma
 # Generate Prisma Client
-RUN cd packages/backend && npx prisma generate
+RUN cd packages/mate-service && npx prisma generate
 
 # Copy frontend artifacts
-COPY formmate/packages/frontend/dist ./packages/frontend/dist
+COPY formmate/packages/mate-ui/dist ./packages/mate-ui/dist
 
 # --- Stage 2: Final Image (Hybrid .NET + Node) ---
 FROM mcr.microsoft.com/dotnet/aspnet:10.0

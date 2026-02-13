@@ -5,8 +5,8 @@ WORKDIR /app
 # Install dependencies (utilizing workspace support)
 COPY formmate/package.json formmate/package-lock.json ./
 COPY formmate/packages/shared/package.json ./packages/shared/
-COPY formmate/packages/backend/package.json ./packages/backend/
-COPY formmate/packages/frontend/package.json ./packages/frontend/
+COPY formmate/packages/mate-service/package.json ./packages/mate-service/
+COPY formmate/packages/mate-ui/package.json ./packages/mate-ui/
 RUN npm install
 
 # Copy Formmate source code
@@ -15,11 +15,11 @@ COPY formmate/ .
 # Build Shared Package
 RUN npm run build:shared
 
-# Build Frontend (outputs to packages/frontend/dist)
-RUN cd packages/frontend && npm run build
+# Build Frontend (outputs to packages/mate-ui/dist)
+RUN cd packages/mate-ui && npm run build
 
 # Build Backend
-RUN cd packages/backend && cp .env.production .env && npx prisma generate && npm run build
+RUN cd packages/mate-service && cp .env.production .env && npx prisma generate && npm run build
 
 # --- Stage 2: Build FormCMS (.NET 8) ---
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS dotnet-builder

@@ -2,13 +2,18 @@
     "name": "formmate",
     "private": true,
     "workspaces": [
-        "packages/*"
+        "packages/*",
+        "packages/sdk",
+        "packages/admin",
+        "packages/portal"
     ],
     "scripts": {
-        "dev": "concurrently \"npm run debug:backend\" \"npm run dev:frontend\"",
-        "dev:backend": "npm run dev --workspace=@formmate/backend",
-        "debug:backend": "npm run debug --workspace=@formmate/backend",
-        "dev:frontend": "npm run dev --workspace=@formmate/frontend",
+        "dev": "concurrently \"npm run dev:service\" \"npm run dev:ui\"",
+        "dev:service": "npm run dev --workspace=@formmate/service",
+        "debug:service": "npm run debug --workspace=@formmate/service",
+        "dev:ui": "npm run dev --workspace=@formmate/ui",
+        "dev:admin": "npm run dev --workspace=@formmate/admin",
+        "dev:portal": "npm run dev --workspace=@formmate/portal",
         "build:shared": "npm run build --workspace=@formmate/shared",
         "install:all": "npm install"
     },
