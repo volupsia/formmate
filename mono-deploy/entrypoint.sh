@@ -19,6 +19,7 @@ CONFIG_PATH=${FORMCMS_CONFIG_PATH:-"/app/formcms/formcms.settings.json"}
 # Generate formcms.settings.json from environment variables if not exists
 if [ ! -f "$CONFIG_PATH" ]; then
   echo "[ENTRYPOINT] Writing settings to $CONFIG_PATH..."
+  mkdir -p "$(dirname "$CONFIG_PATH")"
   echo "{\"FormCms\":{\"DatabaseProvider\":${DATABASE_PROVIDER},\"ConnectionString\":\"${CONNECTION_STRING}\",\"Spas\":null}}" > "$CONFIG_PATH"
   echo "[ENTRYPOINT] Write complete. File size:"
   ls -l "$CONFIG_PATH"

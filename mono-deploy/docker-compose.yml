@@ -5,7 +5,7 @@ services:
       dockerfile: formmate/mono-deploy/Dockerfile
     image: formcms-mono-deploy:latest
     ports:
-      - "5000:5000" # Nginx Gateway
+      - "${APP_PORT:-5000}:5000" # Nginx Gateway
     environment:
       # --- FormCMS (.NET) Settings ---
       - DATABASE_PROVIDER=1 # 0=SQLite, 1=Postgres, 2=SqlServer, 3=MySQL
@@ -16,21 +16,21 @@ services:
       - "ConnectionStrings__Postgres=Host=db;Database=cms;Username=postgres;Password=postgres;"
       - ApiInfo__Url=http://localhost:5000
       - ASPNETCORE_URLS=http://+:5000
-      - FORMCMS_CONFIG_PATH=/config/formcms.settings.json
+      - FORMCMS_CONFIG_PATH=/data/config/formcms.settings.json
+      - FORMCMS_STORE_PATH=/data/files
 
       # --- FormMate (Node.js) Settings ---
       - PORT=3001
       - NODE_ENV=production
       - FORMCMS_BASE_URL=http://localhost:5000
       - FRONTEND_URL=http://localhost:5000/mate
-      - DATABASE_URL=file:/app/packages/mate-service/data/sqlite.db
+      - DATABASE_URL=file:/data/mate/sqlite.db
 
     depends_on:
       - db
     restart: unless-stopped
     volumes:
-      - sqlite_data:/app/packages/mate-service/data
-      - formcms_config:/config
+      - formcms_data:/data
 
   db:
     image: postgres:15
@@ -41,10 +41,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     restart: unless-stopped
 
 volumes:
   postgres_data:
-  sqlite_data:
-  formcms_config:
+  formcms_data:
