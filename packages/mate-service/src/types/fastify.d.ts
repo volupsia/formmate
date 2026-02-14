@@ -7,10 +7,12 @@ import { AIProvider } from '../infrastructures/ai-provider.interface';
 import { FormCMSClient } from '../infrastructures/formcms-client';
 import type { ServerToClientEvents, ClientToServerEvents, User } from '@formmate/shared';
 import type { SessionStore } from '@fastify/session';
+import { PrismaClient } from '@prisma/client';
 import '@fastify/session';
 
 declare module 'fastify' {
     interface FastifyInstance {
+        prisma: PrismaClient;
         io: Server<ClientToServerEvents, ServerToClientEvents>;
         chatService: ChatService;
         authService: AuthService;

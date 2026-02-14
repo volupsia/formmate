@@ -16,6 +16,7 @@
         "dev:admin": "npm run dev --workspace=@formmate/admin",
         "dev:portal": "npm run dev --workspace=@formmate/portal",
         "build:shared": "npm run build --workspace=@formmate/shared",
+        "build:all": "npm run build --workspaces --if-present",
         "install:all": "npm install"
     },
     "devDependencies": {
