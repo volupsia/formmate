@@ -26,6 +26,8 @@ RUN cd packages/mate-service && npx prisma generate
 
 # Copy frontend artifacts
 COPY formmate/packages/mate/dist ./packages/mate/dist
+COPY formmate/packages/admin/dist ./packages/admin/dist
+COPY formmate/packages/portal/dist ./packages/portal/dist
 
 # --- Stage 2: Final Image (Hybrid .NET + Node) ---
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
