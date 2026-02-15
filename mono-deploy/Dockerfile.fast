@@ -20,6 +20,7 @@ COPY formmate/packages/shared/dist ./packages/shared/dist
 COPY formmate/packages/mate-service/dist ./packages/mate-service/dist
 COPY formmate/packages/mate-service/src ./packages/mate-service/src
 COPY formmate/packages/mate-service/resources ./packages/mate-service/resources
+COPY formmate/packages/mate-service/public ./packages/mate-service/public
 COPY formmate/packages/mate-service/prisma ./packages/mate-service/prisma
 # Generate Prisma Client
 RUN cd packages/mate-service && npx prisma generate

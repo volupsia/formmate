@@ -16,8 +16,7 @@ services:
       - "ConnectionStrings__Postgres=Host=db;Database=cms;Username=postgres;Password=postgres;"
       - ApiInfo__Url=http://localhost:5000
       - ASPNETCORE_URLS=http://+:5000
-      - FORMCMS_CONFIG_PATH=/data/config/formcms.settings.json
-      - FORMCMS_STORE_PATH=/data/files
+      - FORMCMS_DATA_PATH=/data
 
       # --- FormMate (Node.js) Settings ---
       - PORT=3001
