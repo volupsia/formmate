@@ -5,6 +5,9 @@ import monacoEditorPlugin from 'vite-plugin-monaco-editor'
 
 
 // https://vite.dev/config/
+const FORMCMS_TARGET = 'http://127.0.0.1:5000';
+const MATE_TARGET = 'http://127.0.0.1:3001';
+
 export default defineConfig({
   base: '/mate/',
   build: {
@@ -29,15 +32,28 @@ export default defineConfig({
     host: '127.0.0.1',
     proxy: {
       '/files': {
-        target: 'http://127.0.0.1:8000',
+        target: FORMCMS_TARGET,
         changeOrigin: true,
       },
       '/api': {
-        target: 'http://127.0.0.1:8000',
+        target: FORMCMS_TARGET,
         changeOrigin: true,
       },
       '/graphql': {
-        target: 'http://127.0.0.1:8000',
+        target: FORMCMS_TARGET,
+        changeOrigin: true,
+      },
+      '/mateapi': {
+        target: MATE_TARGET,
+        changeOrigin: true,
+        ws: true,
+      },
+      '/admin': {
+        target: MATE_TARGET,
+        changeOrigin: true,
+      },
+      '/portal': {
+        target: MATE_TARGET,
         changeOrigin: true,
       },
     },

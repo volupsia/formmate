@@ -4,9 +4,8 @@ import StudioPage from './pages/studio-page';
 import AiLogsPage from './pages/ai-logs-page';
 import SystemSettingsPage from './pages/system-settings-page';
 import { setAuthApiBaseUrl } from '@formmate/sdk';
-import { config } from './config';
 
-setAuthApiBaseUrl(config.FORMCMS_BASE_URL);
+setAuthApiBaseUrl('');
 
 import LoginPage from './pages/login-page';
 import { useAuth } from './hooks/use-auth';

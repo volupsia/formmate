@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { SOCKET_EVENTS, type ChatMessage, type ServerToClientEvents, type ClientToServerEvents, type SchemaSummary, type SystemMessagePayload } from '@formmate/shared';
-import { config } from '../config';
 
 export function useSocket() {
     const socketRef = useRef<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
     const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
-        socketRef.current = io(config.MATE_API_BASE_URL, {
+        socketRef.current = io('', {
             path: '/mateapi/socket.io',
             withCredentials: true,
         });
