@@ -28,7 +28,7 @@ echo "🚀 Building FormCMS (.NET) locally..."
 cd "$REPO_ROOT/formcms"
 # Clean previous publish to avoid stale files
 rm -rf publish
-dotnet publish server/FormCMS.App/FormCMS.App.csproj -c Release -o ./publish
+dotnet publish server/FormCMS.MonoApp/FormCMS.MonoApp.csproj -c Release -o ./publish
 
 echo "🐳 Building Docker Image (Fast Mode)..."
 cd "$SCRIPT_DIR"

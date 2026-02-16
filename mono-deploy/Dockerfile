@@ -30,7 +30,7 @@ WORKDIR /src
 COPY formcms/ ./
 
 # Publish the specific project
-RUN dotnet publish server/FormCMS.App/FormCMS.App.csproj -c Release -o /app/publish
+RUN dotnet publish server/FormCMS.MonoApp/FormCMS.MonoApp.csproj -c Release -o /app/publish
 
 # --- Stage 3: Final Runtime ---
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
@@ -55,7 +55,7 @@ COPY --from=dotnet-builder /app/publish ./formcms
 RUN touch ./formcms/appsettings.json && chmod 666 ./formcms/appsettings.json
 
 # Copy Entrypoint
-COPY formmate/standalone-formcms/entrypoint.sh /app/entrypoint.sh
+COPY formmate/mono-deploy/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # Expose Nginx Port
