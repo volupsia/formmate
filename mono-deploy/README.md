@@ -150,7 +150,7 @@ docker-compose logs -f
 docker buildx create --use
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t your-registry/formcms-mono-deploy:latest \
+  -t jaike/formcms-mono:latest \
   -f Dockerfile \
   --push \
   ../..
@@ -159,7 +159,7 @@ docker buildx build \
 **2. Deploy to server:**
 ```bash
 # Pull image
-docker pull your-registry/formcms-mono-deploy:latest
+docker pull jaike/formcms-mono:latest
 
 # Run with docker-compose
 docker-compose up -d

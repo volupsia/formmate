@@ -10,19 +10,24 @@ COPY formmate/package.json formmate/package-lock.json ./
 COPY formmate/packages/shared/package.json ./packages/shared/
 COPY formmate/packages/mate-service/package.json ./packages/mate-service/
 COPY formmate/packages/mate/package.json ./packages/mate/
+# Also copy SDK which is a dependency now
+COPY formmate/packages/sdk/package.json ./packages/sdk/
 
 # 2. Install PROD dependencies
-RUN npm ci --omit=dev
+# Note: In multi-arch, we might need to be careful with native modules, but pure JS deps are fine.
+# If implicit 'npm ci' fails due to platform specifics of lockfile, we use 'npm install'
+RUN npm install --omit=dev
 
 # 3. Copy pre-built artifacts from LOCAL machine
 COPY formmate/packages/shared/dist ./packages/shared/dist
-# Copy backend artifacts AND source files (for tsx)
+# Copy backend artifacts AND source files (for tsx if needed, though we should run compiled js)
 COPY formmate/packages/mate-service/dist ./packages/mate-service/dist
 COPY formmate/packages/mate-service/src ./packages/mate-service/src
 COPY formmate/packages/mate-service/resources ./packages/mate-service/resources
 COPY formmate/packages/mate-service/public ./packages/mate-service/public
 COPY formmate/packages/mate-service/prisma ./packages/mate-service/prisma
-# Generate Prisma Client
+
+# Generate Prisma Client (needs to run on target arch)
 RUN cd packages/mate-service && npx prisma generate
 
 # Copy frontend artifacts
@@ -49,8 +54,9 @@ COPY formmate/mono-deploy/404.html /usr/share/nginx/html/404.html
 COPY --from=node-base /app /app
 
 # Copy Pre-built .NET App from LOCAL machine
+# .NET Publish output is portable if not self-contained
 COPY formcms/publish ./formcms
-# Ensure config files are writable (will be regenerated from env vars at runtime)
+# Ensure config files are writable
 RUN touch ./formcms/appsettings.json && chmod 666 ./formcms/appsettings.json
 
 # Copy Entrypoint
