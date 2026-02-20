@@ -108,11 +108,11 @@ Once running, try these prompts:
 
 ## 📚 Documentation
 
-For detailed documentation, please refer to our **[Wiki](https://github.com/formcms/formcms/wiki/Home.md)** (source of truth):
+For detailed documentation, please refer to our **[Wiki](https://github.com/formcms/formcms/wiki)** (source of truth):
 
 | Documentation | Description |
 |---------------|-------------|
-| [Setup Guide](https://github.com/formcms/formcms/wiki/Setup.md) | Development and production environment setup |
+| [Setup Guide](https://github.com/formcms/formcms/wiki/Setup.md) | Development environment setup |
 | [Architecture](https://github.com/formcms/formcms/wiki/Architecture.md) | Component architecture and system design |
 | [Orchestrator Strategy](https://github.com/formcms/formcms/wiki/Orchestrator-Strategy.md) | Multi-agent pipeline design and debugging approach |
 | [Performance & Scalability](https://github.com/formcms/formcms/wiki/Performance-Scalability.md) | Benchmarks and scaling strategies |
@@ -144,3 +144,17 @@ For detailed documentation, please refer to our **[Wiki](https://github.com/form
 | **Database Support** | SQLite, PostgreSQL, SQL Server, MySQL |
 
 📖 **[See Wiki for performance details →](https://github.com/formcms/formcms/wiki/Performance-Scalability.md)**
+
+---
+
+## 🗺️ Roadmap
+
+FormCMS is actively evolving toward a vision of **no-code app building with AI**. Here's what's coming:
+
+| Phase | Focus | Key Features |
+|-------|-------|-------------|
+| **Enhanced AI** | Smarter generation | Natural language → schema, AI-suggested relationships, auto-generated CRUD & queries |
+| **Visual Builder** | No-code editing | Drag-and-drop page builder, visual schema editor, real-time preview, theme templates |
+| **Marketplace** | Community ecosystem | Pre-built app templates, community components, one-click install |
+
+> **The Vision:** Describe your app in plain English → AI generates the entire backend (entities, queries, pages) → deploy with one click. No code required.
