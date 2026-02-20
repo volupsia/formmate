@@ -1,0 +1,107 @@
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import StudioPage from './pages/studio-page';
+
+import SystemSettingsPage from './pages/system-settings-page';
+import { SocketProvider } from './context/socket-provider';
+import { setAuthApiBaseUrl } from '@formmate/sdk';
+
+setAuthApiBaseUrl('');
+
+import LoginPage from './pages/login-page';
+import { useAuth } from './hooks/use-auth';
+import { Loader2 } from 'lucide-react';
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, hasSuperAdmin } = useAuth();
+  const location = useLocation();
+
+  // When system status is still loading, show loading screen
+  if (hasSuperAdmin === undefined) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-app">
+        <Loader2 className="w-10 h-10 animate-spin text-primary-muted" />
+      </div>
+    );
+  }
+
+  // When database not ready, master password not set, or no user exists, redirect to settings
+  if (!hasSuperAdmin) {
+    if (location.pathname !== '/mate/settings') {
+      return <Navigate to="/mate/settings" replace />;
+    }
+    // Allow access to settings page for initial setup
+    return <>{children}</>;
+  }
+
+  // System is fully ready, require authentication
+  if (!user) {
+    return <Navigate to="/mate/login" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+
+
+function App() {
+  return (
+    <SocketProvider>
+      <BrowserRouter>
+        <Toaster position="top-right" />
+        <Routes>
+          {/* ... existing routes ... */}
+          <Route path="/mate">
+            <Route path="login" element={<LoginPage />} />
+            <Route
+              path=""
+              element={
+                <ProtectedRoute>
+                  <StudioPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="overview"
+              element={
+                <ProtectedRoute>
+                  <StudioPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path=":type/:id"
+              element={
+                <ProtectedRoute>
+                  <StudioPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path=":type/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <StudioPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="settings"
+              element={
+                <ProtectedRoute>
+                  <SystemSettingsPage />
+                </ProtectedRoute>
+              }
+            />
+
+          </Route>
+          <Route path="/" element={<Navigate to="/mate" replace />} />
+          <Route path="*" element={<Navigate to="/mate" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </SocketProvider>
+  );
+}
+
+export default App;
