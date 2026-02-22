@@ -35,6 +35,20 @@ Then open **http://localhost:5000/mate** in your browser.
 
 > **Note:** Data is persisted in a Docker volume (`formcms_data`). Your content survives container restarts.
 
+### Ephemeral Mode (No Persistence)
+
+You can also start FormCMS without a volume if your Docker host provider doesn't allow volumes for free users:
+
+```bash
+docker run -d \
+  --name formcms \
+  -p 5000:5000 \
+  jaike/formcms-mono:latest
+```
+
+> [!CAUTION]
+> Data is **ephemeral**. Every time the container restarts, all your data will be **lost**.
+
 ---
 
 ## 2. Production — Docker Compose with PostgreSQL
@@ -126,4 +140,4 @@ Open **http://localhost:5000/mate** and follow the setup wizard.
 ## Links
 
 - **GitHub:** [https://github.com/formcms/formcms](https://github.com/formcms/formcms)
-- **Documentation:** [https://formcms.com](https://formcms.com)
+- **Documentation:** [https://github.com/formcms/formcms/wiki](https://github.com/formcms/formcms/wiki)

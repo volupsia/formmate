@@ -10,8 +10,8 @@ export FORMCMS_BASE_URL=${FORMCMS_BASE_URL:-"http://127.0.0.1:5001"} # Internal 
 export FRONTEND_URL=${FRONTEND_URL:-"http://127.0.0.1:3001"}
 
 # FormCMS Configuration from Environment Variables
-export DATABASE_PROVIDER=${DATABASE_PROVIDER:-1}  # Default to Postgres
-export CONNECTION_STRING=${CONNECTION_STRING:-"Host=db;Port=5432;Database=cms;Username=postgres;Password=postgres;"}
+export DATABASE_PROVIDER=${DATABASE_PROVIDER:-0}  # Default to Sqlite
+export CONNECTION_STRING=${CONNECTION_STRING:-"Data Source=cms.db"}
 
 # Use custom config path if set, otherwise default
 if [ -n "$FORMCMS_DATA_PATH" ]; then
