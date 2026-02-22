@@ -1,5 +1,5 @@
 import type { ServiceLogger } from '../../types/logger';
-import { type AgentContext, type AgentResponse, BaseAgent } from './chat-agent';
+import { type AgentContext, type AgentResponse, BaseAgent, parseModelFromProvider } from './chat-agent';
 import { type TemplateSelectionRequest, type PagePlan } from '@formmate/shared';
 import type { AIProvider } from '../../infrastructures/ai-provider.interface';
 import type { FormCMSClient } from '../../infrastructures/formcms-client';
@@ -82,7 +82,8 @@ export class PagePlannerAgent extends BaseAgent<TemplateSelectionRequest> {
         const response = await this.aiProvider.generate(
             this.plannerSystemPrompt,
             developerMessage,
-            userInput
+            userInput,
+            parseModelFromProvider(context.providerName)
         );
 
         try {

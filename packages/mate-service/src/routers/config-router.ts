@@ -88,6 +88,89 @@ const configRouter: FastifyPluginAsync = async (fastify) => {
             return reply.status(501).send({ error: 'Gemini agent does not support runtime configuration' });
         }
     });
+
+    // GET /mateapi/config/openai - Check status
+    fastify.get('/mateapi/config/openai', {
+        preHandler: [fastify.authenticate]
+    }, async (request, reply) => {
+        const openaiAgent = fastify.aiProvider['openai'];
+        if (!openaiAgent) {
+            return {
+                success: true,
+                data: { configured: false, available: false }
+            };
+        }
+
+        const isConfigured = openaiAgent.hasApiKey ? openaiAgent.hasApiKey() : false;
+        const maskedKey = openaiAgent.getMaskedApiKey ? openaiAgent.getMaskedApiKey() : null;
+
+        return {
+            success: true,
+            data: {
+                configured: isConfigured,
+                maskedKey: maskedKey,
+                available: true
+            }
+        };
+    });
+
+    // PUT /mateapi/config/openai - Update key
+    fastify.put('/mateapi/config/openai', {
+        preHandler: [fastify.authenticate]
+    }, async (request, reply) => {
+        const body_ = updateSchema.safeParse(request.body);
+        if (!body_.success) {
+            return reply.status(400).send({ error: 'Invalid request body' });
+        }
+
+        const { apiKey } = body_.data;
+        const openaiAgent = fastify.aiProvider['openai'];
+
+        if (!openaiAgent) {
+            return reply.status(404).send({ error: 'OpenAI agent not enabled' });
+        }
+
+        if (openaiAgent.setApiKey) {
+            // Save to database
+            await fastify.prisma.systemSetting.upsert({
+                where: { key: 'OPENAI_API_KEY' },
+                update: { value: apiKey },
+                create: { key: 'OPENAI_API_KEY', value: apiKey }
+            });
+
+            // Update in-memory
+            openaiAgent.setApiKey(apiKey);
+            fastify.log.info('OpenAI API Key updated via API and saved to DB');
+            return { success: true };
+        } else {
+            return reply.status(501).send({ error: 'OpenAI agent does not support runtime configuration' });
+        }
+    });
+
+    // DELETE /mateapi/config/openai - Delete key
+    fastify.delete('/mateapi/config/openai', {
+        preHandler: [fastify.authenticate]
+    }, async (request, reply) => {
+        const openaiAgent = fastify.aiProvider['openai'];
+
+        if (!openaiAgent) {
+            return reply.status(404).send({ error: 'OpenAI agent not enabled' });
+        }
+
+        if (openaiAgent.setApiKey) {
+            // Remove from database
+            await fastify.prisma.systemSetting.deleteMany({
+                where: { key: 'OPENAI_API_KEY' }
+            });
+
+            // Reset in-memory
+            openaiAgent.setApiKey('');
+            fastify.log.info('OpenAI API Key deleted via API');
+            return { success: true };
+        } else {
+            return reply.status(501).send({ error: 'OpenAI agent does not support runtime configuration' });
+        }
+    });
 };
 
 export default configRouter;
