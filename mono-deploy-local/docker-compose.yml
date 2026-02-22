@@ -2,7 +2,7 @@ services:
   app:
     build:
       context: ../../
-      dockerfile: formmate/mono-deploy/Dockerfile
+      dockerfile: formmate/mono-deploy-local/Dockerfile
     image: formcms-mono-deploy:latest
     ports:
       - "${APP_PORT:-5000}:5000" # Nginx Gateway

@@ -47,8 +47,8 @@ RUN apt-get update && apt-get install -y curl nginx procps dos2unix && \
     rm -rf /var/lib/apt/lists/*
 
 # Configure Nginx
-COPY formmate/mono-deploy/nginx.conf /etc/nginx/nginx.conf
-COPY formmate/mono-deploy/404.html /usr/share/nginx/html/404.html
+COPY formmate/mono-deploy-local/nginx.conf /etc/nginx/nginx.conf
+COPY formmate/mono-deploy-local/404.html /usr/share/nginx/html/404.html
 
 # Copy Node.js App from node-base
 COPY --from=node-base /app /app
@@ -60,7 +60,7 @@ COPY formcms/publish ./formcms
 RUN touch ./formcms/appsettings.json && chmod 666 ./formcms/appsettings.json
 
 # Copy Entrypoint
-COPY formmate/mono-deploy/entrypoint.sh /app/entrypoint.sh
+COPY formmate/mono-deploy-local/entrypoint.sh /app/entrypoint.sh
 RUN dos2unix /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 EXPOSE 5000
