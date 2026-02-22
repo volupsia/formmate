@@ -1,26 +1,31 @@
 import type { AIProvider } from '../../infrastructures/ai-provider.interface';
 import type { FormCMSClient } from '../../infrastructures/formcms-client';
 import type { ServiceLogger } from '../../types/logger';
-import { type AgentContext, type AgentResponse, BaseAgent, parseModelFromProvider } from './chat-agent';
+import { type AgentContext, type AgentResponse, BaseAgent, parseModelFromProvider } from './chat-assistant';
 import { AGENT_NAMES, type PageDto, type PageMetadata, type SaveSchemaPayload } from '@formmate/shared';
 
-export interface VisitTrackPlan {
+export interface TopListPlan {
     schemaId: string;
     pageDto: PageDto;
 }
 
-export class VisitTrackGenerator extends BaseAgent<VisitTrackPlan> {
+export class TopListBuilder extends BaseAgent<TopListPlan> {
     constructor(
         aiProvider: AIProvider,
         private readonly systemPrompt: string,
+        private readonly topListSnippet: string,
         private readonly formCMSClient: FormCMSClient,
         logger: ServiceLogger,
     ) {
-        super("adding visit tracking", logger, aiProvider);
+        super("adding top list", logger, aiProvider);
     }
 
-    async think(userInput: string, context: AgentContext): Promise<VisitTrackPlan> {
-        this.logger.info('VisitTrackGenerator think started');
+    public getSnippet(): string {
+        return this.topListSnippet;
+    }
+
+    async think(userInput: string, context: AgentContext): Promise<TopListPlan> {
+        this.logger.info('TopListBuilder think started');
 
         // 1. Extract Schema ID
         let schemaId = context.schemaId;
@@ -42,9 +47,11 @@ export class VisitTrackGenerator extends BaseAgent<VisitTrackPlan> {
         }
 
         const pageDto = schema.settings.page;
+        const metadata = JSON.parse(schema.settings.page.metadata) as PageMetadata;
 
         const developerMessage = JSON.stringify({
-            existingHtml: pageDto.html
+            existingHtml: pageDto.html,
+            topListSnippet: this.topListSnippet.replace(/{{entityName}}/g, metadata.plan?.entityName || '')
         }, null, 2);
 
         const res = await this.aiProvider.generate(
@@ -63,11 +70,11 @@ export class VisitTrackGenerator extends BaseAgent<VisitTrackPlan> {
         };
     }
 
-    async act(plan: VisitTrackPlan, context: AgentContext): Promise<AgentResponse | null> {
+    async act(plan: TopListPlan, context: AgentContext): Promise<AgentResponse | null> {
         const { schemaId, pageDto } = plan;
 
         const metadata = JSON.parse(pageDto.metadata) as PageMetadata;
-        metadata.enableVisitTrack = true;
+        metadata.enableTopList = true;
 
         const payload: SaveSchemaPayload = {
             schemaId: schemaId,
@@ -81,9 +88,9 @@ export class VisitTrackGenerator extends BaseAgent<VisitTrackPlan> {
         };
 
         await this.formCMSClient.saveSchema(context.externalCookie, payload);
-        await context.saveAgentMessage(`Successfully added visit tracking to page "${pageDto.name}".`);
+        await context.saveAgentMessage(`Successfully added Top List component to page "${pageDto.name}".`);
         await context.onSchemasSync({
-            task_type: AGENT_NAMES.VISIT_TRACK_GENERATOR,
+            task_type: AGENT_NAMES.TOP_LIST_BUILDER,
             schemasId: [schemaId]
         });
         return null;

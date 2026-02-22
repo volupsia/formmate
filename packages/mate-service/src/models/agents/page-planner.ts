@@ -1,10 +1,10 @@
 import type { ServiceLogger } from '../../types/logger';
-import { type AgentContext, type AgentResponse, BaseAgent, parseModelFromProvider } from './chat-agent';
+import { type AgentContext, type AgentResponse, BaseAgent, parseModelFromProvider } from './chat-assistant';
 import { type TemplateSelectionRequest, type PagePlan } from '@formmate/shared';
 import type { AIProvider } from '../../infrastructures/ai-provider.interface';
 import type { FormCMSClient } from '../../infrastructures/formcms-client';
 
-export class PagePlannerAgent extends BaseAgent<TemplateSelectionRequest> {
+export class PagePlanner extends BaseAgent<TemplateSelectionRequest> {
     constructor(
         aiProvider: AIProvider,
         private readonly plannerSystemPrompt: string,

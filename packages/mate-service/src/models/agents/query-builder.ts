@@ -1,7 +1,7 @@
 import type { AIProvider } from '../../infrastructures/ai-provider.interface';
 import type { FormCMSClient } from '../../infrastructures/formcms-client';
 import type { ServiceLogger } from '../../types/logger';
-import { type AgentContext, type AgentResponse, BaseAgent, parseModelFromProvider } from './chat-agent';
+import { type AgentContext, type AgentResponse, BaseAgent, parseModelFromProvider } from './chat-assistant';
 import { type QueryResponse, type SchemaDto, type SaveSchemaPayload, AGENT_NAMES } from '@formmate/shared';
 
 export interface QueryGeneratorPlan extends QueryResponse {
@@ -24,7 +24,7 @@ export class QueryGenerator extends BaseAgent<QueryGeneratorPlan> {
         let schemaId = '';
 
         // 1. Identification: Check if user input contains #schemaId:
-        const idMatch = userInput.match(new RegExp(`${AGENT_NAMES.QUERY_GENERATOR}#([^:]+):`));
+        const idMatch = userInput.match(new RegExp(`${AGENT_NAMES.QUERY_BUILDER}#([^:]+):`));
         if (idMatch) {
             try {
                 existingSchema = await this.formCMSClient.getSchemaBySchemaId(context.externalCookie, idMatch[1] as string);
@@ -94,7 +94,7 @@ ${sdl}
 
         if (schemaIds.length > 0) {
             await context.onSchemasSync({
-                task_type: 'query_generator',
+                task_type: 'query_builder',
                 schemasId: schemaIds
             });
             const finalMessage = plan.existingSchema
