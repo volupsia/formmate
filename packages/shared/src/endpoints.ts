@@ -1,11 +1,9 @@
 export const ENDPOINTS = {
     CHAT: {
         HISTORY: '/mateapi/chat/history',
-        ENGAGEMENT_BAR: '/mateapi/chat/engagement-bar',
-        USER_AVATAR: '/mateapi/chat/user-avatar',
-        VISIT_TRACK: '/mateapi/chat/visit-track',
-        TOP_LIST: '/mateapi/chat/top-list',
         STATUS: '/mateapi/chat/status',
+        PAGE_ADDONS: '/mateapi/page-addons',
+        TRIGGER_ADDON: '/mateapi/chat/addon',
     },
     AUTH: {
         LOGIN: '/api/login',

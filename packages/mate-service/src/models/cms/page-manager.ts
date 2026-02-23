@@ -1,7 +1,7 @@
 import type { FormCMSClient } from '../../infrastructures/formcms-client';
 import type { ServiceLogger } from '../../types/logger';
 import type { SaveSchemaPayload, TemplateSelectionResponse, PagePlan } from '@formmate/shared';
-import { LayoutCompiler, HTML_BLOCKS, type LayoutJson } from '@formmate/shared';
+import { LayoutCompiler, type LayoutJson } from '@formmate/shared';
 
 export class PageManager {
     constructor(
@@ -123,8 +123,7 @@ export class PageManager {
                 layout.sections.forEach(section => {
                     section.columns.forEach(col => {
                         col.blocks.forEach(block => {
-                            const template = HTML_BLOCKS[block.type] || '';
-                            componentsMap[block.id] = { html: template, props: {} };
+                            componentsMap[block.id] = { html: `<!-- Generating component ${block.type} -->`, props: {} };
                         });
                     });
                 });
