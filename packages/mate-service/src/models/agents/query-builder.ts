@@ -85,7 +85,6 @@ ${sdl}
             try {
                 const newSchemaId = await this.formCMSClient.saveQuery(context.externalCookie, targetSchemaId, name, source);
                 schemaIds.push(newSchemaId);
-                await context.saveAgentMessage(`Query "${name}" executed successfully.`);
             } catch (e: any) {
                 this.logger.error({ error: e }, 'Failed to save query');
                 await context.saveAgentMessage(`Failed to save query "${name}".`);
