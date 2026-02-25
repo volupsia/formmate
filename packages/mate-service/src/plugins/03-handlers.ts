@@ -121,9 +121,18 @@ const handlersPlugin: FastifyPluginAsync = async (fastify) => {
                 addonHandlers[addon.agentName] = new BuilderClass(addon, provider, prompt, snippet, formcmsClient, modelLogger);
             }
 
+            // Create a map of addon handlers keyed by their ID for the PageBuilder
+            const addonHandlersById: Record<string, BaseAgent<any>> = {};
+            for (const addon of PAGE_ADDON_REGISTRY) {
+                const handler = addonHandlers[addon.agentName];
+                if (handler) {
+                    addonHandlersById[addon.id] = handler;
+                }
+            }
+
             const pageArchitectAgent = new PageArchitect(provider, pageArchitectPrompt, formcmsClient, modelLogger);
 
-            const pageBuilderAgent = new PageBuilder(provider, htmlGeneratorPrompt, getStylePrompt, formcmsClient, modelLogger, config.FORMCMS_BASE_URL);
+            const pageBuilderAgent = new PageBuilder(provider, htmlGeneratorPrompt, getStylePrompt, formcmsClient, modelLogger, config.FORMCMS_BASE_URL, addonHandlersById);
 
 
             const entityGenerator = new EntityGenerator(provider, entityGeneratorPrompt,
