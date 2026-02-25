@@ -178,7 +178,7 @@ ARCHITECTURE HINTS: ${architecturePlan.architectureHints}
 
         // Completion
         const componentCount = Object.keys(plan.components).length;
-        const finalMessage = `I have generated ${componentCount} component(s) and compiled them into your page layout. You can find it in FormCMS.`;
+        const finalMessage = `I have generated ${componentCount} component(s) and compiled them into your page layout. You can find it in explorer.`;
         await context.saveAgentMessage(finalMessage);
         return null;
     }
