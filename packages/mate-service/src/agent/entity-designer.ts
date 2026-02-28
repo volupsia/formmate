@@ -1,10 +1,10 @@
-import type { AIProvider } from '../../infrastructures/ai-provider.interface';
-import type { FormCMSClient } from '../../infrastructures/formcms-client';
-import type { ServiceLogger } from '../../types/logger';
+import type { AIProvider } from '../infrastructures/ai-provider.interface';
+import type { FormCMSClient } from '../infrastructures/formcms-client';
+import type { ServiceLogger } from '../types/logger';
 import { type AgentContext, type AgentResponse, BaseAgent, parseModelFromProvider } from './chat-assistant';
 import { type EntityDto, type RelationshipDto, AGENT_NAMES } from '@formmate/shared';
-import { EntityModel } from '../cms/entity-model';
-import { RelationshipModel } from '../cms/relationship-model';
+import { EntityModel } from '../models/entity-model';
+import { RelationshipModel } from '../models/relationship-model';
 
 export interface EntityGeneratorResponse {
     entities: EntityDto[];

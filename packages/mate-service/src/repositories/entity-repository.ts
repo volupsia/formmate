@@ -3,11 +3,11 @@ import {
     type SchemaDto,
     type SaveSchemaPayload
 } from '@formmate/shared';
-import type { FormCMSClient } from '../../infrastructures/formcms-client';
-import type { ServiceLogger } from '../../types/logger';
-import { RelationshipModel } from './relationship-model';
+import type { FormCMSClient } from '../infrastructures/formcms-client';
+import type { ServiceLogger } from '../types/logger';
+import { RelationshipModel } from '../models/relationship-model';
 
-export class EntityManager {
+export class EntityRepository {
     constructor(
         private readonly formCMSClient: FormCMSClient,
         private readonly logger: ServiceLogger,

@@ -1,6 +1,6 @@
-import type { AIProvider } from '../../infrastructures/ai-provider.interface';
-import type { FormCMSClient } from '../../infrastructures/formcms-client';
-import type { ServiceLogger } from '../../types/logger';
+import type { AIProvider } from '../infrastructures/ai-provider.interface';
+import type { FormCMSClient } from '../infrastructures/formcms-client';
+import type { ServiceLogger } from '../types/logger';
 import { type AgentContext, type AgentResponse, BaseAgent, parseModelFromProvider } from './chat-assistant';
 
 import { AGENT_NAMES } from '@formmate/shared';
