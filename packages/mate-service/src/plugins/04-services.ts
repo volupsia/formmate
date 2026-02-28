@@ -30,7 +30,8 @@ const servicesPlugin: FastifyPluginAsync = async (fastify) => {
         // @ts-ignore
         fastify.chatHandlers,
         statusService,
-        serviceLogger
+        serviceLogger,
+        prisma
     );
     const authService = new AuthService(formcmsClient, serviceLogger);
     const socketService = new SocketService(fastify.io);
