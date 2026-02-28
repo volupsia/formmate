@@ -1,4 +1,4 @@
-import type { LayoutJson } from '../dtos.js';
+import type { LayoutJson } from '../mate.dto.js';
 
 export interface CompileOptions {
     enableVisitTrack?: boolean;

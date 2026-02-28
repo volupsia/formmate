@@ -38,14 +38,11 @@ const servicesPlugin: FastifyPluginAsync = async (fastify) => {
     const chatService = new ChatService(
         messageRepository,
         logRepository,
-        agentTaskRepository,
-        formcmsClient,
         intentClassifier,
         // @ts-ignore
         fastify.chatHandlers,
         statusService,
         serviceLogger,
-        prisma,
         new EntityOperator(formcmsClient, serviceLogger),
         new PageOperator(formcmsClient, serviceLogger),
         new TaskOperator(agentTaskRepository, serviceLogger)
