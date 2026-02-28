@@ -8,6 +8,10 @@ import { FormCMSClient } from '../infrastructures/formcms-client';
 import type { ServerToClientEvents, ClientToServerEvents, User } from '@formmate/shared';
 import type { SessionStore } from '@fastify/session';
 import { PrismaClient } from '@prisma/client';
+import { IChatMessageRepository } from '../repositories/chat-message-repository';
+import { IAiResponseLogRepository } from '../repositories/ai-response-log-repository';
+import { IDesignStyleRepository } from '../repositories/design-style-repository';
+import { ISystemSettingRepository } from '../repositories/system-setting-repository';
 import '@fastify/session';
 
 declare module 'fastify' {
@@ -22,6 +26,10 @@ declare module 'fastify' {
         aiProvider: Record<string, AIProvider>;
         formCMS: FormCMSClient;
         sessionStore: SessionStore;
+        chatMessageRepository: IChatMessageRepository;
+        aiResponseLogRepository: IAiResponseLogRepository;
+        designStyleRepository: IDesignStyleRepository;
+        systemSettingRepository: ISystemSettingRepository;
         authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     }
 

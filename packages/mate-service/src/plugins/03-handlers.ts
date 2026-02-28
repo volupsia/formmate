@@ -19,6 +19,8 @@ import { PAGE_ADDON_REGISTRY } from '../agent/page-addons/index';
 import { PageAddonBuilder } from '../agent/page-addons/PageAddonBuilder';
 import { BaseAgent } from '../agent/chat-assistant';
 import { SystemArchitect } from '../agent/system-architect';
+import { EntityOperator } from '../operators/entity-operator';
+import { PageOperator } from '../operators/page-operator';
 
 // ArchitectDesignerAgent import removed
 // removed HtmlGenerationHandler import
@@ -93,6 +95,9 @@ const handlersPlugin: FastifyPluginAsync = async (fastify) => {
 
             // Build addon handlers from registry
             const addonHandlers: Record<string, BaseAgent<any>> = {};
+            const entityOperator = new EntityOperator(formcmsClient, modelLogger);
+            const pageOperator = new PageOperator(formcmsClient, modelLogger);
+
             for (const addon of PAGE_ADDON_REGISTRY) {
                 let prompt = '';
                 try {
@@ -110,7 +115,7 @@ const handlersPlugin: FastifyPluginAsync = async (fastify) => {
                     }
                 }
 
-                addonHandlers[addon.agentName] = new PageAddonBuilder(addon, provider, prompt, snippet, formcmsClient, modelLogger);
+                addonHandlers[addon.agentName] = new PageAddonBuilder(addon, provider, prompt, snippet, formcmsClient, modelLogger, pageOperator);
             }
 
             // Create a map of addon handlers keyed by their ID for the PageBuilder
@@ -122,13 +127,13 @@ const handlersPlugin: FastifyPluginAsync = async (fastify) => {
                 }
             }
 
-            const pageArchitectAgent = new PageArchitect(provider, pageArchitectPrompt, formcmsClient, modelLogger);
+            const pageArchitectAgent = new PageArchitect(provider, pageArchitectPrompt, formcmsClient, modelLogger, pageOperator);
 
-            const pageBuilderAgent = new PageBuilder(provider, htmlGeneratorPrompt, getStylePrompt, formcmsClient, modelLogger, config.FORMCMS_BASE_URL, addonHandlersById);
+            const pageBuilderAgent = new PageBuilder(provider, htmlGeneratorPrompt, getStylePrompt, formcmsClient, modelLogger, config.FORMCMS_BASE_URL, pageOperator, addonHandlersById);
 
 
             const entityGenerator = new EntityGenerator(provider, entityGeneratorPrompt,
-                entitySchema, attributeSchema, relationshipSchema, formcmsClient, modelLogger);
+                entitySchema, attributeSchema, relationshipSchema, formcmsClient, modelLogger, entityOperator);
             const queryGenerator = new QueryGenerator(provider, queryGeneratorPrompt, formcmsClient, modelLogger);
             const pagePlannerAgent = new PagePlanner(provider, pagePlannerPrompt, modelLogger, getTemplateOptions, formcmsClient);
             const dataGenerator = new DataGenerator(provider, dataGeneratorPrompt, formcmsClient, modelLogger);
