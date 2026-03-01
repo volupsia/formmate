@@ -1,24 +1,22 @@
 import type { AIProvider } from '../infrastructures/ai-provider.interface';
 import type { FormCMSClient } from '../infrastructures/formcms-client';
 
-import { type AgentContext, type AgentPlanResponse, BaseAgent, parseModelFromProvider } from './chat-assistant';
+import { type AgentContext, type AgentPlanResponse, type Agent } from './chat-assistant';
 import type { ServiceLogger } from '../types/logger';
-import { type QueryResponse, type SchemaDto, type SaveSchemaPayload, AGENT_NAMES } from '@formmate/shared';
+import { type QueryResponse, type SchemaDto, type SaveSchemaPayload, AGENT_NAMES, SOCKET_EVENTS } from '@formmate/shared';
 
 export interface QueryGeneratorPlan extends QueryResponse {
     schemaId?: string;
     existingSchema: SchemaDto | null;
 }
 
-export class QueryGenerator extends BaseAgent<QueryGeneratorPlan> {
+export class QueryGenerator implements Agent<QueryGeneratorPlan> {
     constructor(
-        aiProvider: AIProvider,
+        private readonly aiProvider: AIProvider,
         private readonly systemPrompt: string,
         private readonly formCMSClient: FormCMSClient,
-        logger: ServiceLogger,
-    ) {
-        super("generating your query", logger, aiProvider);
-    }
+        private readonly logger: ServiceLogger,
+    ) { }
 
     async think(userInput: string, context: AgentContext): Promise<AgentPlanResponse<QueryGeneratorPlan>> {
         let existingSchema: SchemaDto | null = null;
@@ -54,7 +52,7 @@ ${sdl}
             this.systemPrompt,
             developerMessage,
             userInput,
-            parseModelFromProvider(context.providerName),
+            context?.selection.model,
             context.signal ? { signal: context.signal } : undefined
         );
 
@@ -102,7 +100,7 @@ ${sdl}
         }
 
         if (schemaIds.length > 0) {
-            await context.onSchemasSync({
+            await context.emitEvent(SOCKET_EVENTS.CHAT.SCHEMAS_SYNC, {
                 task_type: 'query_builder',
                 schemasId: schemaIds
             });
