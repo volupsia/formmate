@@ -9,6 +9,7 @@
         "packages/mate"
     ],
     "scripts": {
+        "debug": "concurrently \"npm run debug:service\" \"npm run dev:mate\"",
         "dev": "concurrently \"npm run dev:service\" \"npm run dev:mate\"",
         "dev:service": "npm run dev --workspace=@formmate/service",
         "debug:service": "npm run debug --workspace=@formmate/service",
