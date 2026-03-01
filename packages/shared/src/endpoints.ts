@@ -3,7 +3,7 @@ export const ENDPOINTS = {
         HISTORY: '/mateapi/chat/history',
         STATUS: '/mateapi/chat/status',
         PAGE_ADDONS: '/mateapi/page-addons',
-        TRIGGER_ADDON: '/mateapi/chat/addon',
+        CANCEL: '/mateapi/chat/cancel',
     },
     AUTH: {
         LOGIN: '/api/login',
