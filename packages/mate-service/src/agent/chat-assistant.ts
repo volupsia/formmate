@@ -1,9 +1,8 @@
-import type { ChatMessage, AgentName, AgentTaskRef, ModelSelection } from '@formmate/shared';
+import type { ChatMessage } from '@formmate/shared';
 import type { AgentTaskItem } from '../models/agent-task-model';
 
 export interface AgentContext {
     externalCookie: string;
-    selection: ModelSelection;
     schemaId?: string;
     saveAgentMessage: (content: string, payload?: any) => Promise<ChatMessage>;
     signal?: AbortSignal;
