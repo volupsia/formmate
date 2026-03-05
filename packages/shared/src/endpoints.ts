@@ -56,6 +56,9 @@ export const ENDPOINTS = {
         DOWNLOAD: '/api/tasks/export/download/:id',
         IMPORT: '/api/tasks/import',
     },
+    MATE_TASKS: {
+        LATEST: '/mateapi/tasks',
+    },
     ENTITIES: {
         LIST: '/api/entities/:schemaName',
         TREE: '/api/entities/tree/:schemaName',
