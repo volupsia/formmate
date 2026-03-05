@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { type SchemaDto, type SaveSchemaPayload, type XEntityDto, type AssetListResponse, ENDPOINTS, FormCmsApiClient } from '@formmate/shared';
-import { UserVisibleError } from '../utils/user-visible-error';
+import { FormCmsError } from './form-cms-error';
 
 export class FormCMSClient {
     private populatingPromise: Promise<void> | null = null;
@@ -30,7 +30,7 @@ export class FormCMSClient {
             error => {
                 const title = error.response?.data?.title;
                 if (title) {
-                    throw new UserVisibleError(title, error);
+                    throw new FormCmsError(title, error);
                 }
                 throw error;
             }
