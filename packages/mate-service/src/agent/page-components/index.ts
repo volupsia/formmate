@@ -1,6 +1,7 @@
-import { AGENT_NAMES, type PageAddonDefinition } from '@formmate/shared';
+import { AGENT_NAMES, type PageComponentDefinition } from '@formmate/shared';
 
-export const PAGE_COMPONENT_REGISTRY: PageAddonDefinition[] = [
+// Define the available page components
+export const PAGE_COMPONENT_REGISTRY: PageComponentDefinition[] = [
     {
         id: 'common_component',
         agentName: AGENT_NAMES.COMPONENT_BUILDER,
