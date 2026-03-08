@@ -58,6 +58,7 @@ export const ENDPOINTS = {
     },
     MATE_TASKS: {
         LATEST: '/mateapi/tasks',
+        TOGGLE_ITEM: '/mateapi/tasks/:taskId/items/:index/toggle',
     },
     ENTITIES: {
         LIST: '/api/entities/:schemaName',
