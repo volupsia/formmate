@@ -1,5 +1,4 @@
 import { PageDto } from "./mate.dto";
-
 export interface XAttributeDto {
     field: string;
     header: string;
@@ -12,7 +11,6 @@ export interface XAttributeDto {
     lookup: XEntityDto | null;
     collection: XEntityDto | null;
 }
-
 export interface XEntityDto {
     attributes: XAttributeDto[];
     name: string;
@@ -22,7 +20,6 @@ export interface XEntityDto {
     defaultPageSize: number;
     previewUrl: string;
 }
-
 export interface AssetDto {
     path: string;
     id: number;
@@ -36,12 +33,10 @@ export interface AssetDto {
     progress: any;
     linkCount: number;
 }
-
 export interface AssetListResponse {
     items: AssetDto[];
     totalRecords: number;
 }
-
 export interface AttributeDto {
     field: string;
     header: string;
@@ -53,7 +48,6 @@ export interface AttributeDto {
     options: string;
     validation: string;
 }
-
 export interface EntityDto {
     name: string;
     displayName: string;
@@ -65,7 +59,6 @@ export interface EntityDto {
     pageUrl: string;
     attributes: AttributeDto[];
 }
-
 export interface RelationshipDto {
     sourceEntity: string;
     fieldName: string;
@@ -73,13 +66,15 @@ export interface RelationshipDto {
     targetEntity: string;
     cardinality: 'oneToMany' | 'manyToOne' | 'manyToMany';
 }
-
 export interface QueryDto {
     name: string;
     entityName: string;
     source: string;
     filters: any[];
-    sorts: { field: string; order: string; }[];
+    sorts: {
+        field: string;
+        order: string;
+    }[];
     variables: {
         name: string;
         isRequired: boolean;
@@ -91,7 +86,6 @@ export interface QueryDto {
         limit: string;
     };
 }
-
 export interface SchemaDto {
     id: number;
     schemaId: string;
@@ -108,7 +102,6 @@ export interface SchemaDto {
         page?: PageDto | null;
     };
 }
-
 export type SaveSchemaPayload = {
     schemaId: string | null;
     type: 'entity';
@@ -131,4 +124,4 @@ export type SaveSchemaPayload = {
         page: PageDto;
     };
 };
-
+//# sourceMappingURL=cms.dto.d.ts.map

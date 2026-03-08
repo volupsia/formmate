@@ -1,12 +1,6 @@
-import type { LayoutSection, PageComponent } from '../mate.dto.js';
-
-export interface CompileOptions {
-    enableVisitTrack?: boolean;
-}
-
 export class LayoutCompiler {
     // Build HTML head template — add/remove framework includes here
-    private static buildHtmlHead(options?: CompileOptions): string {
+    static buildHtmlHead(options) {
         const visitTrackSnippet = options?.enableVisitTrack
             ? `\n\n        if (mateSdk.engagementService) {\n            mateSdk.engagementService.trackVisit();\n        }`
             : '';
@@ -29,11 +23,10 @@ export class LayoutCompiler {
         body { font-family: 'Inter', sans-serif; }
     </style>`;
     }
-
     /**
      * Compile layout + components into a full HTML document.
      */
-    static compile(lsections: LayoutSection[], components: PageComponent[], title?: string, options?: CompileOptions): string {
+    static compile(lsections, components, title, options) {
         const body = this.compileBody(lsections, components);
         return `<!DOCTYPE html>
 <html lang="en">
@@ -46,17 +39,14 @@ ${body}
 </body>
 </html>`;
     }
-
     /**
      * Compile layout + components into just the body grid HTML (no wrapper).
      */
-    static compileBody(lsections: LayoutSection[], components: PageComponent[]): string {
+    static compileBody(lsections, components) {
         let compiledHtml = '';
-
         for (const section of lsections) {
             // Setup a generic Tailwind Grid wrapper
             compiledHtml += '\n<div class="grid grid-cols-12 gap-6 w-full max-w-7xl mx-auto px-4">';
-
             // Render columns
             for (const col of section.columns) {
                 compiledHtml += '\n    <div class="col-span-12 md:col-span-' + col.span + '">';
@@ -66,10 +56,9 @@ ${body}
                 }
                 compiledHtml += '\n    </div>';
             }
-
             compiledHtml += '\n</div>';
         }
-
         return compiledHtml;
     }
 }
+//# sourceMappingURL=layout-compiler.js.map

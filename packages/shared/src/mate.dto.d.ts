@@ -1,5 +1,4 @@
 import { EntityDto, RelationshipDto } from "./cms.dto";
-
 export interface PageDto {
     name: string;
     title: string;
@@ -7,24 +6,21 @@ export interface PageDto {
     source: string;
     metadata: PageMetadata;
 }
-
 export type ParsedPageDto = PageDto;
-
 export interface AgentTaskRef {
     taskId: number;
     index: number;
 }
-
 export interface SchemaSummary {
     userInput: string;
     summary: string;
-    entities: (EntityDto & { schemaId?: string | null; })[];
+    entities: (EntityDto & {
+        schemaId?: string | null;
+    })[];
     relationships: RelationshipDto[];
 }
-
 /** Provider/model key, e.g. "gemini/gemini-2.5-flash" or "openai/gpt-5.2" */
 export type ModelSelection = string;
-
 export interface TemplateSelectionRequest {
     userInput: string;
     plan: PagePlan;
@@ -34,12 +30,10 @@ export interface TemplateSelectionRequest {
         description: string;
     }[];
 }
-
 export interface TemplateSelectionResponse {
     selectedTemplate: string;
     requestPayload: TemplateSelectionRequest;
 }
-
 export interface PageArchitecture {
     pageTitle: string;
     sections: LayoutSection[];
@@ -53,24 +47,19 @@ export interface PageArchitecture {
     architectureHints: string;
     componentInstructions?: ComponentInstruction[];
 }
-
 export interface ComponentInstruction {
     id: string;
     instruction: string;
     queriesToUse: string[];
-    componentTypeId?: string; // matches PageComponentDefinition.id when this is a known component type
+    componentTypeId?: string;
 }
-
 export interface LayoutColumn {
     span: number;
     ids: string[];
 }
-
 export interface LayoutSection {
     columns: LayoutColumn[];
 }
-
-
 export interface PageComponentDefinition {
     id: string;
     agentName: string;
@@ -80,16 +69,14 @@ export interface PageComponentDefinition {
     pageTypes: ('detail' | 'list')[];
     resourceDir: string;
     hasSnippet?: boolean;
-    needQueries?: boolean; // if true, the addon builder will fetch query variable details
+    needQueries?: boolean;
     chatMessage: string;
 }
-
 export interface PageComponent {
     id: string;
     html: string;
     componentTypeId?: string;
 }
-
 export interface PageMetadata {
     plan?: PagePlan;
     architecture?: PageArchitecture;
@@ -98,7 +85,6 @@ export interface PageMetadata {
     templateId?: string;
     enableVisitTrack?: boolean;
 }
-
 export interface PagePlan {
     pageName: string;
     pageTitle: string;
@@ -106,17 +92,14 @@ export interface PagePlan {
     pageType: 'list' | 'detail';
     primaryParameter: string | null;
 }
-
 export interface SystemRequirmentItem {
     type: 'entity' | 'query' | 'page';
     name: string;
     description: string;
 }
-
 export interface SystemRequirment {
     items: SystemRequirmentItem[];
 }
-
 export interface DesignStyle {
     id: number;
     name: string;
@@ -127,7 +110,7 @@ export interface DesignStyle {
     createdAt: string;
     updatedAt: string;
 }
-
 export interface QueryResponse {
     queries: Record<string, string>;
 }
+//# sourceMappingURL=mate.dto.d.ts.map
