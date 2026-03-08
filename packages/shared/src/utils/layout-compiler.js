@@ -18,6 +18,7 @@ export class LayoutCompiler {
     <script type="module">
         import * as mateSdk from '/static/index.js';
         window.mateSdk = mateSdk;${visitTrackSnippet}
+        window.dispatchEvent(new CustomEvent('mateSdkReady'));
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; }

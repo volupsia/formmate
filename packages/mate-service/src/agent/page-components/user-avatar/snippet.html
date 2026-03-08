@@ -2,9 +2,15 @@
     user: null,
     unreadCount: 0,
     async init() {
-        if (!window.mateSdk?.userService) return;
-        this.user = await window.mateSdk.userService.fetchMe();
-        this.unreadCount = await window.mateSdk.engagementService.getUnreadCount();
+        const doInit = async () => {
+            this.user = await window.mateSdk.userService.fetchMe();
+            this.unreadCount = await window.mateSdk.engagementService.getUnreadCount();
+        };
+        if (window.mateSdk?.userService) {
+            await doInit();
+        } else {
+            window.addEventListener('mateSdkReady', doInit, { once: true });
+        }
     },
     async handleClick() {
         if (!window.mateSdk?.userService) return;
