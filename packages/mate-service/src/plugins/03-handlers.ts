@@ -6,19 +6,22 @@ import { fileURLToPath } from 'url';
 import { config } from '../config';
 import { AGENT_NAMES } from '@formmate/shared';
 
-import { IntentClassifier } from '../models/agents/intent-classifier';
-import { EntityGenerator } from '../models/agents/entity-generator-agent';
+import { IntentClassifier } from '../agent/intent-classifier';
+import { EntityGenerator } from '../agent/entity-designer';
 
-import { QueryGenerator } from '../models/agents/query-generator-agent';
-import { PagePlannerAgent } from '../models/agents/page-planner-agent';
+import { QueryGenerator } from '../agent/query-builder';
+import { PagePlanner } from '../agent/page-planner';
 // PageArchitect import removed
-import { PageArchitectAgent } from '../models/agents/page-architect-agent';
-import { PageBuilderAgent } from '../models/agents/page-builder-agent';
-import { DataGenerator } from '../models/agents/data-generator-agent';
-import { EngagementBarGenerator } from '../models/agents/engagement-bar-generator';
-import { UserAvatarGenerator } from '../models/agents/user-avatar-generator';
-import { VisitTrackGenerator } from '../models/agents/visit-track-generator';
-import { TopListGenerator } from '../models/agents/top-list-generator';
+import { PageArchitect } from '../agent/page-architect';
+import { DataGenerator } from '../agent/data-synthesizer';
+import { PAGE_COMPONENT_REGISTRY } from '../agent/page-components/index';
+import { PageComponentBuilder } from '../agent/page-components/page-component-builder';
+import type { Agent } from '../agent/chat-assistant';
+import { SystemArchitect } from '../agent/system-architect';
+import { EntityOperator } from '../operators/entity-operator';
+import { PageOperator } from '../operators/page-operator';
+import { TaskOperator } from '../operators/task-operator';
+import { SqliteAgentTaskRepository } from '../repositories/agent-task-repository';
 
 // ArchitectDesignerAgent import removed
 // removed HtmlGenerationHandler import
@@ -29,9 +32,9 @@ const handlersPlugin: FastifyPluginAsync = async (fastify) => {
     const modelLogger = fastify.log.child({ component: 'MODEL' }, { level: config.LOG_LEVEL_MODEL });
 
     // Resolve directories
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
-    const promptsDir = path.join(__dirname, '../../resources/prompts');
-    const schemasDir = path.join(__dirname, '../../resources/schemas');
+    const __dirname = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+    const agentsDir = path.join(__dirname, 'agent');
+    const schemasDir = path.join(__dirname, '../resources/schemas');
 
     // Load common schemas
     const [entitySchema, attributeSchema, relationshipSchema] = await Promise.all([
@@ -40,100 +43,87 @@ const handlersPlugin: FastifyPluginAsync = async (fastify) => {
         fs.readFile(path.join(schemasDir, 'relationship.json'), 'utf-8'),
     ]);
 
+    const loadPrompt = async (fileName: string) => {
+        try {
+            return await fs.readFile(path.join(agentsDir, fileName), 'utf-8');
+        } catch (err) {
+            fastify.log.warn(`Prompt ${fileName} not found in agents folder, using empty string`);
+            return '';
+        }
+    };
+
+    const [
+        entityGeneratorPrompt,
+        intentClassifierPrompt,
+        queryGeneratorPrompt,
+        dataGeneratorPrompt,
+        pageArchitectPrompt,
+        pagePlannerPrompt,
+        systemArchitectPrompt,
+    ] = await Promise.all([
+        loadPrompt('entity-designer.md'),
+        loadPrompt('intent-classifier.md'),
+        loadPrompt('query-builder.md'),
+        loadPrompt('data-synthesizer.md'),
+        loadPrompt('page-architect.md'),
+        loadPrompt('page-planner.md'),
+        loadPrompt('system-architect.md'),
+    ]);
+
     const intentClassifiers: Record<string, IntentClassifier> = {};
 
     for (const [providerName, provider] of Object.entries(providers)) {
-        const promptSubDir = providerName;
         try {
-            const loadPrompt = async (fileName: string) => {
+            // DB-backed style lookup function
+            const prisma = fastify.prisma;
+            const getStylePrompt = async (styleName: string, pageType: string): Promise<string> => {
+                if (!styleName) return '';
+                const style = await (prisma as any).designStyle.findUnique({ where: { name: styleName } });
+                if (!style) return '';
+                return pageType === 'detail' ? (style.detailPrompt || '') : (style.listPrompt || '');
+            };
+
+            // Load template options from DB for PagePlanner
+            const getTemplateOptions = async (): Promise<{ id: string; name: string; description: string }[]> => {
+                const styles = await (prisma as any).designStyle.findMany({ orderBy: { name: 'asc' } });
+                return styles.map((s: any) => ({ id: s.name, name: s.displayName, description: s.description }));
+            };
+
+            const pageAddonsDir = path.join(__dirname, 'agent/page-components');
+
+            // Build addon handlers from registry
+            const addonHandlers: Record<string, Agent<any>> = {};
+            const entityOperator = new EntityOperator(formcmsClient, modelLogger);
+            const pageOperator = new PageOperator(formcmsClient, modelLogger);
+
+            for (const addon of PAGE_COMPONENT_REGISTRY) {
+                let prompt = '';
                 try {
-                    return await fs.readFile(path.join(promptsDir, `${promptSubDir}/${fileName}`), 'utf-8');
-                } catch (e) {
-                    fastify.log.warn(`Prompt ${fileName} not found for provider ${providerName}, using empty string`);
-                    return '';
+                    prompt = await fs.readFile(path.join(pageAddonsDir, addon.resourceDir, 'prompt.md'), 'utf-8');
+                } catch (err) {
+                    fastify.log.warn(`Prompt for addon ${addon.id} not found at ${addon.resourceDir}/prompt.md`);
                 }
-            };
 
-            const [
-                entityGeneratorPrompt,
-                intentClassifierPrompt,
-                queryGeneratorPrompt,
-                dataGeneratorPrompt,
-                pageArchitectPrompt,
-                pagePlannerPrompt,
-                htmlGeneratorPrompt,
-            ] = await Promise.all([
-                fs.readFile(path.join(promptsDir, `${promptSubDir}/entity-generator.md`), 'utf-8'),
-                fs.readFile(path.join(promptsDir, `${promptSubDir}/intent-classifier.md`), 'utf-8'),
-                fs.readFile(path.join(promptsDir, `${promptSubDir}/query-generator.md`), 'utf-8'),
-                fs.readFile(path.join(promptsDir, `${promptSubDir}/data-generator.md`), 'utf-8'),
-                loadPrompt('page-architect-agent.md'),
-                loadPrompt('page-planner-agent.md'),
-                loadPrompt('page-builder-agent.md'),
-            ]);
+                let snippet: string | undefined = undefined;
+                if (addon.hasSnippet) {
+                    try {
+                        snippet = await fs.readFile(path.join(pageAddonsDir, addon.resourceDir, 'snippet.html'), 'utf-8');
+                    } catch (err) {
+                        fastify.log.warn(`Snippet for addon ${addon.id} not found at ${addon.resourceDir}/snippet.html`);
+                    }
+                }
 
-            const [
-                modernListPrompt,
-                modernDetailPrompt,
-                classicListPrompt,
-                classicDetailPrompt,
-                minimalListPrompt,
-                minimalDetailPrompt
-            ] = await Promise.all([
-                fs.readFile(path.join(promptsDir, 'styles/modern-editorial-list.md'), 'utf-8'),
-                fs.readFile(path.join(promptsDir, 'styles/modern-editorial-detail.md'), 'utf-8'),
-                fs.readFile(path.join(promptsDir, 'styles/classic-newspaper-list.md'), 'utf-8'),
-                fs.readFile(path.join(promptsDir, 'styles/classic-newspaper-detail.md'), 'utf-8'),
-                fs.readFile(path.join(promptsDir, 'styles/minimalist-visual-list.md'), 'utf-8'),
-                fs.readFile(path.join(promptsDir, 'styles/minimalist-visual-detail.md'), 'utf-8'),
-            ]);
+                addonHandlers[addon.agentName] = new PageComponentBuilder(addon, provider, prompt, snippet, formcmsClient, modelLogger, pageOperator, config.FORMCMS_BASE_URL, getStylePrompt);
+            }
 
-            const styleMap: Record<string, string> = {
-                'modern-list': modernListPrompt,
-                'modern-detail': modernDetailPrompt,
-                'classic-list': classicListPrompt,
-                'classic-detail': classicDetailPrompt,
-                'minimal-list': minimalListPrompt,
-                'minimal-detail': minimalDetailPrompt,
-                // Fallbacks
-                'modern': modernListPrompt,
-                'classic': classicListPrompt,
-                'minimal': minimalListPrompt
-            };
-
-            const userAvatarPrompt = await fs.readFile(path.join(promptsDir, `${promptSubDir}/user-avatar-agent.md`), 'utf-8').catch(() => '');
-            const engagementBarPrompt = await fs.readFile(path.join(promptsDir, `${promptSubDir}/engagement-bar-agent.md`), 'utf-8').catch(() => '');
-            const visitTrackPrompt = await fs.readFile(path.join(promptsDir, `${promptSubDir}/visit-track-agent.md`), 'utf-8').catch(() => '');
-            const topListPrompt = await fs.readFile(path.join(promptsDir, `${promptSubDir}/top-list-agent.md`), 'utf-8').catch(() => '');
-            const engagementBarSnippet = await fs.readFile(path.join(promptsDir, 'components/engagement-bar.html'), 'utf-8').catch(() => '');
-            const userAvatarSnippet = await fs.readFile(path.join(promptsDir, 'components/user-avatar.html'), 'utf-8').catch(() => '');
-            const topListSnippet = await fs.readFile(path.join(promptsDir, 'components/top-list.html'), 'utf-8').catch(() => '');
-
-
-            // Instantiate Planners
-            // PagePlanner instantiation removed
-            // PageArchitect instantiation removed
-
-            const engagementBarGenerator = new EngagementBarGenerator(provider, engagementBarPrompt, engagementBarSnippet, formcmsClient, modelLogger);
-            const userAvatarGenerator = new UserAvatarGenerator(provider, userAvatarPrompt, userAvatarSnippet, formcmsClient, modelLogger);
-            const visitTrackGenerator = new VisitTrackGenerator(provider, visitTrackPrompt, formcmsClient, modelLogger);
-            const topListGenerator = new TopListGenerator(provider, topListPrompt, topListSnippet, formcmsClient, modelLogger);
-
-            const pageArchitectAgent = new PageArchitectAgent(provider, pageArchitectPrompt, formcmsClient, modelLogger);
-
-            const pageBuilderAgent = new PageBuilderAgent(provider, htmlGeneratorPrompt, styleMap, formcmsClient, modelLogger, config.FORMCMS_BASE_URL);
-
-
-            const dataDir = path.join(__dirname, '../../resources/data');
-            const templatesData = await fs.readFile(path.join(dataDir, 'page-templates.json'), 'utf-8');
-            const templates = JSON.parse(templatesData);
+            const pageArchitectAgent = new PageArchitect(provider, pageArchitectPrompt, formcmsClient, modelLogger, pageOperator);
 
             const entityGenerator = new EntityGenerator(provider, entityGeneratorPrompt,
-                entitySchema, attributeSchema, relationshipSchema, formcmsClient, modelLogger);
+                entitySchema, attributeSchema, relationshipSchema, formcmsClient, modelLogger, entityOperator);
             const queryGenerator = new QueryGenerator(provider, queryGeneratorPrompt, formcmsClient, modelLogger);
-            const pagePlannerAgent = new PagePlannerAgent(provider, pagePlannerPrompt, modelLogger, templates, formcmsClient);
+            const pagePlannerAgent = new PagePlanner(provider, pagePlannerPrompt, modelLogger, getTemplateOptions, formcmsClient, pageOperator);
             const dataGenerator = new DataGenerator(provider, dataGeneratorPrompt, formcmsClient, modelLogger);
-            // removed htmlGenerationHandler instantiation
+            const systemArchitect = new SystemArchitect(provider, systemArchitectPrompt, fastify.prisma, modelLogger);
 
             const intentClassifier = new IntentClassifier(
                 provider,
@@ -153,19 +143,14 @@ const handlersPlugin: FastifyPluginAsync = async (fastify) => {
             }
 
             // @ts-ignore
-            // @ts-ignore
             fastify.chatHandlers[providerName] = {
-                [AGENT_NAMES.ENTITY_GENERATOR]: entityGenerator,
-                [AGENT_NAMES.QUERY_GENERATOR]: queryGenerator,
+                [AGENT_NAMES.ENTITY_DESIGNER]: entityGenerator,
+                [AGENT_NAMES.QUERY_BUILDER]: queryGenerator,
                 [AGENT_NAMES.PAGE_PLANNER]: pagePlannerAgent,
-                [AGENT_NAMES.DATA_GENERATOR]: dataGenerator,
-                [AGENT_NAMES.PAGE_BUILDER]: pageBuilderAgent,
-                [AGENT_NAMES.ENGAGEMENT_BAR_GENERATOR]: engagementBarGenerator,
-                [AGENT_NAMES.USER_AVATAR_GENERATOR]: userAvatarGenerator,
-                [AGENT_NAMES.VISIT_TRACK_GENERATOR]: visitTrackGenerator,
-                [AGENT_NAMES.TOP_LIST_GENERATOR]: topListGenerator,
-
+                [AGENT_NAMES.DATA_SYNTHESIZER]: dataGenerator,
                 [AGENT_NAMES.PAGE_ARCHITECT]: pageArchitectAgent,
+                [AGENT_NAMES.SYSTEM_ARCHITECT]: systemArchitect,
+                ...addonHandlers,
             };
         } catch (error) {
             fastify.log.warn(`Failed to load prompts for provider "${providerName}": ${(error as Error).message}`);

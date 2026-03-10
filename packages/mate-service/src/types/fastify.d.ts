@@ -1,5 +1,5 @@
 import { AuthService } from '../services/auth-service';
-import { ChatService } from '../services/chat-service';
+import { OrchestratorService } from '../services/orchestrator-service';
 import { SocketService } from '../services/socket-service';
 import { StatusService } from '../services/status-service';
 import { IntentClassifier } from '../models/agents/intent-classifier';
@@ -8,13 +8,20 @@ import { FormCMSClient } from '../infrastructures/formcms-client';
 import type { ServerToClientEvents, ClientToServerEvents, User } from '@formmate/shared';
 import type { SessionStore } from '@fastify/session';
 import { PrismaClient } from '@prisma/client';
+import { IChatMessageRepository } from '../repositories/chat-message-repository';
+import { IAiResponseLogRepository } from '../repositories/ai-response-log-repository';
+import { IDesignStyleRepository } from '../repositories/design-style-repository';
+import { ISystemSettingRepository } from '../repositories/system-setting-repository';
+import { IAgentTaskRepository } from '../repositories/agent-task-repository';
+import { TaskOperator } from '../operators/task-operator';
 import '@fastify/session';
 
 declare module 'fastify' {
     interface FastifyInstance {
         prisma: PrismaClient;
         io: Server<ClientToServerEvents, ServerToClientEvents>;
-        chatService: ChatService;
+        orchestratorService: OrchestratorService;
+        taskOperator: TaskOperator;
         authService: AuthService;
         socketService: SocketService;
         statusService: StatusService;
@@ -22,6 +29,11 @@ declare module 'fastify' {
         aiProvider: Record<string, AIProvider>;
         formCMS: FormCMSClient;
         sessionStore: SessionStore;
+        chatMessageRepository: IChatMessageRepository;
+        aiResponseLogRepository: IAiResponseLogRepository;
+        designStyleRepository: IDesignStyleRepository;
+        systemSettingRepository: ISystemSettingRepository;
+        agentTaskRepository: IAgentTaskRepository;
         authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     }
 

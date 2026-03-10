@@ -1,0 +1,45 @@
+services:
+  app:
+    build:
+      context: ../../
+      dockerfile: formmate/mono-deploy-local/Dockerfile
+    image: formcms-mono-deploy:latest
+    ports:
+      - "${APP_PORT:-5000}:5000" # Nginx Gateway
+    environment:
+      # --- FormCMS (.NET) Settings ---
+      - DATABASE_PROVIDER=1 # 0=SQLite, 1=Postgres, 2=SqlServer, 3=MySQL
+      - CONNECTION_STRING=Host=db;Port=5432;Database=cms;Username=postgres;Password=postgres;
+      - MASTER_PASSWORD= # Empty - user sets via UI on first startup
+
+      - DatabaseProvider=Postgres
+      - "ConnectionStrings__Postgres=Host=db;Database=cms;Username=postgres;Password=postgres;"
+      - FORMCMS_DATA_PATH=/data
+
+      # --- FormMate (Node.js) Settings ---
+      - PORT=3001
+      - NODE_ENV=production
+      - FORMCMS_BASE_URL=http://127.0.0.1:5001 # Internal URL to reach .NET (matches entrypoint.sh)
+      - DATABASE_URL=file:/data/mate/sqlite.db
+
+    depends_on:
+      - db
+    restart: unless-stopped
+    volumes:
+      - formcms_data:/data
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=cms
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  formcms_data:

@@ -2,7 +2,6 @@
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
-    "rootDir": "src",
     "outDir": "dist",
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
@@ -37,5 +36,11 @@
     "skipLibCheck": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "paths": {
+      "@formmate/shared": [
+        "../shared/src/index.ts"
+      ]
+    }
   }
 }

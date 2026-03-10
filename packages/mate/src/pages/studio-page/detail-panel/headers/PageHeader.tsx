@@ -1,31 +1,65 @@
 import { useState, useRef, useEffect } from 'react';
-import { Trash2, Edit2, Layout, Sparkles, MessageSquarePlus, UserCircle, ChevronDown, Eye, TrendingUp } from 'lucide-react';
-import { type PageDto, AGENT_NAMES, type PageMetadata, ENDPOINTS } from '@formmate/shared';
+import {
+    Trash2, Edit2, Layout, Sparkles, ChevronDown, Code,
+    MessageSquarePlus, UserCircle, Eye, TrendingUp, Plus, Puzzle
+} from 'lucide-react';
+import { type PageDto, type PageMetadata, type PageComponentDefinition, ENDPOINTS } from '@formmate/shared';
 import axios from 'axios';
-import toast from 'react-hot-toast';
 import { HeaderLayout } from './HeaderLayout';
+// Icon lookup for dynamic addon rendering
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
+    MessageSquarePlus,
+    UserCircle,
+    Eye,
+    TrendingUp,
+    Plus,
+    Puzzle,
+};
+
+// Color class lookup
+const COLOR_MAP: Record<string, { text: string; bg: string }> = {
+    blue: { text: 'text-blue-600', bg: 'hover:bg-blue-500/10' },
+    green: { text: 'text-green-600', bg: 'hover:bg-green-500/10' },
+    orange: { text: 'text-orange-600', bg: 'hover:bg-orange-500/10' },
+    purple: { text: 'text-purple-600', bg: 'hover:bg-purple-500/10' },
+    red: { text: 'text-red-600', bg: 'hover:bg-red-500/10' },
+    cyan: { text: 'text-cyan-600', bg: 'hover:bg-cyan-500/10' },
+    pink: { text: 'text-pink-600', bg: 'hover:bg-pink-500/10' },
+};
 
 interface PageHeaderProps {
     page: PageDto;
     schemaId: string | null;
     publicationStatus?: string;
     onDelete: () => void;
-    onEdit: (tab: 'settings' | 'code') => void;
+    onEdit: (tab: 'settings' | 'code' | 'layout' | 'view-html') => void;
     onChatAction: (action: string) => void;
 }
 
 export function PageHeader({ page, schemaId, publicationStatus, onDelete, onEdit, onChatAction }: PageHeaderProps) {
     const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
+    const [addons, setAddons] = useState<PageComponentDefinition[]>([]);
     const addMenuRef = useRef<HTMLDivElement>(null);
 
     let metadata: PageMetadata = {};
     try {
         if (page.metadata) {
-            metadata = JSON.parse(page.metadata);
+            metadata = page.metadata;
         }
     } catch {
         // ignore
     }
+
+    // Fetch available addons from backend
+    useEffect(() => {
+        axios.get(ENDPOINTS.CHAT.PAGE_ADDONS, { withCredentials: true })
+            .then(res => {
+                if (res.data?.success && Array.isArray(res.data.data)) {
+                    setAddons(res.data.data);
+                }
+            })
+            .catch(err => console.warn('Failed to load page addons:', err));
+    }, []);
 
     // Close menu when clicking outside
     useEffect(() => {
@@ -38,85 +72,25 @@ export function PageHeader({ page, schemaId, publicationStatus, onDelete, onEdit
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleAddEngagementBar = async () => {
+    const handleTriggerAddon = (addon: PageComponentDefinition) => {
         setIsAddMenuOpen(false);
-        try {
-            const providerName = localStorage.getItem('formmate_selected_provider') || 'gemini';
-            toast.loading(`Triggering Engagement Bar Generator (${providerName})...`, { id: 'engagement-bar' });
-            await axios.post(`${''}${ENDPOINTS.CHAT.ENGAGEMENT_BAR}`, {
-                schemaId,
-                providerName
-            }, {
-                withCredentials: true
-            });
-            toast.success('Engagement Bar Generator triggered. Check chat for progress.', { id: 'engagement-bar' });
-        } catch (error) {
-            console.error(error);
-            toast.error('Failed to trigger Engagement Bar Generator', { id: 'engagement-bar' });
-        }
-    };
 
-    const handleAddUserAvatar = async () => {
-        setIsAddMenuOpen(false);
-        try {
-            const providerName = localStorage.getItem('formmate_selected_provider') || 'gemini';
-            toast.loading(`Triggering User Avatar Generator (${providerName})...`, { id: 'user-avatar' });
-            await axios.post(`${''}${ENDPOINTS.CHAT.USER_AVATAR}`, {
-                schemaId,
-                providerName
-            }, {
-                withCredentials: true
-            });
-            toast.success('User Avatar Generator triggered. Check chat for progress.', { id: 'user-avatar' });
-        } catch (error) {
-            console.error(error);
-            toast.error('Failed to trigger User Avatar Generator', { id: 'user-avatar' });
-        }
-    };
+        const message = `@page_architect#${schemaId} add a component ${addon.id}`;
 
-    const handleAddVisitTrack = async () => {
-        setIsAddMenuOpen(false);
-        try {
-            const providerName = localStorage.getItem('formmate_selected_provider') || 'gemini';
-            toast.loading(`Triggering Visit Track Generator (${providerName})...`, { id: 'visit-track' });
-            await axios.post(`${''}${ENDPOINTS.CHAT.VISIT_TRACK}`, {
-                schemaId,
-                providerName
-            }, {
-                withCredentials: true
-            });
-            toast.success('Visit Track Generator triggered. Check chat for progress.', { id: 'visit-track' });
-        } catch (error) {
-            console.error(error);
-            toast.error('Failed to trigger Visit Track Generator', { id: 'visit-track' });
-        }
-    };
-
-    const handleAddTopList = async () => {
-        setIsAddMenuOpen(false);
-        try {
-            const providerName = localStorage.getItem('formmate_selected_provider') || 'gemini';
-            toast.loading(`Triggering Top List Generator (${providerName})...`, { id: 'top-list' });
-            await axios.post(`${''}${ENDPOINTS.CHAT.TOP_LIST}`, {
-                schemaId,
-                providerName
-            }, {
-                withCredentials: true
-            });
-            toast.success('Top List Generator triggered. Check chat for progress.', { id: 'top-list' });
-        } catch (error) {
-            console.error(error);
-            toast.error('Failed to trigger Top List Generator', { id: 'top-list' });
-        }
+        onChatAction(message);
     };
 
     // Determine page type
     const isDetailPage = metadata.plan?.pageType === 'detail';
     const isListPage = metadata.plan?.pageType === 'list';
+    const currentPageType = isDetailPage ? 'detail' : isListPage ? 'list' : null;
 
-    // Show dropdown for detail pages (all 4 features) and list pages (3 features, no engagement bar)
-    // Buttons are always available so users can ask LLM to modify existing features
-    const hasAddOptions = (isDetailPage || isListPage) && metadata.plan?.entityName;
+    // Filter addons by current page type
+    const availableAddons = currentPageType
+        ? addons.filter(a => a.pageTypes.includes(currentPageType as 'detail' | 'list'))
+        : [];
+
+    const hasAddOptions = availableAddons.length > 0 && metadata.plan?.entityName;
 
     return (
         <HeaderLayout
@@ -126,17 +100,26 @@ export function PageHeader({ page, schemaId, publicationStatus, onDelete, onEdit
             publicationStatus={publicationStatus}
             icon={<Layout className="w-5 h-5" />}
             menuItems={
-                <button
-                    onClick={onDelete}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-500/10 transition-colors text-left"
-                >
-                    <Trash2 className="w-4 h-4" />
-                    Delete Page
-                </button>
+                <>
+                    <button
+                        onClick={() => onEdit('view-html')}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-primary hover:bg-app-muted transition-colors text-left"
+                    >
+                        <Code className="w-4 h-4 text-primary-muted" />
+                        View HTML
+                    </button>
+                    <button
+                        onClick={onDelete}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-500/10 transition-colors text-left"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        Delete Page
+                    </button>
+                </>
             }
         >
             <button
-                onClick={() => onChatAction(`@${AGENT_NAMES.PAGE_PLANNER}#${schemaId}:`)}
+                onClick={() => onChatAction(`@page_architect#${schemaId}`)}
                 className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 rounded-lg text-xs font-bold transition-all border border-purple-500/20"
             >
                 <Sparkles className="w-3.5 h-3.5 fill-current" />
@@ -146,7 +129,7 @@ export function PageHeader({ page, schemaId, publicationStatus, onDelete, onEdit
             {hasAddOptions && (
                 <div className="relative ml-1" ref={addMenuRef}>
                     <button
-                        onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
+                        onClick={() => setIsAddMenuOpen(prev => !prev)}
                         className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 rounded-lg text-xs font-bold transition-all border border-blue-500/20"
                     >
                         <Sparkles className="w-3.5 h-3.5" />
@@ -155,41 +138,26 @@ export function PageHeader({ page, schemaId, publicationStatus, onDelete, onEdit
                     </button>
 
                     {isAddMenuOpen && (
-                        <div className="absolute top-full left-0 mt-1 bg-app-surface border border-border rounded-lg shadow-lg z-50 min-w-[180px] py-1">
-                            {isDetailPage && (
-                                <button
-                                    onClick={handleAddEngagementBar}
-                                    className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-500/10 transition-colors text-left"
-                                >
-                                    <MessageSquarePlus className="w-4 h-4" />
-                                    Engagement Bar
-                                </button>
-                            )}
-                            <button
-                                onClick={handleAddUserAvatar}
-                                className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-green-600 hover:bg-green-500/10 transition-colors text-left"
-                            >
-                                <UserCircle className="w-4 h-4" />
-                                User Avatar
-                            </button>
-                            <button
-                                onClick={handleAddVisitTrack}
-                                className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-orange-600 hover:bg-orange-500/10 transition-colors text-left"
-                            >
-                                <Eye className="w-4 h-4" />
-                                Visit Tracking
-                            </button>
-                            <button
-                                onClick={handleAddTopList}
-                                className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-purple-600 hover:bg-purple-500/10 transition-colors text-left"
-                            >
-                                <TrendingUp className="w-4 h-4" />
-                                Top List
-                            </button>
+                        <div className="absolute top-full left-0 mt-1 bg-app-surface border border-border rounded-lg shadow-lg z-50 min-w-[240px] py-1">
+                            {availableAddons.map(addon => {
+                                const IconComponent = ICON_MAP[addon.icon] || Puzzle;
+                                const colors = COLOR_MAP[addon.color] || COLOR_MAP.blue;
+                                return (
+                                    <button
+                                        key={addon.id}
+                                        onClick={() => handleTriggerAddon(addon)}
+                                        className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-bold ${colors.text} ${colors.bg} transition-colors text-left`}
+                                    >
+                                        <IconComponent className="w-4 h-4" />
+                                        {addon.label}
+                                    </button>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
-            )}
+            )
+            }
 
             <div className="flex bg-app-muted p-0.5 rounded-lg ml-1">
                 <button
@@ -200,13 +168,14 @@ export function PageHeader({ page, schemaId, publicationStatus, onDelete, onEdit
                     Settings
                 </button>
                 <button
-                    onClick={() => onEdit('code')}
+                    onClick={() => onEdit('layout')}
                     className="flex items-center gap-2 px-3 py-1.5 text-primary-muted hover:text-primary rounded-md text-xs font-bold transition-all"
                 >
-                    Edit Source
+                    <Layout className="w-3.5 h-3.5" />
+                    Edit Layout
                 </button>
             </div>
-        </HeaderLayout>
+        </HeaderLayout >
     );
 }
 

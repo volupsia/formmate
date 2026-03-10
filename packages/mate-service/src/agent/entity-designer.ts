@@ -1,0 +1,136 @@
+import type { AIProvider } from '../infrastructures/ai-provider.interface';
+import type { FormCMSClient } from '../infrastructures/formcms-client';
+import type { ServiceLogger } from '../types/logger';
+import { type AgentContext, type Agent, type ThinkResult, type ActResult, type FinalizeResult } from './chat-assistant';
+import { type EntityDto, type RelationshipDto, AGENT_NAMES } from '@formmate/shared';
+import { EntityModel } from '../models/entity-model';
+import { RelationshipModel } from '../models/relationship-model';
+import { EntityOperator } from '../operators/entity-operator';
+
+export interface EntityGeneratorResponse {
+    entities: EntityDto[];
+    relationships: RelationshipDto[];
+}
+
+export interface EntityGeneratorPlan extends EntityGeneratorResponse {
+    existingContext?: string;
+    userInput: string;
+}
+
+export class EntityGenerator implements Agent<EntityGeneratorPlan> {
+    constructor(
+        private readonly aiProvider: AIProvider,
+        private readonly systemPrompt: string,
+        private readonly entitySchema: string,
+        private readonly attributeSchema: string,
+        private readonly relationshipSchema: string,
+        private readonly formCMSClient: FormCMSClient,
+        private readonly logger: ServiceLogger,
+        private readonly entityOperator: EntityOperator,
+    ) { }
+
+    async create(userInput: string, existingContext?: string, context?: AgentContext): Promise<{ response: EntityGeneratorResponse, developerMessage: string }> {
+        let schemasText = [
+            { name: 'entity', content: this.entitySchema },
+            { name: 'attribute', content: this.attributeSchema },
+            { name: 'relationship', content: this.relationshipSchema }
+        ].map(s => `${s.name.toUpperCase()} SCHEMA:\n${s.content}`).join('\n\n');
+
+        if (existingContext) {
+            schemasText += `\n\n${existingContext}`;
+        }
+
+
+
+        const response = await this.aiProvider.generate(
+            this.systemPrompt,
+            schemasText,
+            userInput,
+            { ...context?.signal ? { signal: context.signal } : {}, parseJson: true }
+        );
+
+        let responseJson: any;
+        if (typeof response === 'string') {
+            responseJson = JSON.parse(response);
+        } else {
+            responseJson = response;
+        }
+        return { response: responseJson, developerMessage: schemasText };
+    }
+
+    async think(userInput: string, context: AgentContext): Promise<ThinkResult<EntityGeneratorPlan>> {
+        let existingContext = '';
+        const idMatch = userInput.match(new RegExp(`${AGENT_NAMES.ENTITY_DESIGNER}#([^:]+):`));
+
+        if (idMatch) {
+            const schemaId = idMatch[1] as string;
+            try {
+                const existingSchema = await this.formCMSClient.getSchemaBySchemaId(context.externalCookie, schemaId);
+                if (existingSchema && existingSchema.settings.entity) {
+                    const ent = existingSchema.settings.entity;
+                    existingContext = `EXISTING ENTITY SCHEMA FOR "${ent.name}" (ID: ${schemaId}):\n${JSON.stringify({
+                        name: ent.name,
+                        tableName: ent.tableName,
+                        attributes: ent.attributes
+                    }, null, 2)}`;
+                    await context.saveAgentMessage(`I found the existing entity "${ent.name}". I'll fetch its schema and help you modify it...`);
+                }
+            } catch (e) {
+                await context.saveAgentMessage(`I couldn't find an existing entity with ID "${schemaId}". I'll proceed with generating what you need...`);
+            }
+        } else {
+            await context.saveAgentMessage('Analyzing your requirements and generating the schema...');
+        }
+
+        const { response: resp, developerMessage } = await this.create(userInput, existingContext, context);
+
+        return {
+            plan: {
+                ...resp,
+                existingContext,
+                userInput
+            },
+            prompts: {
+                systemPrompt: this.systemPrompt,
+                developerMessage,
+                userInput
+            }
+        };
+    }
+
+    async act(plan: EntityGeneratorPlan, context: AgentContext): Promise<ActResult<EntityGeneratorPlan>> {
+        // Normalize: handle cases where AI might return 'fields' instead of 'attributes'
+        const entities = (plan.entities || []).map((e: any) => ({
+            ...e,
+            attributes: e.attributes || e.fields || []
+        }));
+
+        // normalize attributes using model behavior
+        const normalizedEntities = entities.map((entity: any) => new EntityModel(entity).normalize());
+        const normalizedRelationships = (plan.relationships || []).map(r => new RelationshipModel(r).normalize());
+
+        // Compare with FormCMS to categorize entities and create summary
+        const summary = await this.entityOperator.prepareSummary(
+            normalizedEntities,
+            normalizedRelationships,
+            plan.userInput,
+            context.externalCookie
+        );
+
+        // Return summary as feedback data — OrchestratorService will compose the payload and emit the event
+        return { feedback: summary, syncedSchemaIds: [] };
+    }
+
+    async finalize(feedbackData: any, context: AgentContext): Promise<FinalizeResult> {
+        const response = feedbackData;
+        if (!response.entities || response.entities.length === 0) {
+            await context.saveAgentMessage('No entities provided to commit.');
+            return { syncedSchemaIds: [] };
+        }
+        const entityNames = response.entities.map((e: any) => e.name).join(', ');
+
+        const schemaIds = await this.entityOperator.commit(response, context.externalCookie);
+        await context.saveAgentMessage(`All confirmed entities have been committed to the system: ${entityNames}`);
+        return { syncedSchemaIds: schemaIds };
+    }
+}

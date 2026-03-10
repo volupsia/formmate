@@ -1,18 +1,15 @@
 import type { ChatMessage } from './contracts.js';
-import { SchemaSummary } from './dtos.js';
 import type { AgentName } from './constants.js';
 
 export const SOCKET_EVENTS = {
     CHAT: {
         SEND_MESSAGE: 'chat:send_message',
         MESSAGE_RECEIVED: 'chat:message_received',
-        SCHEMA_SUMMARY_TO_CONFIRM: 'chat:schema_summary_to_confirm',
-        SCHEMA_SUMMARY_RESPONSE: 'chat:schema_summary_response',
         SCHEMAS_SYNC: 'chat:schemas_sync',
-        // TEMPLATE_SELECTION_TO_CONFIRM: 'chat:template_selection_to_confirm',
-        TEMPLATE_SELECTION_LIST_TO_CONFIRM: 'chat:template_selection_list_to_confirm',
-        TEMPLATE_SELECTION_DETAIL_TO_CONFIRM: 'chat:template_selection_detail_to_confirm',
-        TEMPLATE_SELECTION_RESPONSE: 'chat:template_selection_response',
+        // Unified feedback events
+        AGENT_PLAN_TO_CONFIRM: 'chat:agent_plan_to_confirm',
+        AGENT_FEEDBACK_RESPONSE: 'chat:agent_feedback_response',
+        AGENT_STATUS: 'chat:agent_status',
     }
 } as const;
 
@@ -23,17 +20,16 @@ export interface SystemMessagePayload {
 
 export interface ServerToClientEvents {
     [SOCKET_EVENTS.CHAT.MESSAGE_RECEIVED]: (message: ChatMessage) => void;
-    [SOCKET_EVENTS.CHAT.SCHEMA_SUMMARY_TO_CONFIRM]: (summary: SchemaSummary) => void;
     [SOCKET_EVENTS.CHAT.SCHEMAS_SYNC]: (data: SystemMessagePayload) => void;
-    [SOCKET_EVENTS.CHAT.TEMPLATE_SELECTION_LIST_TO_CONFIRM]: (data: any) => void;
-    [SOCKET_EVENTS.CHAT.TEMPLATE_SELECTION_DETAIL_TO_CONFIRM]: (data: any) => void;
-
+    // Unified feedback event
+    [SOCKET_EVENTS.CHAT.AGENT_PLAN_TO_CONFIRM]: (data: { agentName: AgentName; data: any; agentTaskItem?: any }) => void;
+    [SOCKET_EVENTS.CHAT.AGENT_STATUS]: (data: { agentName: string | null; createdAt?: number }) => void;
 }
 
 export interface ClientToServerEvents {
     [SOCKET_EVENTS.CHAT.SEND_MESSAGE]: (data: { content: string, providerName?: string }) => void;
-    [SOCKET_EVENTS.CHAT.SCHEMA_SUMMARY_RESPONSE]: (data: SchemaSummary) => void;
-    [SOCKET_EVENTS.CHAT.TEMPLATE_SELECTION_RESPONSE]: (data: any) => void;
+    // Unified feedback response
+    [SOCKET_EVENTS.CHAT.AGENT_FEEDBACK_RESPONSE]: (data: { agentName: string; feedbackData: any; selection?: any }) => void;
 }
 
 export interface InterServerEvents {

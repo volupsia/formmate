@@ -1,30 +1,32 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { type SchemaDto, type SaveSchemaPayload, type ParsedPageDto } from '@formmate/shared';
+import { type SchemaDto, type SaveSchemaPayload, type ParsedPageDto, LayoutCompiler } from '@formmate/shared';
 import { useSchemas } from '../../../../hooks/use-schemas';
 import { useSocket } from '../../../../hooks/use-socket';
 import { PublishConfirmDialog } from '../shared/PublishConfirmDialog';
 import { PageEditHeader } from './components/PageEditHeader';
 import { PageEditSettings } from './components/PageEditSettings';
+import { PageEditLayout } from './components/PageEditLayout';
 import { PageEditSource } from './components/PageEditSource';
 
 interface PageEditProps {
     item: SchemaDto;
-    initialTab?: 'settings' | 'code';
-    onTabChange?: (tab: 'settings' | 'code') => void;
+    initialTab?: 'settings' | 'layout' | 'view-html';
+    onTabChange?: (tab: 'settings' | 'layout' | 'view-html') => void;
     onSave: (payload: SaveSchemaPayload, skipNavigate?: boolean) => Promise<void>;
     onCancel: () => void;
+    onSendMessage?: (msg: string) => void;
 }
 
-export function PageEdit({ item, initialTab = 'settings', onTabChange, onSave, onCancel }: PageEditProps) {
-    const [activeTab, setActiveTab] = useState<'settings' | 'code'>(initialTab);
+export function PageEdit({ item, initialTab = 'settings', onTabChange, onSave, onCancel, onSendMessage }: PageEditProps) {
+    const [activeTab, setActiveTab] = useState<'settings' | 'layout' | 'view-html'>(initialTab);
 
     // Sync internal state if prop changes (e.g. via URL)
     if (initialTab !== activeTab) {
         setActiveTab(initialTab);
     }
 
-    const handleTabChange = (tab: 'settings' | 'code') => {
+    const handleTabChange = (tab: 'settings' | 'layout' | 'view-html') => {
         setActiveTab(tab);
         onTabChange?.(tab);
     };
@@ -37,12 +39,10 @@ export function PageEdit({ item, initialTab = 'settings', onTabChange, onSave, o
     const { } = useSocket();
     const [pageForm, setPageForm] = useState<ParsedPageDto>(() => {
         const initialForm = JSON.parse(JSON.stringify(item.settings.page));
-        if (typeof initialForm.metadata === 'string') {
+        if (!initialForm.metadata || typeof initialForm.metadata === 'string') {
             try {
-                initialForm.metadata = JSON.parse(initialForm.metadata);
+                initialForm.metadata = initialForm.metadata ? JSON.parse(initialForm.metadata) : {};
             } catch (e) {
-                // If parsing fails for some reason, we might have issue matching ParsedPageDto.metadata type
-                // But for now let's assume it parses or handle empty object fallback
                 initialForm.metadata = {};
             }
         }
@@ -54,13 +54,27 @@ export function PageEdit({ item, initialTab = 'settings', onTabChange, onSave, o
             setIsSaving(true);
             setError(null);
 
+            let htmlToSave = pageForm.html;
+
+            // Compile the architecture into Tailwind Grid HTML if it exists
+            if (pageForm.metadata?.architecture?.sections) {
+                const components = pageForm.metadata.components || [];
+                htmlToSave = LayoutCompiler.compile(
+                    pageForm.metadata.architecture.sections,
+                    components,
+                    pageForm.title,
+                    { enableVisitTrack: pageForm.metadata.enableVisitTrack }
+                );
+            }
+
             const payload: SaveSchemaPayload = {
                 schemaId: item.schemaId,
                 type: 'page',
                 settings: {
                     page: {
                         ...pageForm,
-                        metadata: JSON.stringify(pageForm.metadata)
+                        html: htmlToSave,
+                        metadata: pageForm.metadata
                     }
                 }
             };
@@ -95,8 +109,20 @@ export function PageEdit({ item, initialTab = 'settings', onTabChange, onSave, o
 
 
     const updateField = (field: keyof ParsedPageDto, value: any) => {
+        let updatedForm = { ...pageForm, [field]: value };
 
-        setPageForm({ ...pageForm, [field]: value });
+        // Auto-recompile HTML when title or metadata (e.g. tracking toggle) changes
+        if ((field === 'title' || field === 'metadata') && updatedForm.metadata?.architecture?.sections) {
+            const components = updatedForm.metadata.components || [];
+            updatedForm.html = LayoutCompiler.compile(
+                updatedForm.metadata.architecture.sections,
+                components,
+                updatedForm.title,
+                { enableVisitTrack: updatedForm.metadata.enableVisitTrack }
+            );
+        }
+
+        setPageForm(updatedForm);
     };
 
     return (
@@ -125,7 +151,19 @@ export function PageEdit({ item, initialTab = 'settings', onTabChange, onSave, o
                         />
                     )}
 
-                    {activeTab === 'code' && (
+                    {activeTab === 'layout' && (
+                        <PageEditLayout
+                            item={item}
+                            pageForm={pageForm}
+                            onUpdateField={updateField}
+                            onSave={handleSave}
+                            onCancel={onCancel}
+                            onSendMessage={onSendMessage}
+                            isSaving={isSaving}
+                        />
+                    )}
+
+                    {activeTab === 'view-html' && (
                         <PageEditSource
                             item={item}
                             pageForm={pageForm}
@@ -133,6 +171,7 @@ export function PageEdit({ item, initialTab = 'settings', onTabChange, onSave, o
                             onSave={handleSave}
                             onCancel={onCancel}
                             isSaving={isSaving}
+                            readOnly={true}
                         />
                     )}
                 </div>
