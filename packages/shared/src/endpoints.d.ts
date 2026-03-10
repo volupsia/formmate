@@ -58,6 +58,7 @@ export declare const ENDPOINTS: {
     };
     readonly MATE_TASKS: {
         readonly LATEST: "/mateapi/tasks";
+        readonly TOGGLE_ITEM: "/mateapi/tasks/:taskId/items/:index/toggle";
     };
     readonly ENTITIES: {
         readonly LIST: "/api/entities/:schemaName";
