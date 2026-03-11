@@ -27,6 +27,8 @@ export function MessageList({ messages, isLoading, isReachingEnd, isFetchingMore
         }
     }, [messages.length, isLoading]);
 
+    const lastMessage = messages[messages.length - 1];
+
     // Scroll to bottom on new messages (if already at bottom or if it's a new message from user/agent)
     useEffect(() => {
         if (isInitialScrollDone.current && messages.length > 0) {
@@ -37,7 +39,7 @@ export function MessageList({ messages, isLoading, isReachingEnd, isFetchingMore
             // this effect will handle regular new messages.
             scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
         }
-    }, [messages.length]);
+    }, [lastMessage?.id, lastMessage?.content]);
 
     const handleInternalLoadMore = async () => {
         const scrollContainer = mainRef.current;
@@ -63,7 +65,7 @@ export function MessageList({ messages, isLoading, isReachingEnd, isFetchingMore
     }
 
     return (
-        <main ref={mainRef} className="flex-1 overflow-y-auto p-4 md:p-8 space-y-2">
+        <main ref={mainRef} className="flex-1 overflow-y-auto px-1 py-2">
             <div className="max-w-3xl mx-auto">
                 <div className="flex items-center justify-center mb-6">
                     {!isReachingEnd && (

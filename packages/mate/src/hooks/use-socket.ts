@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { SOCKET_EVENTS, type ChatMessage, type SchemaSummary, type SystemMessagePayload } from '@formmate/shared';
+import { SOCKET_EVENTS, type ChatMessage, type SystemMessagePayload } from '@formmate/shared';
 import { useSocketContext } from '../context/socket-provider';
 
 export function useSocket() {
@@ -18,13 +18,7 @@ export function useSocket() {
         };
     }, [socket]);
 
-    const onSchemaSummaryToConfirm = useCallback((callback: (data: SchemaSummary) => void) => {
-        if (!socket) return () => { };
-        socket.on(SOCKET_EVENTS.CHAT.SCHEMA_SUMMARY_TO_CONFIRM, callback);
-        return () => {
-            socket.off(SOCKET_EVENTS.CHAT.SCHEMA_SUMMARY_TO_CONFIRM, callback);
-        };
-    }, [socket]);
+
 
     const onSchemasSync = useCallback((callback: (data: SystemMessagePayload) => void) => {
         if (!socket) return () => { };
@@ -34,39 +28,34 @@ export function useSocket() {
         };
     }, [socket]);
 
-    const sendSchemaResponse = useCallback((data: SchemaSummary) => {
-        socket?.emit(SOCKET_EVENTS.CHAT.SCHEMA_SUMMARY_RESPONSE, data);
-    }, [socket]);
 
-    const onTemplateSelectionListToConfirm = useCallback((callback: (data: any) => void) => {
+    const onAgentPlanToConfirm = useCallback((callback: (data: { agentName: string; data: any; agentTaskItem?: any }) => void) => {
         if (!socket) return () => { };
-        socket.on(SOCKET_EVENTS.CHAT.TEMPLATE_SELECTION_LIST_TO_CONFIRM, callback);
+        socket.on(SOCKET_EVENTS.CHAT.AGENT_PLAN_TO_CONFIRM, callback);
         return () => {
-            socket.off(SOCKET_EVENTS.CHAT.TEMPLATE_SELECTION_LIST_TO_CONFIRM, callback);
+            socket.off(SOCKET_EVENTS.CHAT.AGENT_PLAN_TO_CONFIRM, callback);
         };
     }, [socket]);
 
-    const onTemplateSelectionDetailToConfirm = useCallback((callback: (data: any) => void) => {
-        if (!socket) return () => { };
-        socket.on(SOCKET_EVENTS.CHAT.TEMPLATE_SELECTION_DETAIL_TO_CONFIRM, callback);
-        return () => {
-            socket.off(SOCKET_EVENTS.CHAT.TEMPLATE_SELECTION_DETAIL_TO_CONFIRM, callback);
-        };
+    const sendAgentFeedbackResponse = useCallback((data: { agentName: string; feedbackData: any; selection?: any }) => {
+        socket?.emit(SOCKET_EVENTS.CHAT.AGENT_FEEDBACK_RESPONSE, data);
     }, [socket]);
 
-    const sendTemplateSelectionResponse = useCallback((data: any) => {
-        socket?.emit(SOCKET_EVENTS.CHAT.TEMPLATE_SELECTION_RESPONSE, data);
+    const onAgentStatus = useCallback((callback: (data: { agentName: string | null, createdAt?: number }) => void) => {
+        if (!socket) return () => { };
+        socket.on(SOCKET_EVENTS.CHAT.AGENT_STATUS, callback);
+        return () => {
+            socket.off(SOCKET_EVENTS.CHAT.AGENT_STATUS, callback);
+        };
     }, [socket]);
 
     return {
         isConnected,
         sendMessage,
-        sendSchemaResponse,
-        sendTemplateSelectionResponse,
         onMessageReceived,
-        onSchemaSummaryToConfirm,
-        onTemplateSelectionListToConfirm,
-        onTemplateSelectionDetailToConfirm,
+        onAgentPlanToConfirm,
+        sendAgentFeedbackResponse,
         onSchemasSync,
+        onAgentStatus,
     };
 }

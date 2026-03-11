@@ -1,0 +1,58 @@
+<!-- Pagination Component — Cursor-Based -->
+<!-- Embed cursor markers inside your {{#each}} data loop -->
+<!-- query.last.cursor -->
+{{#each items}}
+<span class="hidden pagination-cursor-marker" data-cursor="{{this.cursor}}"
+    data-has-previous-page="{{this.hasPreviousPage}}" data-has-next-page="{{this.hasNextPage}}"></span>
+{{/each}}
+
+<!-- Pagination Controls -->
+<nav x-data="{
+    prevUrl: '',
+    nextUrl: '',
+    hasPrev: false,
+    hasNext: false,
+    init() {
+        const markers = document.querySelectorAll('.pagination-cursor-marker');
+
+        if (markers.length > 0) {
+            const firstMarker = markers[0];
+            const lastMarker = markers[markers.length - 1];
+
+            const firstCursor = firstMarker.getAttribute('data-cursor');
+            const lastCursor = lastMarker.getAttribute('data-cursor');
+            
+            this.hasPrev = firstMarker.getAttribute('data-has-previous-page').toLowerCase() === 'true';
+            this.hasNext = lastMarker.getAttribute('data-has-next-page').toLowerCase() === 'true';
+
+            if (this.hasPrev && firstCursor) {
+                const prevParams = new URLSearchParams(window.location.search);
+                prevParams.delete('last');
+                prevParams.set('first', firstCursor);
+                this.prevUrl = window.location.pathname + '?' + prevParams.toString();
+            }
+
+            if (this.hasNext && lastCursor) {
+                const nextParams = new URLSearchParams(window.location.search);
+                nextParams.delete('first');
+                nextParams.set('last', lastCursor);
+                this.nextUrl = window.location.pathname + '?' + nextParams.toString();
+            }
+        }
+    }
+}" class="flex justify-center items-center gap-4 py-8">
+    <a x-show="hasPrev" :href="prevUrl"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Previous
+    </a>
+    <a x-show="hasNext" :href="nextUrl"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors">
+        Next
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+    </a>
+</nav>

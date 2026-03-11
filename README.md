@@ -78,6 +78,7 @@ docker run -d \
   -v formcms_data:/data \
   -e DATABASE_PROVIDER=0 \
   -e "CONNECTION_STRING=Data Source=/data/cms.db" \
+  -e FORMCMS_DATA_PATH=/data \
   jaike/formcms-mono:latest
 ```
 

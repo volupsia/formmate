@@ -4,7 +4,7 @@ import { Layout, AlertTriangle, Trash2 } from 'lucide-react';
 import { SchemaGraph } from './SchemaGraph';
 import { EntityDetail } from './entity/EntityDetail';
 import { QueryDetail } from './query/QueryDetail';
-import { PageDetail } from './page/PageDetail';
+import { PageDetail, type PageDetailRef } from './page/PageDetail';
 import { EntityHeader } from './headers/EntityHeader';
 import { QueryHeader } from './headers/QueryHeader';
 import { PageHeader } from './headers/PageHeader';
@@ -12,13 +12,24 @@ import { PageHeader } from './headers/PageHeader';
 interface DetailViewProps {
     item: SchemaDto | null;
     schemas: SchemaDto[];
-    onEdit: (tab?: 'settings' | 'code') => void;
+    onEdit: (tab?: 'settings' | 'code' | 'layout' | 'view-html') => void;
     onDelete: () => void;
     onSelect: (item: SchemaDto) => void;
     onChatAction: (action: string) => void;
 }
 
+import { useRef } from 'react';
+
 export function DetailView({ item, schemas, onEdit, onDelete, onSelect, onChatAction }: DetailViewProps) {
+    const pageDetailRef = useRef<PageDetailRef>(null);
+
+    const handleChatAction = (action: string) => {
+        if (action.startsWith('@add-custom-html#') && pageDetailRef.current) {
+            pageDetailRef.current.handleAddCustomHtml();
+        } else {
+            onChatAction(action);
+        }
+    };
 
     if (!item) {
         return (
@@ -89,7 +100,7 @@ export function DetailView({ item, schemas, onEdit, onDelete, onSelect, onChatAc
                     publicationStatus={item.publicationStatus}
                     onDelete={onDelete}
                     onEdit={onEdit}
-                    onChatAction={onChatAction}
+                    onChatAction={handleChatAction}
                 />
             )}
 
@@ -100,7 +111,7 @@ export function DetailView({ item, schemas, onEdit, onDelete, onSelect, onChatAc
                     publicationStatus={item.publicationStatus}
                     onDelete={onDelete}
                     onEdit={onEdit}
-                    onChatAction={onChatAction}
+                    onChatAction={handleChatAction}
                 />
             )}
 
@@ -111,12 +122,12 @@ export function DetailView({ item, schemas, onEdit, onDelete, onSelect, onChatAc
                     publicationStatus={item.publicationStatus}
                     onDelete={onDelete}
                     onEdit={onEdit}
-                    onChatAction={onChatAction}
+                    onChatAction={handleChatAction}
                 />
             )}
 
-            <div className={`flex-1 overflow-auto p-6 ${item.type === 'query' ? 'flex flex-col' : ''}`}>
-                <div className={`space-y-8 ${item.type === 'page' ? 'w-full' : 'max-w-5xl'} ${item.type === 'query' ? 'flex-1 h-full' : ''}`}>
+            <div className={`flex-1 overflow-auto p-6 ${['query', 'page'].includes(item.type) ? 'flex flex-col' : ''}`}>
+                <div className={`space-y-8 ${item.type === 'page' ? 'w-full flex-1 flex flex-col h-full' : 'max-w-5xl'} ${item.type === 'query' ? 'flex-1 h-full' : ''}`}>
                     {item.type === 'entity' && entity && (
                         <EntityDetail schema={item} allSchemas={schemas} />
                     )}
@@ -126,7 +137,15 @@ export function DetailView({ item, schemas, onEdit, onDelete, onSelect, onChatAc
                     )}
 
                     {item.type === 'page' && item.settings?.page && (
-                        <PageDetail schema={item} />
+                        <PageDetail
+                            ref={pageDetailRef}
+                            schema={item}
+                            onChatAction={handleChatAction}
+                            onEditSource={(id) => {
+                                // Transition to layout editor mode and pass block ID
+                                onEdit(`layout&block=${id}` as any);
+                            }}
+                        />
                     )}
 
                     {item.type !== 'entity' && item.type !== 'query' && item.type !== 'page' && (

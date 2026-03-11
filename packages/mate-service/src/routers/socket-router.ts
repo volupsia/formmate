@@ -1,9 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { type Socket } from 'socket.io';
-import { SOCKET_EVENTS, type ClientToServerEvents, type ServerToClientEvents, type InterServerEvents, type SocketData, type SchemaSummary, type OnServerToClientEvent } from '@formmate/shared';
+import { SOCKET_EVENTS, type ClientToServerEvents, type ServerToClientEvents, type InterServerEvents, type SocketData, type OnServerToClientEvent, type ModelSelection, type AgentName } from '@formmate/shared';
 import { formatError } from '../utils/error-formatter';
-
-import { config } from '../config';
 
 const socketHandlerPlugin: FastifyPluginAsync = async (fastify) => {
     fastify.ready((err) => {
@@ -17,28 +15,37 @@ const socketHandlerPlugin: FastifyPluginAsync = async (fastify) => {
                 socket.emit(event, ...args);
             };
 
-            socket.on(SOCKET_EVENTS.CHAT.SEND_MESSAGE, async (data: { content: string, providerName?: string }) => {
+            // Re-send latest status on connect
+            const currentStatus = fastify.statusService.getStatus(userId);
+            if (currentStatus) {
+                onEvent(SOCKET_EVENTS.CHAT.AGENT_STATUS, currentStatus);
+            } else {
+                onEvent(SOCKET_EVENTS.CHAT.AGENT_STATUS, { agentName: null });
+            }
+
+            socket.on(SOCKET_EVENTS.CHAT.SEND_MESSAGE, async (data: { content: string, selection?: ModelSelection }) => {
                 try {
-                    const providerName = data.providerName || config.AI_PROVIDER;
-                    await fastify.chatService.handleUserMessage(userId, data.content, socket.data.externalCookie, providerName, onEvent);
+                    const selection = data.selection || 'gemini/gemini-3-flash';
+                    await fastify.orchestratorService.processInput(userId, data.content, socket.data.externalCookie, selection, onEvent);
                 } catch (error) {
                     console.error('Error handling message:', formatError(error));
                 }
             });
 
-            socket.on(SOCKET_EVENTS.CHAT.SCHEMA_SUMMARY_RESPONSE, async (data: SchemaSummary) => {
+            // Unified feedback response handler — replaces individual schema/template/system listeners
+            socket.on(SOCKET_EVENTS.CHAT.AGENT_FEEDBACK_RESPONSE, async (data: { agentName: string; feedbackData: any; selection?: ModelSelection }) => {
                 try {
-                    await fastify.chatService.handleSchemaSummaryResponse(userId, data, socket.data.externalCookie, onEvent);
+                    const selection = data.selection || 'gemini/gemini-3-flash';
+                    await fastify.orchestratorService.handleAgentFeedback(
+                        userId,
+                        data.agentName as AgentName,
+                        data.feedbackData,
+                        socket.data.externalCookie,
+                        selection,
+                        onEvent
+                    );
                 } catch (error) {
-                    console.error('Error handling schema summary response:', formatError(error));
-                }
-            });
-
-            socket.on(SOCKET_EVENTS.CHAT.TEMPLATE_SELECTION_RESPONSE, async (data: any) => {
-                try {
-                    await fastify.chatService.handleTemplateSelectionResponse(userId, data, socket.data.externalCookie, onEvent);
-                } catch (error) {
-                    console.error('Error handling template selection response:', formatError(error));
+                    console.error('Error handling agent feedback response:', formatError(error));
                 }
             });
 

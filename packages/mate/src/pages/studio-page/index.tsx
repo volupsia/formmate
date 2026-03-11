@@ -6,7 +6,7 @@ import { useSocket } from '../../hooks/use-socket';
 import { useSchemas } from '../../hooks/use-schemas';
 import { useSocketContext } from '../../context/socket-provider';
 import { Loader2 } from 'lucide-react';
-import { type ChatMessage, type SchemaSummary, type SchemaDto, type SaveSchemaPayload, type TemplateSelectionRequest } from '@formmate/shared';
+import { type ChatMessage, type SchemaSummary, type SchemaDto, type SaveSchemaPayload, type TemplateSelectionRequest, type SystemRequirment, AGENT_NAMES } from '@formmate/shared';
 import { StudioHeader } from './StudioHeader';
 import { Explorer } from './explorer-panel/Explorer';
 import { DetailView } from './detail-panel/DetailView';
@@ -17,6 +17,7 @@ import { ChatPanel } from './chat-panel/ChatPanel';
 import { SchemaConfirmationModal } from './chat-panel/entity-confirm';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { TemplateSelectionDialog } from './TemplateSelectionDialog';
+import { SystemPlanConfirmationModal } from './SystemPlanConfirmationModal';
 
 export default function StudioPage() {
     const { type, id } = useParams();
@@ -29,13 +30,14 @@ export default function StudioPage() {
     const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
     const { user, logout } = useAuth();
     const { history, isLoading: chatLoading, size, setSize, isReachingEnd, isFetchingMore } = useChatHistory();
-    const { sendMessage, sendSchemaResponse, sendTemplateSelectionResponse, onMessageReceived, onSchemaSummaryToConfirm, onTemplateSelectionListToConfirm, onTemplateSelectionDetailToConfirm, onSchemasSync } = useSocket();
+    const { sendMessage, onMessageReceived, onAgentPlanToConfirm, sendAgentFeedbackResponse, onSchemasSync } = useSocket();
     const [isDark, setIsDark] = useState(false);
     const [showExplorer, setShowExplorer] = useState(true);
     const [showChat, setShowChat] = useState(true);
+    const [currentAgentTaskItem, setCurrentAgentTaskItem] = useState<any>(null);
 
     const isEditing = location.pathname.endsWith('/edit');
-    const editTab = (searchParams.get('tab') as 'settings' | 'code') || 'settings';
+    const editTab = searchParams.get('tab') || 'settings';
 
     const selectedItem = useMemo(() => {
         if (!type || !id) return null;
@@ -95,6 +97,10 @@ export default function StudioPage() {
     const [showTemplateSelection, setShowTemplateSelection] = useState(false);
     const [templateSelectionData, setTemplateSelectionData] = useState<TemplateSelectionRequest | null>(null);
 
+    // System Plan Confirmation State
+    const [showSystemPlanConfirmation, setShowSystemPlanConfirmation] = useState(false);
+    const [systemPlanData, setSystemPlanData] = useState<SystemRequirment | null>(null);
+
     useEffect(() => {
         if (history) {
             // Dedup history just in case
@@ -113,23 +119,23 @@ export default function StudioPage() {
             setShowChat(true); // Auto-open chat on new message
         });
 
-        const unsubConfirm = onSchemaSummaryToConfirm((data) => {
-            console.log(data);
-            setConfirmationData(data);
-            setShowConfirmation(true);
+        const unsubAgentPlanToConfirm = onAgentPlanToConfirm((payload) => {
+            console.log('Agent plan to confirm:', payload);
+            setCurrentAgentTaskItem(payload.agentTaskItem);
+
+            if (payload.agentName === AGENT_NAMES.ENTITY_DESIGNER) {
+                setConfirmationData(payload.data);
+                setShowConfirmation(true);
+            } else if (payload.agentName === AGENT_NAMES.PAGE_PLANNER) {
+                setTemplateSelectionData(payload.data);
+                setShowTemplateSelection(true);
+            } else if (payload.agentName === AGENT_NAMES.SYSTEM_ARCHITECT) {
+                setSystemPlanData(payload.data);
+                setShowSystemPlanConfirmation(true);
+            }
         });
 
-        const unsubTemplateList = onTemplateSelectionListToConfirm((data: TemplateSelectionRequest) => {
-            console.log('Template selection (List) requested:', data);
-            setTemplateSelectionData(data);
-            setShowTemplateSelection(true);
-        });
 
-        const unsubTemplateDetail = onTemplateSelectionDetailToConfirm((data: TemplateSelectionRequest) => {
-            console.log('Template selection (Detail) requested:', data);
-            setTemplateSelectionData(data);
-            setShowTemplateSelection(true);
-        });
 
         const unsubSync = onSchemasSync((data) => {
             console.log('Schema sync received:', data);
@@ -138,12 +144,10 @@ export default function StudioPage() {
 
         return () => {
             unsubReceived();
-            unsubConfirm();
-            unsubTemplateList();
-            unsubTemplateDetail();
+            unsubAgentPlanToConfirm();
             unsubSync();
         };
-    }, [onMessageReceived, onSchemaSummaryToConfirm, onTemplateSelectionListToConfirm, onTemplateSelectionDetailToConfirm, onSchemasSync, mutate]);
+    }, [onMessageReceived, onAgentPlanToConfirm, onSchemasSync, mutate]);
 
     const handleSend = (content: string, providerName: string) => {
         sendMessage(content, providerName);
@@ -151,21 +155,39 @@ export default function StudioPage() {
     };
 
     const handleConfirmSchema = (response: SchemaSummary) => {
-        sendSchemaResponse(response);
+        sendAgentFeedbackResponse({
+            agentName: AGENT_NAMES.ENTITY_DESIGNER,
+            feedbackData: { ...response, agentTaskItem: currentAgentTaskItem }
+        });
         setShowConfirmation(false);
         setConfirmationData(null);
+        setCurrentAgentTaskItem(null);
     };
 
-    const handleConfirmTemplate = (selectedTemplateId: string, enableEngagementBar: boolean) => {
+    const handleConfirmTemplate = (selectedTemplateId: string) => {
         if (templateSelectionData) {
-            sendTemplateSelectionResponse({
-                selectedTemplate: selectedTemplateId,
-                enableEngagementBar,
-                requestPayload: templateSelectionData
+            sendAgentFeedbackResponse({
+                agentName: AGENT_NAMES.PAGE_PLANNER,
+                feedbackData: {
+                    selectedTemplate: selectedTemplateId,
+                    requestPayload: templateSelectionData,
+                    agentTaskItem: currentAgentTaskItem
+                }
             });
             setShowTemplateSelection(false);
             setTemplateSelectionData(null);
+            setCurrentAgentTaskItem(null);
         }
+    };
+
+    const handleConfirmSystemPlan = (plan: SystemRequirment) => {
+        sendAgentFeedbackResponse({
+            agentName: AGENT_NAMES.SYSTEM_ARCHITECT,
+            feedbackData: { ...plan, agentTaskItem: currentAgentTaskItem }
+        });
+        setShowSystemPlanConfirmation(false);
+        setSystemPlanData(null);
+        setCurrentAgentTaskItem(null);
     };
 
     const [chatDraft, setChatDraft] = useState<string | null>(null);
@@ -181,7 +203,7 @@ export default function StudioPage() {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-app transition-colors duration-300 overflow-hidden">
+        <div className="flex flex-col h-full bg-app transition-colors duration-300 overflow-hidden">
             <StudioHeader
                 isDark={isDark}
                 toggleTheme={toggleTheme}
@@ -236,7 +258,7 @@ export default function StudioPage() {
                         {selectedItem.type === 'query' && (
                             <QueryEdit
                                 item={selectedItem}
-                                initialTab={editTab}
+                                initialTab={editTab as 'settings' | 'code'}
                                 onTabChange={(tab) => setSearchParams({ tab })}
                                 onSave={handleSaveEntity}
                                 onCancel={() => navigate(`/mate/${selectedItem.type}/${selectedItem.schemaId}`)}
@@ -245,10 +267,11 @@ export default function StudioPage() {
                         {selectedItem.type === 'page' && (
                             <PageEdit
                                 item={selectedItem}
-                                initialTab={editTab}
+                                initialTab={editTab as 'settings' | 'layout'}
                                 onTabChange={(tab) => setSearchParams({ tab })}
                                 onSave={handleSaveEntity}
                                 onCancel={() => navigate(`/mate/${selectedItem.type}/${selectedItem.schemaId}`)}
+                                onSendMessage={(msg) => handleSend(msg, localStorage.getItem('formmate_ai_provider') || 'openai')}
                             />
                         )}
                     </>
@@ -295,6 +318,13 @@ export default function StudioPage() {
                 onConfirm={handleConfirmTemplate}
                 templates={templateSelectionData?.templates || []}
                 pageType={templateSelectionData?.plan?.pageType}
+            />
+
+            <SystemPlanConfirmationModal
+                isOpen={showSystemPlanConfirmation}
+                onClose={() => setShowSystemPlanConfirmation(false)}
+                onConfirm={handleConfirmSystemPlan}
+                plan={systemPlanData}
             />
 
             <DeleteConfirmDialog

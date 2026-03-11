@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { type ChatMessage } from '@formmate/shared';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { AiLogsList } from './AiLogsList';
-import { MessageSquare, Database, AlertTriangle, Settings, Loader2, PanelRightClose } from 'lucide-react';
+import { TasksList } from './TasksList';
+import { MessageSquare, Database, AlertTriangle, Settings, Loader2, PanelRightClose, ListChecks } from 'lucide-react';
 import { StatusBar } from '../../../components/StatusBar';
+import { Link } from 'react-router-dom';
 
 interface ChatPanelProps {
     messages: ChatMessage[];
@@ -30,25 +31,45 @@ export function ChatPanel({
     onDraftConsumed,
     onClose
 }: ChatPanelProps) {
-    const [activeTab, setActiveTab] = useState<'chat' | 'logs'>('chat');
+    const [activeTab, setActiveTab] = useState<'chat' | 'logs' | 'tasks'>('chat');
     const [isConfigured, setIsConfigured] = useState<boolean | null>(null);
 
-    useEffect(() => {
-        const checkConfig = async () => {
-            try {
-                const res = await fetch(`${''}/mateapi/config/gemini`, {
-                    credentials: 'include'
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setIsConfigured(data.data?.configured ?? false);
-                }
-            } catch (err) {
-                console.error('Failed to check AI config', err);
+    const checkConfig = async () => {
+        try {
+            // Check if at least either Gemini or OpenAI is configured
+            const [geminiRes, openaiRes] = await Promise.all([
+                fetch(`${''}/mateapi/config/gemini`, { credentials: 'include' }).catch(() => null),
+                fetch(`${''}/mateapi/config/openai`, { credentials: 'include' }).catch(() => null)
+            ]);
+
+            let hasConfig = false;
+
+            if (geminiRes?.ok) {
+                const data = await geminiRes.json();
+                if (data.data?.configured) hasConfig = true;
             }
-        };
+
+            if (openaiRes?.ok) {
+                const data = await openaiRes.json();
+                if (data.data?.configured) hasConfig = true;
+            }
+
+            setIsConfigured(hasConfig);
+        } catch (err) {
+            console.error('Failed to check AI config', err);
+            setIsConfigured(false);
+        }
+    };
+
+    useEffect(() => {
         checkConfig();
     }, []);
+
+    useEffect(() => {
+        if (chatDraft) {
+            setActiveTab('chat');
+        }
+    }, [chatDraft]);
 
     return (
         <div className="w-96 shrink-0 flex flex-col h-full bg-app-surface border-l border-border relative">
@@ -60,6 +81,13 @@ export function ChatPanel({
                     >
                         <MessageSquare className="w-3.5 h-3.5" />
                         Chat
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('tasks')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'tasks' ? 'bg-app-surface text-primary shadow-sm' : 'text-primary-muted hover:text-primary'}`}
+                    >
+                        <ListChecks className="w-3.5 h-3.5" />
+                        Tasks
                     </button>
                     <button
                         onClick={() => setActiveTab('logs')}
@@ -79,7 +107,7 @@ export function ChatPanel({
             </div>
 
             <div className="flex-1 overflow-hidden relative flex flex-col">
-                {activeTab === 'chat' ? (
+                {activeTab === 'chat' && (
                     <MessageList
                         messages={messages}
                         isLoading={isLoading}
@@ -87,17 +115,21 @@ export function ChatPanel({
                         isFetchingMore={isFetchingMore}
                         onLoadMore={onLoadMore}
                     />
-                ) : (
-                    <AiLogsList />
+                )}
+                {activeTab === 'tasks' && (
+                    <TasksList onSwitchToChat={() => setActiveTab('chat')} onSend={onSend} />
+                )}
+                {activeTab === 'logs' && (
+                    <AiLogsList onSwitchToChat={() => setActiveTab('chat')} onSend={onSend} />
                 )}
             </div>
 
             {activeTab === 'chat' && (
-                <div className="border-t border-border bg-app-surface/50 backdrop-blur-sm">
+                <div className="border-t border-border bg-app-surface/50 backdrop-blur-sm relative z-10">
                     <StatusBar />
-                    <div className="p-4">
+                    <div className="p-2">
                         {isConfigured === null ? (
-                            <div className="flex justify-center p-4">
+                            <div className="flex justify-center p-2">
                                 <Loader2 className="w-5 h-5 animate-spin text-primary-muted" />
                             </div>
                         ) : isConfigured ? (

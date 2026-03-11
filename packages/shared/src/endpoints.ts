@@ -1,11 +1,9 @@
 export const ENDPOINTS = {
     CHAT: {
         HISTORY: '/mateapi/chat/history',
-        ENGAGEMENT_BAR: '/mateapi/chat/engagement-bar',
-        USER_AVATAR: '/mateapi/chat/user-avatar',
-        VISIT_TRACK: '/mateapi/chat/visit-track',
-        TOP_LIST: '/mateapi/chat/top-list',
         STATUS: '/mateapi/chat/status',
+        PAGE_ADDONS: '/mateapi/page-addons',
+        CANCEL: '/mateapi/chat/cancel',
     },
     AUTH: {
         LOGIN: '/api/login',
@@ -21,7 +19,6 @@ export const ENDPOINTS = {
     AI: {
         PROVIDERS: '/mateapi/ai/providers',
         LOGS: '/mateapi/ai/logs',
-        ACT_ON_LOG: '/mateapi/ai/logs/:id/act',
         DELETE_LOG: '/mateapi/ai/logs/:id',
     },
     SCHEMA: {
@@ -58,6 +55,10 @@ export const ENDPOINTS = {
         ARCHIVE: '/api/tasks/export/archive/:id',
         DOWNLOAD: '/api/tasks/export/download/:id',
         IMPORT: '/api/tasks/import',
+    },
+    MATE_TASKS: {
+        LATEST: '/mateapi/tasks',
+        TOGGLE_ITEM: '/mateapi/tasks/:taskId/items/:index/toggle',
     },
     ENTITIES: {
         LIST: '/api/entities/:schemaName',

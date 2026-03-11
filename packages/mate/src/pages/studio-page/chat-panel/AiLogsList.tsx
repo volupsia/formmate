@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import axios from 'axios';
-import { Loader2, Database, Calendar, Cpu, Clock, Copy, Check, Play, Trash2 } from 'lucide-react';
+import { Loader2, Database, Calendar, Cpu, Clock, Copy, Check, Play, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import { ENDPOINTS } from '@formmate/shared';
@@ -12,44 +12,55 @@ const fetcher = (url: string) => axios.get(url, { withCredentials: true }).then(
 interface AiLog {
     id: number;
     handler: string;
+    input?: string;
     response: string;
     timestamp: string;
 }
 
-export function AiLogsList() {
+export function AiLogsList({ onSwitchToChat, onSend }: { onSwitchToChat?: () => void; onSend?: (message: string, providerName: string) => void }) {
     const { data, error, isLoading, mutate } = useSWR(`${''}${ENDPOINTS.AI.LOGS}`, fetcher);
     const [expandedLogId, setExpandedLogId] = useState<number | null>(null);
     const [copied, setCopied] = useState<number | null>(null);
-    const [actingLogId, setActingLogId] = useState<number | null>(null);
+    const [showInput, setShowInput] = useState<Record<number, boolean>>({});
 
     const logs: AiLog[] = data?.data || [];
 
-    const handleCopy = (id: number, text: string) => {
-        try {
-            const formatted = JSON.stringify(JSON.parse(text), null, 2);
-            navigator.clipboard.writeText(formatted);
-        } catch (e) {
-            navigator.clipboard.writeText(text);
+    const handleCopy = (id: number, log: AiLog) => {
+        let fullText = '';
+
+        // Include input/prompt if available
+        if (log.input) {
+            try {
+                const inputParsed = JSON.parse(log.input);
+                fullText += `=== SYSTEM PROMPT ===\n${inputParsed.systemPrompt || ''}\n\n`;
+                fullText += `=== DEVELOPER MESSAGE ===\n${inputParsed.developerMessage || ''}\n\n`;
+                fullText += `=== USER INPUT ===\n${inputParsed.userInput || ''}\n\n`;
+            } catch {
+                fullText += `=== INPUT ===\n${log.input}\n\n`;
+            }
         }
+
+        // Include output
+        try {
+            fullText += `=== OUTPUT ===\n${JSON.stringify(JSON.parse(log.response), null, 2)}`;
+        } catch {
+            fullText += `=== OUTPUT ===\n${log.response}`;
+        }
+
+        navigator.clipboard.writeText(fullText);
         setCopied(id);
         setTimeout(() => setCopied(null), 2000);
     };
 
-    const handleAct = async (log: AiLog, continuePipeline: boolean = false) => {
-        try {
-            setActingLogId(log.id);
-            await axios.post(
-                `${''}${ENDPOINTS.AI.ACT_ON_LOG.replace(':id', log.id.toString())}`,
-                { continuePipeline },
-                { withCredentials: true }
-            );
-            toast.success('Action triggered');
-        } catch (e) {
-            console.error('Failed to act on log', e);
-            toast.error('Failed to trigger action');
-        } finally {
-            setActingLogId(null);
-        }
+    const handleAct = (log: AiLog) => {
+        if (!onSend) return;
+        const command = `@replay ${log.id}`;
+        onSend(command, 'gemini');
+        onSwitchToChat?.();
+    };
+
+    const toggleInput = (id: number) => {
+        setShowInput(prev => ({ ...prev, [id]: !prev[id] }));
     };
 
     if (isLoading) {
@@ -104,24 +115,16 @@ export function AiLogsList() {
                         <div className="p-3 bg-app-muted/20 text-xs border-t border-border animate-in slide-in-from-top-2 duration-200">
                             <div className="flex gap-2 mb-3">
                                 <button
-                                    onClick={() => handleAct(log, false)}
-                                    disabled={actingLogId === log.id}
-                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 bg-primary text-white rounded-lg font-bold hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
+                                    onClick={() => handleAct(log)}
+                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 bg-primary text-white rounded-lg font-bold hover:shadow-md transition-all active:scale-95"
                                 >
-                                    {actingLogId === log.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                                    <Play className="w-3.5 h-3.5" />
                                     Act
                                 </button>
                                 <button
-                                    onClick={() => handleAct(log, true)}
-                                    disabled={actingLogId === log.id}
-                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 bg-green-500 text-white rounded-lg font-bold hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
-                                >
-                                    {actingLogId === log.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-                                    Act & Continue
-                                </button>
-                                <button
-                                    onClick={() => handleCopy(log.id, log.response)}
+                                    onClick={() => handleCopy(log.id, log)}
                                     className="px-3 py-1.5 border border-border bg-app-surface text-primary rounded-lg font-medium hover:border-primary/50 transition-all"
+                                    title="Copy all (input + output)"
                                 >
                                     {copied === log.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                                 </button>
@@ -145,6 +148,47 @@ export function AiLogsList() {
                                     <Trash2 className="w-3.5 h-3.5" />
                                 </button>
                             </div>
+
+                            {/* Input / Prompt Section */}
+                            {log.input && (
+                                <div className="mb-3">
+                                    <button
+                                        onClick={() => toggleInput(log.id)}
+                                        className="flex items-center gap-1.5 text-[10px] font-bold text-primary-muted uppercase tracking-wider mb-1 hover:text-primary transition-colors"
+                                    >
+                                        {showInput[log.id] ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                                        Input / Prompt
+                                    </button>
+                                    {showInput[log.id] && (
+                                        <div className="bg-app-surface border border-border rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+                                            {(() => {
+                                                try {
+                                                    const parsed = JSON.parse(log.input!);
+                                                    return (
+                                                        <JsonView
+                                                            src={parsed}
+                                                            theme="default"
+                                                            displaySize={false}
+                                                            enableClipboard={false}
+                                                            collapsed={1}
+                                                            style={{ fontSize: '10px' }}
+                                                        />
+                                                    );
+                                                } catch {
+                                                    return (
+                                                        <pre className="p-2 font-mono whitespace-pre-wrap break-all text-[10px]">
+                                                            {log.input}
+                                                        </pre>
+                                                    );
+                                                }
+                                            })()}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Output Section */}
+                            <div className="text-[10px] font-bold text-primary-muted uppercase tracking-wider mb-1">Output</div>
                             <div className="bg-app-surface border border-border rounded-lg overflow-hidden max-h-60 overflow-y-auto">
                                 {(() => {
                                     try {
@@ -175,3 +219,4 @@ export function AiLogsList() {
         </div>
     );
 }
+

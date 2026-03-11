@@ -19,8 +19,7 @@ interface ExplorerProps {
 
 export function Explorer({ onSelectItem, selectedItem, onChatAction, onClose, user, logout }: ExplorerProps) {
     const navigate = useNavigate();
-    const { entities, queries, pages: allPages, isLoading, saveSchema, defineEntity } = useSchemas();
-    const pages = allPages.filter(p => (p.settings.page?.source === 'ai'));
+    const { entities, queries, pages, isLoading, saveSchema, defineEntity } = useSchemas();
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
         entities: true,
         queries: true,
@@ -56,7 +55,7 @@ export function Explorer({ onSelectItem, selectedItem, onChatAction, onClose, us
 
     const handleUseAI = () => {
         setIsAddEntityDialogOpen(false);
-        onChatAction(`@${AGENT_NAMES.ENTITY_GENERATOR} `);
+        onChatAction(`@${AGENT_NAMES.ENTITY_DESIGNER} `);
     };
 
     const handleManualCreateEntity = async (name: string) => {
@@ -112,9 +111,8 @@ export function Explorer({ onSelectItem, selectedItem, onChatAction, onClose, us
                     page: {
                         name: name,
                         title: name,
-                        source: 'ai',
                         html: '',
-                        metadata: ''
+                        metadata: {}
                     }
                 }
             });
@@ -138,7 +136,7 @@ export function Explorer({ onSelectItem, selectedItem, onChatAction, onClose, us
 
     const handleUseAIQuery = () => {
         setIsAddQueryDialogOpen(false);
-        onChatAction(`@${AGENT_NAMES.QUERY_GENERATOR} `);
+        onChatAction(`@${AGENT_NAMES.QUERY_BUILDER} `);
     };
 
     const handleManualCreateQuery = async (name: string) => {
