@@ -10,6 +10,9 @@ const MATE_TARGET = 'http://127.0.0.1:3001';
 
 export default defineConfig({
   base: '/mate/',
+  define: {
+    __APP_BUILD_TIMESTAMP__: JSON.stringify(new Date().toISOString()),
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: true
