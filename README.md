@@ -67,7 +67,7 @@ Watch FormCMS build a complete Library system (Entities, Data, Queries, and UI) 
 
 The easiest way to get FormCMS running. **No backend setup, no .NET, no database installation required.**
 
-> **🟢 Don't want to install?** Try the [live demo](https://formcms.com/mate) instantly — login: `sadmin@cms.com` / `Admin1!`
+> **🟢 Don't want to install?** Try the [live demo](https://demo.formcms.com/mate) instantly — login: `sadmin@cms.com` / `Admin1!`
 
 Pull and run from [Docker Hub](https://hub.docker.com/repository/docker/jaike/formcms-mono):
 
