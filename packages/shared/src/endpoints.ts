@@ -20,6 +20,7 @@ export const ENDPOINTS = {
         PROVIDERS: '/mateapi/ai/providers',
         LOGS: '/mateapi/ai/logs',
         DELETE_LOG: '/mateapi/ai/logs/:id',
+        GENERATE_DATA: '/mateapi/ai/generate-data',
     },
     SCHEMA: {
         ALL: '/api/schemas?type=',
