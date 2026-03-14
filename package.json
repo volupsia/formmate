@@ -16,6 +16,7 @@
         "dev:mate": "npm run dev --workspace=@formmate/mate",
         "dev:admin": "npm run dev --workspace=@formmate/admin",
         "dev:portal": "npm run dev --workspace=@formmate/portal",
+        "build:sdk": "npm run build --workspace=@formmate/sdk",
         "build:shared": "npm run build --workspace=@formmate/shared",
         "build:mate": "npm run build --workspace=@formmate/mate",
         "build:all": "npm run build --workspaces --if-present",
