@@ -17,6 +17,7 @@ npm run build:shared --silent
 npm run build --workspace=@formmate/mate --silent
 npm run build --workspace=@formmate/admin --silent
 npm run build --workspace=@formmate/portal --silent
+npm run build --workspace=@formmate/stash --silent
 
 # Build Backend (Prisma + TSC)
 cd packages/mate-service
@@ -32,7 +33,7 @@ dotnet publish server/FormCMS.MonoApp/FormCMS.MonoApp.csproj -c Release -o ./pub
 
 echo "🐳 Building Docker Image (Fast Mode)..."
 cd "$SCRIPT_DIR"
-docker build -t formcms-mono-deploy:latest -f Dockerfile "$REPO_ROOT"
+docker build -t "formcms-mono-deploy:latest" -f Dockerfile "$REPO_ROOT"
 
 echo "✅ Build complete! Image: formcms-mono-deploy:latest"
 echo "👉 Run ./reload.sh to restart the container."

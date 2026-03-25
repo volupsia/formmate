@@ -24,6 +24,7 @@ npm run build:shared --silent
 npm run build --workspace=@formmate/mate --silent
 npm run build --workspace=@formmate/admin --silent
 npm run build --workspace=@formmate/portal --silent
+npm run build --workspace=@formmate/stash --silent
 
 # Build Backend (Prisma + TSC)
 cd packages/mate-service
