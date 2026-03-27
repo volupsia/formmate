@@ -66,7 +66,7 @@ Watch FormCMS build a complete Library system (Entities, Data, Queries, and UI) 
 | **Offline audio player** | Your downloaded files play fully offline. Like TTS, playback progress is saved so long audio files (lectures, podcasts) resume right where you left off. |
 
 > **💡 Why a PWA?** Stash uses browser APIs (Web Speech, IndexedDB, Service Worker) to deliver features that feel like a native iPhone/Android app — without the overhead of publishing to an app store.
-
+> try the pwa at https://demo.formcms.com/stash/ (no login required)
 ---
 
 ## 🧑‍💼 For Non-Developers
@@ -86,6 +86,7 @@ Watch FormCMS build a complete Library system (Entities, Data, Queries, and UI) 
 The easiest way to get FormCMS running. **No backend setup, no .NET, no database installation required.**
 
 > **🟢 Don't want to install?** Try the [live demo](https://demo.formcms.com/mate) instantly — login: `sadmin@cms.com` / `Admin1!`
+> try the pwa at https://demo.formcms.com/stash/ (no login required)
 
 Pull and run from [Docker Hub](https://hub.docker.com/repository/docker/jaike/formcms-mono):
 
