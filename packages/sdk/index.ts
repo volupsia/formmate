@@ -19,12 +19,13 @@ export { userNewDataItemPage, getDefaultNewDataItemPageConfig } from "./cms/page
 // asset management
 export type { AssetListPageConfig } from "./cms/pages/useAssetListPage";
 export { useAssetListPage, getDefaultAssetListPageConfig } from "./cms/pages/useAssetListPage";
+export { downloadVideo, useAssets, useGetCmsAssetsUrl, deleteAsset, convertToMp3, convertToM4b, convertToM4a, getAssetProgress } from "./cms/services/asset";
 
 export type { AssetEditPageConfig } from "./cms/pages/useAssetEditPage";
 export { useAssetEditPage, getDefaultAssetEditPageConfig } from "./cms/pages/useAssetEditPage";
 
 //auth and account management pages
-export { useUserInfo } from "./auth/services/auth";
+export { useUserInfo, logout } from "./auth/services/auth";
 
 export type { ChangePasswordPageConfig } from "./auth/pages/useChangePasswordPage";
 export { useChangePasswordPage, getDefaultUseChangePasswordPageConfig } from "./auth/pages/useChangePasswordPage";

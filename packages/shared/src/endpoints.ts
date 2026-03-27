@@ -15,11 +15,13 @@ export const ENDPOINTS = {
     },
     SYSTEM: {
         IS_READY: '/api/system/is-ready',
+        DOWNLOAD_PLUGINS: '/api/system/download-plugins',
     },
     AI: {
         PROVIDERS: '/mateapi/ai/providers',
         LOGS: '/mateapi/ai/logs',
         DELETE_LOG: '/mateapi/ai/logs/:id',
+        GENERATE_DATA: '/mateapi/ai/generate-data',
     },
     SCHEMA: {
         ALL: '/api/schemas?type=',
@@ -45,6 +47,11 @@ export const ENDPOINTS = {
         INFO: '/api/assets/base',
         DELETE: '/api/assets/delete/:id/',
         META: '/api/assets/meta/',
+        VIDEO: '/api/assets/video',
+        CONVERT_MP3: '/api/assets/convert-mp3/:id',
+        CONVERT_M4B: '/api/assets/convert-m4b/:id',
+        CONVERT_M4A: '/api/assets/convert-m4a/:id',
+        PROGRESS: '/api/assets/progress',
     },
     TASKS: {
         ENTITY: '/api/tasks/entity',

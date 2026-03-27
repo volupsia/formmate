@@ -54,3 +54,23 @@ export function deleteAsset(id: number) {
 export function updateAssetMeta(asset: any) {
     return catchResponse(() => axios.post(fullCmsApiUrl(ENDPOINTS.ASSETS.META), asset))
 }
+
+export function downloadVideo(url: string) {
+    return catchResponse(() => axios.post(fullCmsApiUrl(ENDPOINTS.ASSETS.VIDEO), { url }))
+}
+
+export function convertToMp3(id: number) {
+    return catchResponse(() => axios.post(fullCmsApiUrl(ENDPOINTS.ASSETS.CONVERT_MP3.replace(':id', id.toString()))))
+}
+
+export function convertToM4b(id: number) {
+    return catchResponse(() => axios.post(fullCmsApiUrl(ENDPOINTS.ASSETS.CONVERT_M4B.replace(':id', id.toString()))))
+}
+
+export function convertToM4a(id: number) {
+    return catchResponse(() => axios.post(fullCmsApiUrl(ENDPOINTS.ASSETS.CONVERT_M4A.replace(':id', id.toString()))))
+}
+
+export function getAssetProgress(path: string) {
+    return catchResponse(() => axios.get(fullCmsApiUrl(`${ENDPOINTS.ASSETS.PROGRESS}?path=${encodeURIComponent(path)}`)))
+}

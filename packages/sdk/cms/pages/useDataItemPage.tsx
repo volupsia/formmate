@@ -1,25 +1,27 @@
-import {useNavigate, useParams} from "react-router-dom";
-import {deleteItem, updateItem, useItemData, savePublicationSettings} from "../services/entity";
-import {Picklist} from "../containers/Picklist";
-import {useCheckError} from "../../hooks/useCheckError";
-import {createConfirm} from "../../hooks/createConfirm";
-import {FetchingStatus} from "../../containers/FetchingStatus";
-import {EditTable} from "../containers/EditTable";
-import {TreeContainer} from "../containers/TreeContainer";
-import {SetPublishStatusDialog} from "../containers/PublishDialog";
-import {DefaultAttributeNames} from "../types/defaultAttributeNames";
-import {PublicationStatus} from "../types/publicationStatus";
-import {SpecialQueryKeys} from "../types/specialQueryKeys";
-import {getFileUploadURL, useGetCmsAssetsUrl} from "../services/asset";
-import {DefaultColumnNames} from "../types/defaultColumnNames";
-import {useState} from "react";
-import {getInputAttrs} from "../../types/attrUtils";
-import {createInput} from "../containers/createInput";
-import {useForm} from "react-hook-form";
-import {ArrayToObject} from "../../types/formatter";
-import {CmsComponentConfig} from "../cmsComponentConfig";
-import {XEntity} from "../../types/xEntity";
-import {GeneralComponentConfig} from "../../ComponentConfig";
+import { useNavigate, useParams } from "react-router-dom";
+import { deleteItem, updateItem, useItemData, savePublicationSettings } from "../services/entity";
+import { useAiGenerate } from "../hooks/useAiGenerate";
+import { Picklist } from "../containers/Picklist";
+import { useCheckError } from "../../hooks/useCheckError";
+import { EditTable } from "../containers/EditTable";
+import { TreeContainer } from "../containers/TreeContainer";
+import { SetPublishStatusDialog } from "../containers/PublishDialog";
+import { createConfirm } from "../../hooks/createConfirm";
+import { FetchingStatus } from "../../containers/FetchingStatus";
+
+import { DefaultAttributeNames } from "../types/defaultAttributeNames";
+import { PublicationStatus } from "../types/publicationStatus";
+import { SpecialQueryKeys } from "../types/specialQueryKeys";
+import { getFileUploadURL, useGetCmsAssetsUrl } from "../services/asset";
+import { DefaultColumnNames } from "../types/defaultColumnNames";
+import { useState } from "react";
+import { getInputAttrs } from "../../types/attrUtils";
+import { createInput } from "../containers/createInput";
+import { useForm } from "react-hook-form";
+import { ArrayToObject } from "../../types/formatter";
+import { CmsComponentConfig } from "../cmsComponentConfig";
+import { XEntity } from "../../types/xEntity";
+import { GeneralComponentConfig } from "../../ComponentConfig";
 
 export interface DataItemPageConfig {
     saveSuccess: string;
@@ -37,6 +39,10 @@ export interface DataItemPageConfig {
     cancelButtonText: string,
     submitButtonText: string,
     publishAtHeader: string,
+    aiGenerateDialogHeader: string,
+    aiGenerateRequirementPlaceholder: string,
+    aiGenerateButtonText: string,
+    aiGenerateModelLabel: string,
 }
 
 export function getDefaultDataItemPageConfig(): DataItemPageConfig {
@@ -50,10 +56,13 @@ export function getDefaultDataItemPageConfig(): DataItemPageConfig {
         publishDialogHeader: "Publish",
         scheduleSuccess: "Schedule Succeed",
         scheduleDialogHeader: "Schedule",
-
         cancelButtonText: "Cancel",
         submitButtonText: "Save",
         publishAtHeader: "Publish At",
+        aiGenerateDialogHeader: "AI Generate Content",
+        aiGenerateRequirementPlaceholder: "What kind of data do you want to generate?",
+        aiGenerateButtonText: "Generate",
+        aiGenerateModelLabel: "Model",
     }
 }
 
@@ -63,8 +72,8 @@ export function useDataItemPage(
     baseRouter: string,
     pageConfig: DataItemPageConfig = getDefaultDataItemPageConfig(),
 ) {
-    const {id} = useParams()
-    const {data, error, isLoading, mutate} = useItemData(schema.name, id)
+    const { id } = useParams()
+    const { data, error, isLoading, mutate } = useItemData(schema.name, id)
     const previewUrl = getPreviewUrl();
     const navigate = useNavigate();
     const currentUrl = `${baseRouter}/${schema.name}/${id}`;
@@ -76,8 +85,16 @@ export function useDataItemPage(
     const publishProps = usePublish(data, schema, mutate);
     const scheduleProps = useSchedule(data, schema, mutate);
     const unpublishProps = useUnpublish(data, schema, mutate);
+
+    const [visible, setVisible] = useState(false);
+    const handleShowAiGenerate = () => {
+        setVisible(true);
+    };
+
+
     return {
         formId,
+        handleShowAiGenerate,
         showUnpublish,
         previewUrl,
         handleGoBack,
@@ -103,8 +120,20 @@ export function useDataItemPage(
         const trees = schema.attributes.filter(x => x.displayType == 'tree');
         const inputAttrs = getInputAttrs(schema.attributes);
         const getCmsAssetUrl = useGetCmsAssetsUrl();
-        const {handleErrorOrSuccess, CheckErrorStatus} = useCheckError(componentConfig);
-        const {register, handleSubmit, control} = useForm();
+        const { handleErrorOrSuccess, CheckErrorStatus } = useCheckError(componentConfig);
+        const { register, handleSubmit, control, getValues } = useForm();
+        const { AiGenerateDialog } = useAiGenerate(
+            schema, 
+            getValues, 
+            (generatedFields) => {
+                mutate({ ...data, ...generatedFields }, false);
+            },
+            handleErrorOrSuccess, 
+            CheckErrorStatus,
+            pageConfig,
+            visible,
+            setVisible
+        );
 
         async function onSubmit(formData: any) {
             formData[schema.primaryKey] = id
@@ -114,15 +143,16 @@ export function useDataItemPage(
                 formData[a.field] = ArrayToObject(formData[a.field]);
             });
 
-            const {error} = await updateItem(schema.name, formData)
+            const { error } = await updateItem(schema.name, formData)
             await handleErrorOrSuccess(error, pageConfig.saveSuccess, mutate)
         }
 
         return <>
             <FetchingStatus isLoading={isLoading} error={error} componentConfig={componentConfig} />
-            <div><CheckErrorStatus/></div>
+            <div><CheckErrorStatus /></div>
             {data && <div className="grid">
                 <div className={`col-12 md:col-12 lg:${trees.length > 0 ? "col-9" : "col-12"}`}>
+
                     <form onSubmit={handleSubmit(onSubmit)} id={formId}>
                         <div className="formgrid grid">
                             {
@@ -140,28 +170,31 @@ export function useDataItemPage(
                             }
                         </div>
                     </form>
+
+                    {AiGenerateDialog()}
+
                     {
                         (schema?.attributes?.filter(attr =>
-                            attr.displayType ==='picklist'
+                            attr.displayType === 'picklist'
                             || attr.displayType == 'editTable') ?? []).map((column) => {
-                            const props = {
-                                schema,
-                                data,
-                                column,
-                                getFullAssetsURL: getCmsAssetUrl,
-                                baseRouter,
-                                inputConfig: componentConfig
-                            }
-                            if (column.displayType === 'picklist') {
-                            }
-                            return <div key={column.field}>
-                                <hr/>
-                                {column.displayType === 'picklist' &&
-                                    <Picklist key={column.field} {...props} componentConfig={componentConfig}/>}
-                                {column.displayType === 'editTable' &&
-                                    <EditTable key={column.field} {...props} componentConfig={componentConfig} currentUrl={currentUrl}/>}
-                            </div>
-                        })
+                                const props = {
+                                    schema,
+                                    data,
+                                    column,
+                                    getFullAssetsURL: getCmsAssetUrl,
+                                    baseRouter,
+                                    inputConfig: componentConfig
+                                }
+                                if (column.displayType === 'picklist') {
+                                }
+                                return <div key={column.field}>
+                                    <hr />
+                                    {column.displayType === 'picklist' &&
+                                        <Picklist key={column.field} {...props} componentConfig={componentConfig} />}
+                                    {column.displayType === 'editTable' &&
+                                        <EditTable key={column.field} {...props} componentConfig={componentConfig} currentUrl={currentUrl} />}
+                                </div>
+                            })
                     }
                 </div>
                 {
@@ -170,8 +203,8 @@ export function useDataItemPage(
                             trees.map((column) => {
                                 return <div key={column.field}>
                                     <TreeContainer key={column.field} entity={schema} data={data}
-                                                   componentConfig={componentConfig} column={column}></TreeContainer>
-                                    <hr/>
+                                        componentConfig={componentConfig} column={column}></TreeContainer>
+                                    <hr />
                                 </div>
                             })
                         }
@@ -201,7 +234,7 @@ export function useDataItemPage(
                 newStatus={PublicationStatus.Published}
                 setVisible={setVisible}
             />
-        return {handleShowPublish, PublishDialog}
+        return { handleShowPublish, PublishDialog }
     }
 
     function useSchedule(data: any, schema: XEntity, mutate: any) {
@@ -224,39 +257,39 @@ export function useDataItemPage(
                 newStatus={PublicationStatus.Scheduled}
                 setVisible={setVisible}
             />
-        return {handleShowSchedule, ScheduleDialog}
+        return { handleShowSchedule, ScheduleDialog }
     }
 
     function useUnpublish(data: any, schema: XEntity, mutate: any) {
-        const {handleErrorOrSuccess, CheckErrorStatus: CheckUnpublishStatus} = useCheckError(componentConfig);
+        const { handleErrorOrSuccess, CheckErrorStatus: CheckUnpublishStatus } = useCheckError(componentConfig);
 
         async function onUnpublish() {
             const formData: any = {}
             formData[schema.primaryKey] = data[schema.primaryKey];
             formData[DefaultAttributeNames.PublicationStatus] = PublicationStatus.Unpublished;
 
-            const {error} = await savePublicationSettings(schema.name, formData)
+            const { error } = await savePublicationSettings(schema.name, formData)
             await handleErrorOrSuccess(error, pageConfig.unPublishSuccess, mutate)
         }
 
-        return {onUnpublish, CheckUnpublishStatus}
+        return { onUnpublish, CheckUnpublishStatus }
     }
 
     function useDelete(baseRouter: string, schema: XEntity, data: any) {
         const refUrl = new URLSearchParams(location.search).get("ref");
-        const {confirm, Confirm: ConfirmDelete} = createConfirm(`dataItemPage${schema.name}`, componentConfig);
-        const {handleErrorOrSuccess, CheckErrorStatus: CheckDeleteStatus} = useCheckError(componentConfig);
+        const { confirm, Confirm: ConfirmDelete } = createConfirm(`dataItemPage${schema.name}`, componentConfig);
+        const { handleErrorOrSuccess, CheckErrorStatus: CheckDeleteStatus } = useCheckError(componentConfig);
 
         async function handleDelete() {
             const label = data ? data[schema.labelAttributeName] : "";
             confirm(pageConfig.deleteConfirm(label), pageConfig.deleteConfirmHeader, async () => {
-                const {error} = await deleteItem(schema.name, data)
+                const { error } = await deleteItem(schema.name, data)
                 await handleErrorOrSuccess(error, pageConfig.deleteSuccess, () => {
                     window.location.href = refUrl ?? `${baseRouter}/${schema.name}`
                 });
             })
         }
 
-        return {handleDelete, ConfirmDelete, CheckDeleteStatus}
+        return { handleDelete, ConfirmDelete, CheckDeleteStatus }
     }
 }

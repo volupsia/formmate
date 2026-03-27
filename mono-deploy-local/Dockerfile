@@ -34,13 +34,14 @@ RUN cd packages/mate-service && npx prisma generate
 COPY formmate/packages/mate/dist ./packages/mate/dist
 COPY formmate/packages/admin/dist ./packages/admin/dist
 COPY formmate/packages/portal/dist ./packages/portal/dist
+COPY formmate/packages/stash/dist ./packages/stash/dist
 
 # --- Stage 2: Final Image (Hybrid .NET + Node) ---
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 
 # Start Node.js & Nginx
-RUN apt-get update && apt-get install -y curl nginx procps dos2unix && \
+RUN apt-get update && apt-get install -y curl nginx procps dos2unix ffmpeg && \
     curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
     apt-get install -y nodejs && \
     npm install -g tsx && \
