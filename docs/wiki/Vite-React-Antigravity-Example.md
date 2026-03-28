@@ -15,7 +15,10 @@ docker run -d \
   -v formcms_data:/data \
   -e DATABASE_PROVIDER=0 \
   -e "CONNECTION_STRING=Data Source=/data/cms.db" \
+  -e FORMCMS_DATA_PATH=/data \
+  -e "DATABASE_URL=file:/data/mate.db" \
   jaike/formcms-mono:latest
+
 ```
 
 Open **http://localhost:5000/mate** to set up your entities (e.g., "Articles", "Products", "Tasks") using the AI schema builder.
