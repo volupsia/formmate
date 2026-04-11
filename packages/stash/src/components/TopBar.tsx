@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUserInfo, logout } from "@formmate/sdk";
 import { LogIn, LogOut, Loader2, User, ChevronDown, Info, Settings2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,16 +20,20 @@ export const TopBar: React.FC = () => {
     window.location.href = '/stash/login';
   };
 
-  const getPageTitle = () => {
+  const getPageInfo = () => {
     const path = location.pathname;
-    if (path.includes('/explore')) return 'Explore';
-    if (path.includes('/bookmarks')) return 'Bookmarks';
-    if (path.includes('/assets')) return 'Assets';
-    if (path.includes('/offline')) return 'Offline';
-    return '';
+    if (path.includes('/explore')) return { title: 'Global Discovery', emoji: '✨', docTitle: 'Discovery • Zen Stash' };
+    if (path.includes('/bookmarks')) return { title: 'Personal Haven', emoji: '🌌', docTitle: 'Haven • Zen Stash' };
+    if (path.includes('/assets')) return { title: 'Creative Vault', emoji: '🎨', docTitle: 'Vault • Zen Stash' };
+    if (path.includes('/offline')) return { title: 'Local Cache', emoji: '⚡', docTitle: 'Cache • Zen Stash' };
+    return { title: '', emoji: '', docTitle: 'Zen Stash' };
   };
 
-  const pageTitle = getPageTitle();
+  const pageInfo = getPageInfo();
+
+  useEffect(() => {
+    document.title = pageInfo.docTitle;
+  }, [pageInfo.docTitle]);
 
   return (
     <div className="flex justify-between items-center py-2.5 px-3 mb-4 sticky top-0 z-[90] bg-transparent">
@@ -39,11 +43,12 @@ export const TopBar: React.FC = () => {
           <Link to="/explore" className="font-outfit font-extrabold text-xl text-sage-dark tracking-tight hover:opacity-80 transition-opacity shrink-0 no-underline">
             Zen
           </Link>
-          {pageTitle && (
+          {pageInfo.title && (
             <>
               <span className="text-sage-medium/50 text-lg font-light shrink-0">/</span>
-              <span className="font-outfit font-bold text-lg text-sage-dark/80 tracking-tight truncate">
-                {pageTitle}
+              <span className="font-outfit font-bold text-lg text-sage-dark/80 tracking-tight truncate flex items-center gap-1.5">
+                <span>{pageInfo.emoji}</span>
+                <span>{pageInfo.title}</span>
               </span>
             </>
           )}
