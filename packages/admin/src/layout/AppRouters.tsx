@@ -23,6 +23,7 @@ export function AppRouters() {
         <Route path={`${configs.routerPrefix}/entities/*`} element={
             <EntityRouter
                 baseRouter={configs.routerPrefix + "/entities"}
+                appName="Admin"
                 DataListPage={DataListPage}
                 NewDataItemPage={NewDataItemPage}
                 DataItemPage={DataItemPage}

@@ -3,9 +3,9 @@ import 'primereact/resources/primereact.min.css'; //core css
 import 'primeicons/primeicons.css'; //icons
 import 'primeflex/primeflex.css'; // flex
 import './App.css';
-import React from "react";
+import React, { useMemo } from "react";
 import {configs} from "./config";
-import {Route, Routes} from "react-router-dom";
+import {Route, Routes, useLocation} from "react-router-dom";
 import axios from "axios";
 import {LoginPage} from "./pages/auth/LoginPage";
 import {RegisterPage} from "./pages/auth/RegisterPage";
@@ -20,7 +20,8 @@ import {
     setCmsApiBaseUrl,
     setAnalyticsBaseUrl,
     useUserInfo,
-    useGoogleAnalytics
+    useGoogleAnalytics,
+    usePageTitle
 } from "@formmate/sdk";
 
 axios.defaults.withCredentials = true
@@ -34,6 +35,20 @@ function App() {
     const {data} = useUserInfo();
     const [layout, _] = useGlobalState<string>(GlobalStateKeys.Layout, 'sidebar');
     useGoogleAnalytics();
+    
+    const location = useLocation();
+    const { label, emoji } = useMemo(() => {
+        const path = location.pathname;
+        if (path.includes('/login')) return { label: 'Secure Login', emoji: '🔐' };
+        if (path.includes('/register')) return { label: 'Registration', emoji: '✨' };
+        if (path.includes('/auth/users')) return { label: 'User Hub', emoji: '👥' };
+        if (path.includes('/auth/roles')) return { label: 'Role Management', emoji: '🎭' };
+        if (path.includes('/audit')) return { label: 'Audit Trail', emoji: '🛡️' };
+        if (path.includes('/profile')) return { label: 'My Profile', emoji: '👤' };
+        if (path.includes('/entities')) return { label: '', emoji: '' }; // handled by EntityPageWrapper
+        return { label: 'Dashboard', emoji: '📈' };
+    }, [location.pathname]);
+    usePageTitle(label || undefined, 'Admin', emoji || undefined);
     const AuthRouterComponent = () => (
         <AuthRouter
             baseRouter={configs.routerPrefix +"/auth"}

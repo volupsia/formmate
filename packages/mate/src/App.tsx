@@ -4,9 +4,11 @@ import StudioPage from './pages/studio-page';
 
 import SystemSettingsPage from './pages/system-settings-page';
 import { SocketProvider } from './context/socket-provider';
-import { setAuthApiBaseUrl } from '@formmate/sdk';
+import { useMemo } from 'react';
+import { setAuthApiBaseUrl, setAnalyticsBaseUrl, useGoogleAnalytics, usePageTitle } from '@formmate/sdk';
 
 setAuthApiBaseUrl('');
+setAnalyticsBaseUrl('');
 
 import LoginPage from './pages/login-page';
 import RegisterPage from './pages/register-page';
@@ -64,10 +66,38 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 
 
+function AnalyticsWrapper() {
+  useGoogleAnalytics();
+  const location = useLocation();
+
+  const { label, emoji } = useMemo(() => {
+    const path = location.pathname;
+    if (path.includes('/login')) return { label: 'Sign In', emoji: '🔐' };
+    if (path.includes('/register')) return { label: 'Join', emoji: '✨' };
+    if (path.includes('/settings')) return { label: 'System Setup', emoji: '⚙️' };
+    if (path.includes('/overview')) return { label: 'Overview', emoji: '📊' };
+    
+    // Dynamic: /mate/:type/:id/edit or /mate/:type/:id
+    const match = path.match(/\/mate\/([^/]+)\/([^/]+)/);
+    if (match) {
+      const [, type, id] = match;
+      const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+      const isEdit = path.endsWith('/edit');
+      return { label: `${typeLabel}: ${id}${isEdit ? ' (Edit)' : ''}`, emoji: '📝' };
+    }
+    
+    return { label: 'Workspace', emoji: '🏗️' };
+  }, [location.pathname]);
+  usePageTitle(label, 'Mate', emoji);
+
+  return null;
+}
+
 function App() {
   return (
     <SocketProvider>
       <BrowserRouter>
+        <AnalyticsWrapper />
         <Toaster position="top-right" />
         <Routes>
           {/* ... existing routes ... */}

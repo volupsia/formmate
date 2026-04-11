@@ -9,6 +9,7 @@ export const NewItemRoute = "new";
 
 interface EntityRouterProps {
     baseRouter: string;
+    appName?: string;
     DataListPage: React.FC<{ schema: XEntity, baseRouter: string }>;
     NewDataItemPage: React.FC<{ schema: XEntity, baseRouter: string }>;
     DataItemPage: React.FC<{ schema: XEntity, baseRouter: string }>;
@@ -21,6 +22,7 @@ interface EntityRouterProps {
 export function EntityRouter(
     {
         baseRouter,
+        appName,
         DataListPage,
         NewDataItemPage,
         DataItemPage,
@@ -35,11 +37,11 @@ export function EntityRouter(
 
     return task && asset && <Routes>
         <Route path={'/:schemaName'}
-               element={<EntityPageWrapper baseRouter={baseRouter} page={DataListPage}/>}> </Route>
+               element={<EntityPageWrapper baseRouter={baseRouter} page={DataListPage} appName={appName}/>}> </Route>
         <Route path={`/:schemaName/${NewItemRoute}`}
-               element={<EntityPageWrapper baseRouter={baseRouter} page={NewDataItemPage}/>}> </Route>
+               element={<EntityPageWrapper baseRouter={baseRouter} page={NewDataItemPage} appName={appName}/>}> </Route>
         <Route path={'/:schemaName/:id'}
-               element={<EntityPageWrapper baseRouter={baseRouter} page={DataItemPage}/>}> </Route>
+               element={<EntityPageWrapper baseRouter={baseRouter} page={DataItemPage} appName={appName}/>}> </Route>
         <Route path={`/${task.name}`} element={<TaskListPage schema={task} baseRouter={baseRouter}/>}> </Route>
         <Route path={`/${asset.name}`} element={<AssetListPage schema={asset} baseRouter={baseRouter}/>}> </Route>
         <Route path={`/${asset.name}/:id`} element={<AssetEditPage schema={asset} baseRouter={baseRouter}/>}> </Route>

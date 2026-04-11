@@ -5,6 +5,7 @@ export { setAuthApiBaseUrl, getApiClient } from "./auth/configs";
 export { setActivityBaseUrl } from './engagements/config'
 export { setAnalyticsBaseUrl, useGoogleAnalytics } from './hooks/useGoogleAnalytics'
 export type { AnalyticsConfig } from './hooks/useGoogleAnalytics'
+export { usePageTitle } from './hooks/usePageTitle'
 
 //dashboard
 export { useDashboardPage } from "./dashboard/pages/useDashboardPage"
