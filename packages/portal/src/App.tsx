@@ -5,7 +5,7 @@ import 'primeflex/primeflex.css'; // flex
 import './App.css';
 import {configs} from "./config";
 import axios from "axios";
-import {setAuthApiBaseUrl, useUserInfo} from "@formmate/sdk";
+import {setAuthApiBaseUrl, useUserInfo, setAnalyticsBaseUrl, useGoogleAnalytics} from "@formmate/sdk";
 import {Layout} from "./layout/Layout";
 import React from "react";
 import {setActivityBaseUrl} from "@formmate/sdk";
@@ -15,11 +15,13 @@ import {setSubBaseUrl} from "@formmate/sdk/sub/config";
 
 setActivityBaseUrl(configs.apiURL);
 setAuthApiBaseUrl(configs.apiURL);
+setAnalyticsBaseUrl(configs.apiURL);
 setNotificationBaseUrl(configs.apiURL);
 setSubBaseUrl(configs.apiURL);
 axios.defaults.withCredentials = true;
 
 export default function App() {
     const {data} = useUserInfo();
+    useGoogleAnalytics();
     return data ? <Layout/> : <LoginLayout/>
 }

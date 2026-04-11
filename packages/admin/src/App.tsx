@@ -18,7 +18,9 @@ import {
     setAuditLogBaseUrl,
     setAuthApiBaseUrl,
     setCmsApiBaseUrl,
-    useUserInfo
+    setAnalyticsBaseUrl,
+    useUserInfo,
+    useGoogleAnalytics
 } from "@formmate/sdk";
 
 axios.defaults.withCredentials = true
@@ -26,10 +28,12 @@ setCmsApiBaseUrl(configs.apiURL)
 setAuditLogBaseUrl(configs.apiURL)
 setAuthApiBaseUrl(configs.apiURL)
 setActivityBaseUrl(configs.apiURL)
+setAnalyticsBaseUrl(configs.apiURL)
 
 function App() {
     const {data} = useUserInfo();
     const [layout, _] = useGlobalState<string>(GlobalStateKeys.Layout, 'sidebar');
+    useGoogleAnalytics();
     const AuthRouterComponent = () => (
         <AuthRouter
             baseRouter={configs.routerPrefix +"/auth"}

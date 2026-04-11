@@ -3,6 +3,8 @@ export { setCmsApiBaseUrl } from "./cms/configs";
 export { setAuditLogBaseUrl } from "./auditLog/config";
 export { setAuthApiBaseUrl, getApiClient } from "./auth/configs";
 export { setActivityBaseUrl } from './engagements/config'
+export { setAnalyticsBaseUrl, useGoogleAnalytics } from './hooks/useGoogleAnalytics'
+export type { AnalyticsConfig } from './hooks/useGoogleAnalytics'
 
 //dashboard
 export { useDashboardPage } from "./dashboard/pages/useDashboardPage"
