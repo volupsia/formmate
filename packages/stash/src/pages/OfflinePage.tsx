@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { FolderOpen, Info } from 'lucide-react';
 import { OfflineFile } from '@/types';
-import { getAllOfflineFiles, saveOfflineFile, deleteOfflineFile, updateOfflineFileProgress } from '@/utils/offlineStorage';
+import { getAllOfflineFiles, saveOfflineFile, deleteOfflineFile, updateOfflineFileProgress, updateOfflineFile } from '@/db/offlineFileStore';
 import OfflineFileCard from '@/components/offline/OfflineFileCard';
 import OfflinePlayer from '@/components/offline/OfflinePlayer';
+import { useSleepTimer } from '@/contexts/SleepTimerContext';
 
 
 
@@ -15,17 +16,18 @@ const OfflinePage: React.FC = () => {
   const reSelectFileRef = useRef<HTMLInputElement>(null);
   const pendingPlayFileRef = useRef<OfflineFile | null>(null);
   const transientBlobsRef = useRef<Record<string, Blob>>({});
+  const sleepTimer = useSleepTimer();
 
   useEffect(() => {
     loadFiles();
   }, []);
 
-  // Stop the video player when TopBar sleep timer fires
+  // Stop the player when sleep timer expires
   useEffect(() => {
-    const handler = () => handleClosePlayer();
-    window.addEventListener('stash:stopAll', handler);
-    return () => window.removeEventListener('stash:stopAll', handler);
-  }, [fileUrl]);
+    if (sleepTimer.expired) {
+      handleClosePlayer();
+    }
+  }, [sleepTimer.expired]);
 
   const loadFiles = async () => {
     setIsLoading(true);
@@ -70,6 +72,7 @@ const OfflinePage: React.FC = () => {
       type: file.type,
       size: file.size,
       addedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       playProgress: 0,
       fileHandle: handle || null,
     };
@@ -104,8 +107,6 @@ const OfflinePage: React.FC = () => {
   };
 
   const handlePlay = async (file: OfflineFile) => {
-    debugger;
-    console.log('handlePlay', file);
     try {
       let blob: Blob;
 
@@ -154,6 +155,11 @@ const OfflinePage: React.FC = () => {
     }
   };
 
+  const handleUpdateFile = async (id: string, updates: Partial<Pick<OfflineFile, 'title'>>) => {
+    await updateOfflineFile(id, updates);
+    await loadFiles();
+  };
+
   const isIOS = !('showOpenFilePicker' in window);
 
   return (
@@ -196,6 +202,7 @@ const OfflinePage: React.FC = () => {
               onDelete={handleDelete}
               onProgressUpdate={updateOfflineFileProgress}
               onGetBlob={(id) => transientBlobsRef.current[id]}
+              onUpdateFile={handleUpdateFile}
             />
           ))}
         </div>

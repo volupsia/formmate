@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
 import { useSocketContext } from '../context/socket-provider';
 import { Loader2, Lock } from 'lucide-react';
@@ -28,9 +28,13 @@ export default function LoginPage() {
         setError(null);
 
         try {
-            const result = await login(usernameOrEmail, password);
-            if (!result) {
-                setError('Login failed');
+            const result: any = await login(usernameOrEmail, password);
+            if (!result || result.error || result.success === false) {
+                setError(result?.error || 'Login failed');
+            } else if (result.allowedMenus && !result.allowedMenus.includes('menu_schema_builder')) {
+                setError("You don't have privileges to access this workspace");
+                // Immediately clear their session if they shouldn't log in
+                import('@formmate/sdk').then(({ getApiClient }) => getApiClient().logout().catch(() => {}));
             } else {
                 refreshConnection();
                 navigate('/mate');
@@ -106,6 +110,13 @@ export default function LoginPage() {
                             'Sign In'
                         )}
                     </button>
+                    
+                    <p className="text-sm text-primary-muted text-center mt-6 mb-2">
+                        Don't have an account?{' '}
+                        <Link to="/mate/register" className="font-bold text-primary hover:underline">
+                            Register
+                        </Link>
+                    </p>
 
                     <p className="text-[10px] text-primary-muted text-center uppercase tracking-widest font-bold opacity-40">
                         Secure Authentication demo

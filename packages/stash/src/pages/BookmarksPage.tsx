@@ -1,35 +1,40 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { BookmarkItem, BookmarkFolder } from '@/types';
-import { getAllBookmarks, getAllBookmarkFolders, saveBookmarks, clearBookmarks } from '@/utils/storage';
+import { getAllBookmarks, getAllBookmarkFolders } from '@/db/bookmarkStore';
 import { useOnlineStatus } from '@/hooks';
-import { syncBookmarksStore } from '@/components/SyncManager';
-import { useTTS } from '@/contexts/TTSContext';
+import { syncBookmarksStore } from '@/services/syncBookmarks';
+import { TranscriptSheet, TranscriptSheetHandle } from '../components/TranscriptSheet';
 import { BookmarkDialog } from '../components/BookmarkDialog';
-import { engagementApi } from '../utils/engagementApi';
+import { bookmarkApi } from '@/api/bookmarkApi';
+import AssetCard from '@/components/assets/AssetCard';
+import AssetDetailSheet from '@/components/assets/AssetDetailSheet';
+import { Trash2, ExternalLink, Archive, Folder } from 'lucide-react';
 
 const BookmarksPage: React.FC = () => {
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
   const [bookmarkTarget, setBookmarkTarget] = useState<{ entityName: string, recordId: string } | null>(null);
+  const sheetRef = useRef<TranscriptSheetHandle>(null);
 
-  const tts = useTTS();
-
-  const handleSpeak = (item: BookmarkItem, index: number) => {
-    tts.setCurrentTitle(item.title);
-    
+  const handleSpeak = (item: BookmarkItem, index: number, autoPlay: boolean = true) => {
     // Register playlist for navigation (filtered by current folder)
     const filteredBookmarks = bookmarks.filter(b => b.folderId === selectedFolder);
-    tts.setPlaylist(filteredBookmarks, index, (newItem) => 
-      handleSpeak(newItem, filteredBookmarks.findIndex(b => b.id === newItem.id))
+    sheetRef.current?.speak(
+        item.content || "",
+        item.title,
+        `${item.entityName}_${item.recordId}`,
+        {
+          items: filteredBookmarks,
+          index,
+          onPlayItem: (newItem: BookmarkItem) => handleSpeak(newItem, filteredBookmarks.findIndex(b => b.id === newItem.id), true)
+        },
+        autoPlay
     );
-
-    tts.setTranscriptOpen(true);
-    tts.play(item.content || "", `${item.entityName}_${item.recordId}`);
   };
 
   const handleDelete = async (item: BookmarkItem) => {
     if (!window.confirm(`Remove "${item.title}" from bookmarks?`)) return;
     try {
-      await engagementApi.deleteBookmark(item.id);
+      await bookmarkApi.deleteBookmark(item.id);
       if (isOnline) {
         await syncBookmarksStore();
       }
@@ -125,12 +130,19 @@ const BookmarksPage: React.FC = () => {
               href={item.url}
               onClick={(e) => {
                 e.preventDefault();
-                handleSpeak(item, index);
+                handleSpeak(item, index, false);
               }}
               className="flex items-center gap-4 p-3.5 bg-white/80 hover:bg-white rounded-2xl border border-gray-100/60 hover:border-gray-200/80 shadow-sm hover:shadow-md transition-all duration-250 group no-underline cursor-pointer"
             >
               {/* Image with play overlay */}
-              <div className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-sage-light/20 relative">
+              <div 
+                className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-sage-light/20 relative"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSpeak(item, index, true);
+                }}
+              >
                 {item.image ? (
                   <img
                     src={item.image}
@@ -214,10 +226,12 @@ const BookmarksPage: React.FC = () => {
           onClose={() => setBookmarkTarget(null)}
           onSaved={() => {
             setBookmarkTarget(null);
-            loadLocalData(); // Refresh to show any changes (though folders are remote, this is good practice)
+            loadLocalData();
           }}
         />
       )}
+
+      <TranscriptSheet ref={sheetRef} />
     </div>
   );
 };

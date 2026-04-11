@@ -1,22 +1,23 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect, useState, useCallback } from 'react'
 import { useOnlineStatus } from '@/hooks'
-import { initializeDB } from '@/utils/storage'
+import { initializeDB } from '@/db/database'
 import { StatusBar } from '@/components/StatusBar'
 import { SyncManager } from '@/components/SyncManager'
 import { BottomNav } from '@/components/BottomNav'
 import { TopBar } from '@/components/TopBar'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useUserInfo, setAuthApiBaseUrl, setActivityBaseUrl } from "@formmate/sdk"
+import { setAuthApiBaseUrl, setActivityBaseUrl } from "@formmate/sdk"
+import { UserProvider, useUser } from './contexts/UserContext'
 import axios from 'axios'
 import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 import ExplorePage from './pages/ExplorePage'
 import BookmarksPage from './pages/BookmarksPage'
 import AssetsPage from './pages/AssetsPage'
 import OfflinePage from './pages/OfflinePage'
 import './App.css'
-import { TTSProvider, useTTS } from './contexts/TTSContext'
-import { TranscriptSheet } from './components/TranscriptSheet'
+import { SleepTimerProvider } from './contexts/SleepTimerContext'
 
 // Configure SDK
 const apiBaseUrl = import.meta.env.VITE_REACT_APP_API_URL ?? '';
@@ -26,19 +27,16 @@ import { setCmsApiBaseUrl } from "@formmate/sdk";
 setCmsApiBaseUrl(apiBaseUrl);
 axios.defaults.withCredentials = true;
 
-
 function AppContent() {
-  const { data: userInfo, isLoading: isUserLoading } = useUserInfo()
+  const { userInfo, isLoading: isUserLoading, isLoggedIn } = useUser()
   const [syncStatus, setSyncStatus] = useState({
     isSyncing: false,
     error: null as string | null,
   })
   const offlineState = useOnlineStatus()
-  const tts = useTTS()
   const location = useLocation()
 
   useEffect(() => {
-    // Initialize database on mount
     initializeDB().catch(console.error)
   }, [])
 
@@ -52,9 +50,6 @@ function AppContent() {
       error: success ? null : error || 'Sync failed',
     })
   }, [])
-
-
-
 
   if (isUserLoading) {
     return (
@@ -71,10 +66,11 @@ function AppContent() {
     )
   }
 
-  if (!userInfo && location.pathname === '/login') {
+  if (!isLoggedIn && (location.pathname === '/login' || location.pathname === '/register')) {
     return (
       <Routes>
         <Route path="/login" element={<LoginPage baseRouter="/stash" />} />
+        <Route path="/register" element={<RegisterPage baseRouter="/stash" />} />
       </Routes>
     )
   }
@@ -86,6 +82,7 @@ function AppContent() {
 
         <SyncManager
           isOnline={offlineState.isOnline}
+          userId={userInfo?.id}
           onSyncStart={handleSyncStart}
           onSyncEnd={handleSyncEnd}
         />
@@ -108,7 +105,7 @@ function AppContent() {
                 </motion.div>
               } />
               <Route path="/bookmarks" element={
-                userInfo ? (
+                isLoggedIn ? (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -122,7 +119,7 @@ function AppContent() {
                 )
               } />
               <Route path="/assets" element={
-                userInfo ? (
+                isLoggedIn ? (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -150,11 +147,7 @@ function AppContent() {
         </main>
 
         <BottomNav />
-        
-        
-        <TranscriptSheet />
       </div>
-
     </div>
   )
 }
@@ -162,9 +155,11 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter basename="/stash">
-      <TTSProvider>
-        <AppContent />
-      </TTSProvider>
+      <UserProvider>
+        <SleepTimerProvider>
+          <AppContent />
+        </SleepTimerProvider>
+      </UserProvider>
     </BrowserRouter>
   )
 }
