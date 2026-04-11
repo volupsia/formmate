@@ -68,3 +68,4 @@ export function useSyncStatus(): SyncStatus {
 }
 
 export * from './useSpeechSynthesis';
+export * from './useGoogleAnalytics';

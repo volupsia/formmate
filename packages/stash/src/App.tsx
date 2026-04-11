@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect, useState, useCallback } from 'react'
-import { useOnlineStatus } from '@/hooks'
+import { useOnlineStatus, useGoogleAnalytics } from '@/hooks'
 import { initializeDB } from '@/db/database'
 import { StatusBar } from '@/components/StatusBar'
 import { SyncManager } from '@/components/SyncManager'
@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { setAuthApiBaseUrl, setActivityBaseUrl } from "@formmate/sdk"
 import { UserProvider, useUser } from './contexts/UserContext'
 import axios from 'axios'
+import { configApi, AnalyticsConfig } from '@/api/configApi'
+import useSWR from 'swr'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ExplorePage from './pages/ExplorePage'
@@ -33,12 +35,23 @@ function AppContent() {
     isSyncing: false,
     error: null as string | null,
   })
+
+  const { data: gaResponse } = useSWR<{ success: boolean; data: AnalyticsConfig }>(
+    configApi.analyticsConfigUrl(),
+    (url: string) => fetch(url).then(res => res.json())
+  )
+
+  const gaConfig = gaResponse?.data
+
   const offlineState = useOnlineStatus()
   const location = useLocation()
+
+  useGoogleAnalytics(gaConfig?.measurementId, gaConfig?.enabled)
 
   useEffect(() => {
     initializeDB().catch(console.error)
   }, [])
+
 
   const handleSyncStart = useCallback(() => {
     setSyncStatus({ isSyncing: true, error: null })
