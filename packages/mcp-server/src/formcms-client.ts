@@ -1,4 +1,5 @@
 import axios, { type AxiosInstance } from 'axios';
+import { requestContext } from './context.js';
 
 export class FormCmsClient {
     private readonly client: AxiosInstance;
@@ -8,8 +9,16 @@ export class FormCmsClient {
             baseURL: baseUrl,
             headers: {
                 'Content-Type': 'application/json',
-                ...(apiKey ? { 'X-Api-Key': apiKey } : {}),
             },
+        });
+
+        this.client.interceptors.request.use(config => {
+            const store = requestContext.getStore();
+            const key = store?.apiKey || apiKey;
+            if (key) {
+                config.headers['X-Api-Key'] = key;
+            }
+            return config;
         });
 
         this.client.interceptors.response.use(

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Database, Shield, Key, AlertTriangle, Box, Globe, ArrowLeft, Settings, Palette, Puzzle, BarChart2 } from 'lucide-react';
+import { Database, Shield, Key, AlertTriangle, Box, Globe, ArrowLeft, Settings, Palette, Puzzle, BarChart2, Hash } from 'lucide-react';
 import { useAuth } from '../../hooks/use-auth';
 import { DatabaseSettings } from './components/DatabaseSettings';
 import { AdminSettings } from './components/AdminSettings';
 import { AISettings } from './components/AISettings';
+import { ApiKeySettings } from './components/ApiKeySettings';
 import { AddSpaSettings } from './components/AddSpaSettings';
 import { CorsSettings } from './components/CorsSettings';
 import { StyleSettings } from './components/StyleSettings';
@@ -13,7 +14,7 @@ import { GASettings } from './components/GASettings';
 
 declare const __APP_BUILD_TIMESTAMP__: string;
 
-type SettingsTab = 'database' | 'admin' | 'ai' | 'spa' | 'cors' | 'styles' | 'plugins' | 'analytics';
+type SettingsTab = 'database' | 'admin' | 'apikey' | 'ai' | 'spa' | 'cors' | 'styles' | 'plugins' | 'analytics';
 
 interface NavItem {
     id: SettingsTab;
@@ -40,6 +41,7 @@ export default function SystemSettingsPage() {
     const navItems: NavItem[] = [
         { id: 'admin', label: 'Super Admin', icon: <Shield className="w-4 h-4" />, show: !hasSuperAdmin },
         { id: 'database', label: 'Database', icon: <Database className="w-4 h-4" />, show: !databaseReady },
+        { id: 'apikey', label: 'API Key', icon: <Hash className="w-4 h-4" />, show: !!user },
         { id: 'ai', label: 'AI Providers', icon: <Key className="w-4 h-4" />, show: !!user },
         { id: 'analytics', label: 'Google Analytics', icon: <BarChart2 className="w-4 h-4" />, show: !!user },
         { id: 'styles', label: 'Design Styles', icon: <Palette className="w-4 h-4" />, show: !!user },
@@ -116,6 +118,7 @@ export default function SystemSettingsPage() {
                             />
                         )}
                         {activeTab === 'database' && !databaseReady && <DatabaseSettings />}
+                        {user && activeTab === 'apikey' && <ApiKeySettings />}
                         {user && activeTab === 'ai' && <AISettings />}
                         {user && activeTab === 'analytics' && <GASettings />}
                         {user && activeTab === 'styles' && <StyleSettings />}

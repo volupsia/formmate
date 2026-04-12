@@ -10,12 +10,16 @@ const MATE_TARGET = 'http://127.0.0.1:3001';
 
 export default defineConfig({
   base: '/mate/',
+  resolve: {
+    dedupe: ['react', 'react-dom', 'react-router-dom'],
+  },
   define: {
     __APP_BUILD_TIMESTAMP__: JSON.stringify(new Date().toISOString()),
   },
   build: {
     outDir: 'dist',
-    emptyOutDir: true
+    emptyOutDir: true,
+    sourcemap: true,
   },
   plugins: [
     react(),
