@@ -13,31 +13,41 @@ app.use(cors({
     credentials: true,
 }));
 
-// Apply AsyncLocalStorage middleware
+// Extract API key from standard Authorization: Bearer header (RFC 6750)
 app.use((req, res, next) => {
-    let apiKey = req.headers['x-api-key'] as string | '';
-    if (!apiKey && req.headers.authorization?.startsWith('Bearer ')) {
-        apiKey = req.headers.authorization.substring(7);
-    }
+    const auth = req.headers.authorization ?? '';
+    const apiKey = auth.startsWith('Bearer ') ? auth.slice(7) : '';
     requestContext.run({ apiKey }, next);
 });
 
 async function start() {
     try {
         // Build FormCMS HTTP client
-        const formcmsClient = new FormCmsClient(config.FORMCMS_BASE_URL, config.FORMCMS_API_KEY);
+        // API key is injected per-request from headers via AsyncLocalStorage (see middleware above)
+        const formcmsClient = new FormCmsClient(config.FORMCMS_BASE_URL, '');
         const mcpServer = createMcpServer(formcmsClient);
 
-        let transport: SSEServerTransport;
+        const transports = new Map<string, SSEServerTransport>();
 
         app.get('/sse', async (req, res) => {
-            transport = new SSEServerTransport('/messages', res);
+            const transport = new SSEServerTransport('/messages', res);
+            transports.set(transport.sessionId, transport);
+            console.log(`📡 New SSE session: ${transport.sessionId}`);
+
+            // Clean up when the client disconnects
+            res.on('close', () => {
+                console.log(`🔌 SSE session closed: ${transport.sessionId}`);
+                transports.delete(transport.sessionId);
+            });
+
             await mcpServer.connect(transport);
         });
 
         app.post('/messages', async (req, res) => {
+            const sessionId = req.query.sessionId as string;
+            const transport = transports.get(sessionId);
             if (!transport) {
-                res.status(500).send('Session not initialized');
+                res.status(404).send('Session not found');
                 return;
             }
             await transport.handlePostMessage(req, res);
