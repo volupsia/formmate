@@ -41,7 +41,16 @@ This document outlines how developers can use Antigravity (AI code agent) with F
 
 ---
 
-## Proposed Workflow (Integrated)
+## Architecture: Antigravity as the Brain, FormCMS as the Backend
+
+### Core Idea
+
+> **FormCMS runs in Docker, exposes CRUD schema APIs. Antigravity does all the AI thinking. FormCMS never calls AI — it's a pure headless CMS.**
+
+This means:
+- 🧠 **Antigravity** = the intelligence layer (schema design, query planning, frontend generation)
+- 🗄️ **FormCMS** = the data layer (entities, relationships, CRUD endpoints, query execution)
+- 🔑 **No separate API key** — users don't need a Gemini/OpenAI key for FormCMS; Antigravity already has AI built in
 
 ### Vision: One Conversation, Full-Stack App
 
@@ -51,299 +60,228 @@ This document outlines how developers can use Antigravity (AI code agent) with F
 Users should be able to create posts, view posts, and filter by category."
 ```
 
-**Antigravity orchestrates everything:**
-```typescript
-// 1. Generate backend schema via FormCMS API
-const schema = await formcms.generateSchema({
-  prompt: "Blog with posts, authors, categories"
-});
-
-// 2. Generate queries via FormCMS API
-const queries = await formcms.generateQueries({
-  schemaId: schema.id,
-  operations: ["create", "read", "update", "delete", "filter"]
-});
-
-// 3. Generate React frontend (Antigravity's expertise)
-const components = await antigravity.generateComponents({
-  apiEndpoint: formcms.getEndpoint(schema.id),
-  schema: schema,
-  queries: queries
-});
-
-// 4. Deploy everything
-await deploy({ backend: schema, frontend: components });
+**Antigravity thinks and orchestrates:**
+```
+1. Antigravity designs the schema (entities, fields, relationships)
+2. Antigravity calls FormCMS CRUD APIs to create entities & attributes
+3. Antigravity calls FormCMS CRUD APIs to create queries
+4. Antigravity reads back the generated REST endpoints
+5. Antigravity generates React frontend using those endpoints
 ```
 
-**Result:** Working full-stack app in one conversation
+**Result:** Working full-stack app in one conversation — zero AI calls from FormCMS.
 
 ### Benefits
 
 - ✅ No context switching
 - ✅ Faster iteration (minutes vs hours)
-- ✅ Antigravity has full backend context
-- ✅ Consistent API usage across frontend
+- ✅ No separate API key needed — Antigravity IS the AI
+- ✅ FormCMS stays simple — pure CRUD, no AI complexity
+- ✅ Antigravity has full backend context via MCP
 - ✅ Better error handling (Antigravity knows schema constraints)
 
 ---
 
-## Implementation Options
+## Implementation: MCP Server (Model Context Protocol)
 
-### Option 1: FormCMS REST API (Recommended)
+### Why MCP?
 
-**Add these endpoints to FormCMS:**
+- 🔌 **Standard protocol** for AI agents — works with Antigravity and any future MCP-compatible agent
+- 🧠 **Antigravity does the thinking** — FormCMS just exposes CRUD tools, no AI logic needed
+- 🔑 **No API key in FormCMS** — the user's Antigravity session already has AI; FormCMS is just a data service
+- 🐳 **Docker-friendly** — FormCMS runs as a container, MCP server exposes schema management tools
 
-#### Generate Schema
-```http
-POST /api/ai/schema/generate
-Content-Type: application/json
+### FormCMS Docker Setup
 
-{
-  "prompt": "Blog with posts, authors, and categories",
-  "geminiApiKey": "optional-override"
-}
-
-Response:
-{
-  "success": true,
-  "data": {
-    "schemaId": "post-123",
-    "name": "Post",
-    "fields": [
-      { "name": "title", "type": "string", "required": true },
-      { "name": "content", "type": "text", "required": true },
-      { "name": "authorId", "type": "reference", "ref": "Author" }
-    ],
-    "endpoints": {
-      "list": "/api/posts",
-      "get": "/api/posts/:id",
-      "create": "/api/posts",
-      "update": "/api/posts/:id",
-      "delete": "/api/posts/:id"
-    }
-  }
-}
+```yaml
+# docker-compose.yml
+services:
+  formcms:
+    image: formcms/formcms:latest
+    ports:
+      - "5000:5000"   # REST API
+      - "5001:5001"   # MCP Server
+    environment:
+      - DATABASE_URL=postgres://...
 ```
 
-#### Generate Query
-```http
-POST /api/ai/query/generate
-Content-Type: application/json
+### MCP Server: CRUD Schema Tools
 
-{
-  "schemaId": "post-123",
-  "prompt": "Get all posts with author, sorted by date descending"
-}
-
-Response:
-{
-  "success": true,
-  "data": {
-    "queryId": "recent-posts",
-    "endpoint": "/api/queries/recent-posts",
-    "graphql": "query { posts(orderBy: createdAt_DESC) { id title author { name } } }"
-  }
-}
-```
-
-#### Get Schema Details
-```http
-GET /api/schemas/:schemaId
-
-Response:
-{
-  "success": true,
-  "data": {
-    "id": "post-123",
-    "name": "Post",
-    "fields": [...],
-    "relationships": [...],
-    "endpoints": {...}
-  }
-}
-```
-
-**Antigravity Integration:**
-```typescript
-// Antigravity can call these APIs directly
-const response = await fetch('http://localhost:5000/api/ai/schema/generate', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    prompt: userRequest
-  })
-});
-
-const { schemaId, endpoints } = await response.json();
-
-// Now generate React code using these endpoints
-```
-
----
-
-### Option 2: FormCMS TypeScript SDK
-
-**Create an npm package:**
-
-```bash
-npm install @formcms/sdk
-```
-
-**SDK Usage:**
-```typescript
-import { FormCMS } from '@formcms/sdk';
-
-const cms = new FormCMS({
-  baseUrl: 'http://localhost:5000',
-  apiKey: process.env.FORMCMS_API_KEY
-});
-
-// Generate schema
-const schema = await cms.ai.generateSchema({
-  prompt: "Blog with posts and authors"
-});
-
-// Generate query
-const query = await cms.ai.generateQuery({
-  schemaId: schema.id,
-  prompt: "Get recent posts with authors"
-});
-
-// Get endpoints
-const endpoints = cms.getEndpoints(schema.id);
-// { list: '/api/posts', create: '/api/posts', ... }
-```
-
-**Antigravity Integration:**
-```typescript
-// Antigravity uses the SDK
-import { FormCMS } from '@formcms/sdk';
-
-async function buildFullStackApp(userPrompt: string) {
-  const cms = new FormCMS({ 
-    baseUrl: process.env.FORMCMS_URL 
-  });
-  
-  // Generate backend
-  const schema = await cms.ai.generateSchema({ prompt: userPrompt });
-  
-  // Generate React frontend
-  const components = await generateReactComponents({
-    apiEndpoint: cms.getEndpoints(schema.id),
-    schema: schema.toTypeScript() // Get TypeScript types
-  });
-  
-  return { backend: schema, frontend: components };
-}
-```
-
----
-
-### Option 3: MCP Server (Model Context Protocol)
-
-**FormCMS exposes an MCP server:**
+FormCMS exposes an MCP server with tools for managing entities, attributes, queries, and reading endpoints. **No AI tools** — Antigravity is the AI.
 
 ```typescript
-// FormCMS MCP Server
+// FormCMS MCP Server — pure CRUD, no AI
 const formcmsMCP = {
   name: "formcms",
   version: "1.0.0",
-  
+
   tools: [
+    // --- Entity Management ---
     {
-      name: "generate_schema",
-      description: "Generate a database schema from natural language",
+      name: "list_entities",
+      description: "List all entities (tables) in FormCMS",
+      inputSchema: { type: "object", properties: {} }
+    },
+    {
+      name: "create_entity",
+      description: "Create a new entity with a name and display name",
       inputSchema: {
         type: "object",
         properties: {
-          prompt: { type: "string", description: "Natural language description" }
-        }
+          name: { type: "string", description: "Entity name (e.g. 'post')" },
+          displayName: { type: "string", description: "Human-readable name (e.g. 'Blog Post')" }
+        },
+        required: ["name", "displayName"]
       }
     },
     {
-      name: "generate_query",
-      description: "Generate a query for a schema",
+      name: "get_entity",
+      description: "Get entity details including fields, relationships, and REST endpoints",
       inputSchema: {
         type: "object",
         properties: {
-          schemaId: { type: "string" },
-          prompt: { type: "string" }
-        }
+          entityName: { type: "string" }
+        },
+        required: ["entityName"]
       }
     },
+    {
+      name: "delete_entity",
+      description: "Delete an entity",
+      inputSchema: {
+        type: "object",
+        properties: {
+          entityName: { type: "string" }
+        },
+        required: ["entityName"]
+      }
+    },
+
+    // --- Attribute Management ---
+    {
+      name: "add_attribute",
+      description: "Add a field/column to an entity",
+      inputSchema: {
+        type: "object",
+        properties: {
+          entityName: { type: "string" },
+          field: { type: "string", description: "Field name" },
+          type: { type: "string", enum: ["string", "text", "number", "boolean", "datetime", "image", "file"] },
+          required: { type: "boolean" }
+        },
+        required: ["entityName", "field", "type"]
+      }
+    },
+    {
+      name: "add_relationship",
+      description: "Add a relationship between two entities",
+      inputSchema: {
+        type: "object",
+        properties: {
+          sourceEntity: { type: "string" },
+          targetEntity: { type: "string" },
+          type: { type: "string", enum: ["one-to-many", "many-to-one", "many-to-many"] }
+        },
+        required: ["sourceEntity", "targetEntity", "type"]
+      }
+    },
+
+    // --- Query Management ---
+    {
+      name: "create_query",
+      description: "Create a named query with filters, sorting, and joins",
+      inputSchema: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          entityName: { type: "string" },
+          filters: { type: "object" },
+          sorts: { type: "array" },
+          joins: { type: "array" }
+        },
+        required: ["name", "entityName"]
+      }
+    },
+    {
+      name: "list_queries",
+      description: "List all saved queries",
+      inputSchema: { type: "object", properties: {} }
+    },
+
+    // --- Endpoint Discovery ---
     {
       name: "get_endpoints",
-      description: "Get REST API endpoints for a schema",
+      description: "Get all REST API endpoints for an entity (list, get, create, update, delete)",
       inputSchema: {
         type: "object",
         properties: {
-          schemaId: { type: "string" }
-        }
+          entityName: { type: "string" }
+        },
+        required: ["entityName"]
       }
     }
   ]
 };
 ```
 
-**Antigravity uses MCP:**
+### How Antigravity Uses It
+
 ```
 User: "Build a blog app with posts and authors"
 
-Antigravity thinks: I need to create the backend first
-Antigravity: [Calls formcms.generate_schema("blog with posts and authors")]
-FormCMS MCP: Returns { schemaId: "blog-123", fields: [...], endpoints: {...} }
+Antigravity thinks: I need to design a schema for a blog.
+  - Entity "post" with fields: title (string), content (text), publishedAt (datetime)
+  - Entity "author" with fields: name (string), email (string), bio (text)
+  - Relationship: author one-to-many posts
 
-Antigravity thinks: Now I'll generate the React frontend
-Antigravity: [Generates React code using the endpoints]
+Antigravity: [Calls formcms.create_entity({ name: "author", displayName: "Author" })]
+Antigravity: [Calls formcms.add_attribute({ entityName: "author", field: "name", type: "string", required: true })]
+Antigravity: [Calls formcms.add_attribute({ entityName: "author", field: "email", type: "string", required: true })]
+Antigravity: [Calls formcms.add_attribute({ entityName: "author", field: "bio", type: "text" })]
 
-Antigravity: "I've created a full-stack blog app. The backend is ready at 
-              http://localhost:5000/api/posts and I've generated React 
-              components in src/components/Blog/"
+Antigravity: [Calls formcms.create_entity({ name: "post", displayName: "Blog Post" })]
+Antigravity: [Calls formcms.add_attribute({ entityName: "post", field: "title", type: "string", required: true })]
+Antigravity: [Calls formcms.add_attribute({ entityName: "post", field: "content", type: "text", required: true })]
+Antigravity: [Calls formcms.add_attribute({ entityName: "post", field: "publishedAt", type: "datetime" })]
+
+Antigravity: [Calls formcms.add_relationship({ sourceEntity: "author", targetEntity: "post", type: "one-to-many" })]
+
+Antigravity: [Calls formcms.get_endpoints({ entityName: "post" })]
+FormCMS MCP: Returns { list: "/api/posts", get: "/api/posts/:id", create: "POST /api/posts", ... }
+
+Antigravity thinks: Now I'll generate the React frontend using these endpoints.
+Antigravity: [Generates React code with proper API calls]
+
+Antigravity: "I've created a full-stack blog app:
+  - Backend: FormCMS with 2 entities (author, post) and their relationship
+  - Frontend: React app in src/components/Blog/
+  - API: http://localhost:5000/api/posts, /api/authors"
 ```
+
+**Key difference:** Antigravity designed the schema itself. FormCMS just stored it and generated the REST endpoints. No AI calls from FormCMS.
 
 ---
 
-## Recommended Implementation Path
+## Implementation Path
 
-### Phase 1: REST API Endpoints (Week 1-2)
+### Phase 1: Dockerize FormCMS (Week 1)
 
-**Add to FormCMS:**
-1. `POST /api/ai/schema/generate` - Generate schema from prompt
-2. `POST /api/ai/query/generate` - Generate query from prompt
-3. `GET /api/schemas/:id` - Get schema details
+1. Create production Docker image for FormCMS
+2. Expose CRUD schema management REST APIs
+3. Document all entity/attribute/query CRUD endpoints
 
-**Benefits:**
-- Simple to implement
-- Works with any HTTP client
-- No new dependencies
-- Antigravity can use it immediately
+### Phase 2: MCP Server (Week 2-3)
 
-### Phase 2: TypeScript SDK (Week 3-4)
+1. Implement MCP server in FormCMS Docker container
+2. Define tools for entity, attribute, relationship, and query management
+3. Define tools for endpoint discovery
+4. Test with Antigravity
 
-**Create `@formcms/sdk`:**
-1. Wrapper around REST API
-2. TypeScript types for schemas
-3. Helper methods for common operations
-4. Better developer experience
+### Phase 3: Polish & Documentation (Week 4)
 
-**Benefits:**
-- Type safety
-- Better autocomplete
-- Easier to use than raw HTTP
-- Can be used in any Node.js/TypeScript project
-
-### Phase 3: MCP Server (Month 2)
-
-**Implement MCP protocol:**
-1. MCP server in FormCMS
-2. Tool definitions for AI agents
-3. Documentation for AI integration
-
-**Benefits:**
-- Standard protocol for AI agents
-- Works with any MCP-compatible agent
-- Future-proof
-- Better AI understanding of capabilities
+1. Write MCP tool documentation and examples
+2. Create quick-start guide for Antigravity + FormCMS
+3. Publish Docker image
 
 ---
 
@@ -351,63 +289,63 @@ Antigravity: "I've created a full-stack blog app. The backend is ready at
 
 ### User Request
 ```
-"Build a recipe sharing app where users can post recipes, 
+"Build a recipe sharing app where users can post recipes,
 rate them, and search by ingredients"
 ```
 
-### Antigravity Execution
+### Antigravity Execution (via MCP)
 
-**1. Generate Backend (via FormCMS API)**
-```typescript
-// Antigravity calls FormCMS
-const schemas = await Promise.all([
-  formcms.generateSchema({ prompt: "Recipe with title, instructions, ingredients" }),
-  formcms.generateSchema({ prompt: "Rating with stars and comment" }),
-  formcms.generateSchema({ prompt: "User with name and email" })
-]);
-
-// FormCMS returns endpoints
-// /api/recipes, /api/ratings, /api/users
+**1. Antigravity Designs the Schema (AI thinking)**
+```
+Antigravity analyzes the request and decides:
+- Entity "recipe": title (string), instructions (text), prepTime (number), image (image)
+- Entity "ingredient": name (string), quantity (string)
+- Entity "rating": stars (number), comment (text)
+- Entity "user": name (string), email (string), avatar (image)
+- Relationships: user → recipes (1:N), recipe → ingredients (1:N), recipe → ratings (1:N)
 ```
 
-**2. Generate Queries (via FormCMS API)**
-```typescript
-const queries = await Promise.all([
-  formcms.generateQuery({ 
-    schemaId: schemas[0].id, 
-    prompt: "Search recipes by ingredient name" 
-  }),
-  formcms.generateQuery({ 
-    schemaId: schemas[0].id, 
-    prompt: "Get top rated recipes" 
-  })
-]);
-
-// FormCMS returns custom endpoints
-// /api/queries/search-by-ingredient
-// /api/queries/top-rated
+**2. Antigravity Creates Backend (MCP CRUD calls)**
+```
+[Calls formcms.create_entity({ name: "user", displayName: "User" })]
+[Calls formcms.add_attribute({ entityName: "user", field: "name", type: "string", required: true })]
+[Calls formcms.add_attribute({ entityName: "user", field: "email", type: "string", required: true })]
+...
+[Calls formcms.create_entity({ name: "recipe", displayName: "Recipe" })]
+...
+[Calls formcms.add_relationship({ sourceEntity: "user", targetEntity: "recipe", type: "one-to-many" })]
+...
+[Calls formcms.create_query({ name: "top-rated", entityName: "recipe", sorts: [{field: "avgRating", dir: "desc"}] })]
 ```
 
-**3. Generate React Frontend (Antigravity)**
-```typescript
-// Antigravity generates components
-const components = [
-  'src/components/RecipeCard.tsx',
-  'src/components/RecipeForm.tsx',
-  'src/components/SearchBar.tsx',
-  'src/components/RatingStars.tsx',
-  'src/pages/HomePage.tsx',
-  'src/pages/RecipePage.tsx'
-];
+**3. Antigravity Reads Endpoints (MCP discovery)**
+```
+[Calls formcms.get_endpoints({ entityName: "recipe" })]
+→ { list: "/api/recipes", get: "/api/recipes/:id", create: "POST /api/recipes", ... }
 
-// All components use the FormCMS API endpoints
+[Calls formcms.get_endpoints({ entityName: "user" })]
+→ { list: "/api/users", ... }
 ```
 
-**4. Result**
+**4. Antigravity Generates React Frontend (code generation)**
 ```
-✅ Backend: FormCMS with 3 entities, 2 custom queries
+Generates:
+  src/components/RecipeCard.tsx
+  src/components/RecipeForm.tsx
+  src/components/SearchBar.tsx
+  src/components/RatingStars.tsx
+  src/pages/HomePage.tsx
+  src/pages/RecipePage.tsx
+
+All components call the FormCMS REST endpoints.
+```
+
+**5. Result**
+```
+✅ Backend: FormCMS with 4 entities, relationships, and custom queries
 ✅ Frontend: React app with 6 components
-✅ Time: ~5 minutes (vs ~5 hours manually)
+✅ AI calls from FormCMS: ZERO — Antigravity did all the thinking
+✅ Time: ~5 minutes
 ```
 
 ---
@@ -449,20 +387,18 @@ Total: ~5 minutes
 
 ### For FormCMS Team
 
-1. **Add REST API endpoints** (Option 1)
-   - Start with `/api/ai/schema/generate`
-   - Add authentication
-   - Document API
+1. **Dockerize FormCMS**
+   - Production Docker image with CRUD schema APIs exposed
+   - Docker Compose template for quick start
 
-2. **Create TypeScript SDK** (Option 2)
-   - Publish to npm as `@formcms/sdk`
-   - Add examples
-   - Write documentation
+2. **Build MCP Server**
+   - Implement entity/attribute/relationship/query CRUD tools
+   - Implement endpoint discovery tools
+   - No AI logic — keep FormCMS as a pure data service
 
-3. **Consider MCP Server** (Option 3)
-   - Research MCP protocol
-   - Implement if beneficial
-   - Integrate with AI agents
+3. **Document CRUD APIs**
+   - Full REST API documentation for schema management
+   - MCP tool reference for Antigravity integration
 
 ### For Antigravity Users
 
@@ -473,27 +409,30 @@ Total: ~5 minutes
 3. Tell Antigravity to build frontend using those endpoints
 ```
 
-**Future (Integrated):**
+**Future (MCP Integrated):**
 ```
-1. Tell Antigravity to build full-stack app
-2. Antigravity calls FormCMS API
-3. Done
+1. Start FormCMS Docker container
+2. Tell Antigravity: "Build me a recipe app"
+3. Antigravity designs schema, creates entities via MCP, generates frontend
+4. Done — no API keys, no context switching
 ```
 
 ---
 
 ## Conclusion
 
-**Best Approach:** Start with **Option 1 (REST API)** because:
-- ✅ Simple to implement
-- ✅ Works immediately with Antigravity
-- ✅ No new dependencies
-- ✅ Foundation for SDK and MCP later
+**Approach: MCP Server with FormCMS in Docker**
+
+- ✅ FormCMS stays simple — pure CRUD, no AI complexity
+- ✅ No separate API key — Antigravity already has AI built in
+- ✅ Standard MCP protocol — works with any compatible AI agent
+- ✅ Docker deployment — easy to run anywhere
+- ✅ Clear separation — FormCMS = data, Antigravity = intelligence
 
 **Impact:**
 - 🚀 10x faster full-stack development
-- 🎯 Better developer experience
+- 🎯 Zero context switching for developers
 - 🤖 True AI-powered app building
 - 💡 Unique competitive advantage
 
-The combination of FormCMS (AI backend generation) + Antigravity (AI frontend generation) = **No-code full-stack development** 🎉
+The combination of FormCMS (headless CRUD backend in Docker) + Antigravity (AI brain via MCP) = **No-code full-stack development** 🎉

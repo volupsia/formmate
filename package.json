@@ -9,8 +9,8 @@
         "packages/mate"
     ],
     "scripts": {
-        "debug": "concurrently \"npm run debug:service\" \"npm run dev:mate\"",
-        "dev": "concurrently \"npm run dev:service\" \"npm run dev:mate\"",
+        "debug": "concurrently \"npm run debug:service\" \"npm run dev:mate\" \"npm run dev:mcp\"",
+        "dev": "concurrently \"npm run dev:service\" \"npm run dev:mate\" \"npm run dev:mcp\"",
         "dev:service": "npm run dev --workspace=@formmate/service",
         "debug:service": "npm run debug --workspace=@formmate/service",
         "dev:mate": "npm run dev --workspace=@formmate/mate",
@@ -24,6 +24,7 @@
         "build:mate": "npm run build --workspace=@formmate/mate",
         "build:all": "npm run build --workspaces --if-present",
         "install:all": "npm install",
+        "dev:mcp": "npm run dev --workspace=@formmate/mcp-server",
         "setup": "npm run build:shared && npm run db:init --workspace=@formmate/service"
     },
     "devDependencies": {
