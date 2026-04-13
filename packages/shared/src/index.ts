@@ -6,3 +6,4 @@ export * from "./cms.dto";
 export * from "./mate.dto";
 export * from './constants.js';
 export * from './api-client.js';
+export * from './entity-design.js';

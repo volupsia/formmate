@@ -3,6 +3,8 @@ import type { FormCmsClient } from './formcms-client.js';
 import { registerSchemaTools } from './tools/schema.js';
 import { registerEntityTools } from './tools/entity.js';
 import { registerQueryTools } from './tools/query.js';
+import { registerSchemaResources } from './resources/schemas.js';
+import { registerSchemaPrompts } from './prompts/entity-designer.js';
 
 export function createMcpServer(client: FormCmsClient): McpServer {
     const server = new McpServer({
@@ -10,9 +12,16 @@ export function createMcpServer(client: FormCmsClient): McpServer {
         version: '1.0.0',
     });
 
+    // Tools — actions the LLM can call
     registerSchemaTools(server, client);
     registerEntityTools(server, client);
     registerQueryTools(server, client);
+
+    // Resources — static context the LLM can read
+    registerSchemaResources(server);
+
+    // Prompts — reusable prompt templates
+    registerSchemaPrompts(server);
 
     return server;
 }

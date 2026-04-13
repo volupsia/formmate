@@ -3,8 +3,14 @@ import fp from 'fastify-plugin';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import {
+    ENTITY_JSON_SCHEMA_STR,
+    ATTRIBUTE_JSON_SCHEMA_STR,
+    RELATIONSHIP_JSON_SCHEMA_STR,
+    ENTITY_DESIGNER_PROMPT,
+    AGENT_NAMES,
+} from '@formmate/shared';
 import { config } from '../config';
-import { AGENT_NAMES } from '@formmate/shared';
 
 import { IntentClassifier } from '../agent/intent-classifier';
 import { EntityGenerator } from '../agent/entity-designer';
@@ -31,14 +37,11 @@ const agentsPlugin: FastifyPluginAsync = async (fastify) => {
     // Resolve directories
     const __dirname = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
     const agentsDir = path.join(__dirname, 'agent');
-    const schemasDir = path.join(__dirname, '../resources/schemas');
 
-    // Load common schemas
-    const [entitySchema, attributeSchema, relationshipSchema] = await Promise.all([
-        fs.readFile(path.join(schemasDir, 'entity.json'), 'utf-8'),
-        fs.readFile(path.join(schemasDir, 'attribute.json'), 'utf-8'),
-        fs.readFile(path.join(schemasDir, 'relationship.json'), 'utf-8'),
-    ]);
+    // Schemas come from @formmate/shared — single source of truth
+    const entitySchema = ENTITY_JSON_SCHEMA_STR;
+    const attributeSchema = ATTRIBUTE_JSON_SCHEMA_STR;
+    const relationshipSchema = RELATIONSHIP_JSON_SCHEMA_STR;
 
     const loadPrompt = async (fileName: string) => {
         try {
@@ -49,8 +52,10 @@ const agentsPlugin: FastifyPluginAsync = async (fastify) => {
         }
     };
 
+    // entity-designer prompt comes from @formmate/shared
+    const entityGeneratorPrompt = ENTITY_DESIGNER_PROMPT;
+
     const [
-        entityGeneratorPrompt,
         intentClassifierPrompt,
         queryGeneratorPrompt,
         dataGeneratorPrompt,
@@ -58,7 +63,6 @@ const agentsPlugin: FastifyPluginAsync = async (fastify) => {
         pagePlannerPrompt,
         systemArchitectPrompt,
     ] = await Promise.all([
-        loadPrompt('entity-designer.md'),
         loadPrompt('intent-classifier.md'),
         loadPrompt('query-builder.md'),
         loadPrompt('data-synthesizer.md'),
