@@ -100,7 +100,7 @@ export const ENTITY_JSON_SCHEMA = {
         attributes: {
             type: 'array',
             description: 'List of attributes (fields) for this entity',
-            items: { $ref: 'attribute.json' },
+            items: ATTRIBUTE_JSON_SCHEMA,
             minItems: 1,
         },
     },

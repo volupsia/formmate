@@ -1,66 +1,87 @@
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import {
+    ATTRIBUTE_JSON_SCHEMA,
+    ENTITY_JSON_SCHEMA,
+    RELATIONSHIP_JSON_SCHEMA,
+} from '@formmate/shared';
 import type { FormCmsClient } from '../formcms-client.js';
 
-// ─── Zod schemas mirroring mate-service/resources/schemas/*.json ──────────────
+// ─── Zod schemas – derived from @formmate/shared JSON Schema constants ─────────
+//
+// Single source of truth: packages/shared/src/entity-design.ts
+// These Zod schemas are the MCP-layer binding; every value comes from the
+// shared constants so there is NOTHING to keep in sync here.
+
+// Pull the display-type enum directly from the JSON Schema so this list
+// never drifts from what the backend expects.
+const displayTypeValues = ATTRIBUTE_JSON_SCHEMA.properties.displayType.enum;
+// Zod requires a non-empty tuple for z.enum(); the cast is safe because the
+// shared constant is typed `as const` with at least one element.
+const displayTypeEnum = z.enum(
+    displayTypeValues as unknown as [string, ...string[]]
+);
 
 const AttributeSchema = z.object({
     field: z
         .string()
-        .min(1)
-        .describe('Internal field name (camelCase). Do NOT use reserved names: id, status, publishedAt, createdAt, updatedAt.'),
+        .min(ATTRIBUTE_JSON_SCHEMA.properties.field.minLength)
+        .describe(ATTRIBUTE_JSON_SCHEMA.properties.field.description),
     header: z
         .string()
-        .min(1)
-        .describe('Human-readable label shown in the UI'),
-    displayType: z
-        .enum([
-            'text', 'textarea', 'editor', 'number',
-            'localDatetime', 'datetime', 'date',
-            'image', 'gallery', 'file',
-            'dictionary', 'dropdown', 'multiselect',
-        ])
-        .describe(
-            'UI display/edit widget. Use "dropdown" or "multiselect" ONLY when options are provided. ' +
-            '"select" is forbidden.'
-        ),
+        .min(ATTRIBUTE_JSON_SCHEMA.properties.header.minLength)
+        .describe(ATTRIBUTE_JSON_SCHEMA.properties.header.description),
+    displayType: displayTypeEnum.describe(
+        ATTRIBUTE_JSON_SCHEMA.properties.displayType.description +
+        '. Use "dropdown" or "multiselect" ONLY when options are provided. "select" is forbidden.'
+    ),
     validation: z
         .string()
         .describe(
-            'Regex for input validation. Use simple character-set patterns (e.g. "^[A-Za-z]+$"). ' +
+            ATTRIBUTE_JSON_SCHEMA.properties.validation.description +
+            ' Use simple character-set patterns (e.g. "^[A-Za-z]+$"). ' +
             'NO lookaheads/lookbehinds. For image/gallery/file fields use ".*".'
         ),
     options: z
         .string()
         .describe(
-            'Comma-separated option values, e.g. "Draft,Published,Archived". ' +
-            'Required for dropdown/multiselect; leave empty for all other types.'
+            ATTRIBUTE_JSON_SCHEMA.properties.options.description +
+            ' Required for dropdown/multiselect; leave empty for all other types.'
         ),
     inList: z
         .boolean()
-        .default(true)
-        .describe('Show this field in list/table views'),
+        .default(ATTRIBUTE_JSON_SCHEMA.properties.inList.default)
+        .describe(ATTRIBUTE_JSON_SCHEMA.properties.inList.description),
     inDetail: z
         .boolean()
-        .default(true)
-        .describe('Show this field on the detail/edit page'),
+        .default(ATTRIBUTE_JSON_SCHEMA.properties.inDetail.default)
+        .describe(ATTRIBUTE_JSON_SCHEMA.properties.inDetail.description),
 });
 
 const RelationshipSchema = z.object({
-    sourceEntity: z.string().describe('The entity where this relationship originates (camelCase)'),
-    targetEntity: z.string().describe('The related entity (camelCase)'),
+    sourceEntity: z
+        .string()
+        .describe(RELATIONSHIP_JSON_SCHEMA.properties.sourceEntity.description),
+    targetEntity: z
+        .string()
+        .describe(RELATIONSHIP_JSON_SCHEMA.properties.targetEntity.description),
     fieldName: z
         .string()
         .describe(
-            'Field name on the source entity that represents this relationship (camelCase). ' +
-            'Do NOT create a matching attribute — relationships must NOT be modelled as attributes.'
+            RELATIONSHIP_JSON_SCHEMA.properties.fieldName.description +
+            ' Do NOT create a matching attribute — relationships must NOT be modelled as attributes.'
         ),
-    label: z.string().optional().describe('Human-readable label for this relationship in the UI'),
+    label: z
+        .string()
+        .optional()
+        .describe(RELATIONSHIP_JSON_SCHEMA.properties.label.description),
     cardinality: z
-        .enum(['oneToMany', 'manyToOne', 'manyToMany'])
+        .enum(
+            RELATIONSHIP_JSON_SCHEMA.properties.cardinality.enum as unknown as [string, ...string[]]
+        )
         .describe(
-            'Cardinality from sourceEntity → targetEntity. ' +
-            '"manyToOne" means the source holds the foreign key.'
+            RELATIONSHIP_JSON_SCHEMA.properties.cardinality.description +
+            ' "manyToOne" means the source holds the foreign key.'
         ),
 });
 
@@ -68,23 +89,23 @@ const EntitySchema = z.object({
     name: z
         .string()
         .min(1)
-        .describe('Internal entity name (camelCase). Forbidden: "User", "Comment".'),
+        .describe(ENTITY_JSON_SCHEMA.properties.name.description + ' Forbidden: "User", "Comment".'),
     displayName: z
         .string()
         .min(1)
-        .describe('Human-readable name shown in the UI'),
+        .describe(ENTITY_JSON_SCHEMA.properties.displayName.description),
     tableName: z
         .string()
         .min(1)
-        .describe('Database table name (usually same as name, camelCase)'),
+        .describe(ENTITY_JSON_SCHEMA.properties.tableName.description),
     labelAttributeName: z
         .string()
         .min(1)
-        .describe('The attribute used as the primary label in lists and dropdowns'),
+        .describe(ENTITY_JSON_SCHEMA.properties.labelAttributeName.description),
     attributes: z
         .array(AttributeSchema)
         .min(1)
-        .describe('Scalar fields for this entity. Do NOT include relationship fields here.'),
+        .describe(ENTITY_JSON_SCHEMA.properties.attributes.description + ' Do NOT include relationship fields here.'),
 });
 
 /** Full design payload: one or more entities plus their relationships */
