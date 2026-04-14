@@ -32,6 +32,8 @@ const agentsPlugin: FastifyPluginAsync = async (fastify) => {
 
     const entityOperator = fastify.entityOperator;
     const pageOperator = fastify.pageOperator;
+    const queryOperator = fastify.queryOperator;
+    const dataOperator = fastify.dataOperator;
     const prisma = fastify.prisma;
 
     // Resolve directories
@@ -118,9 +120,9 @@ const agentsPlugin: FastifyPluginAsync = async (fastify) => {
 
             const entityGenerator = new EntityGenerator(provider, entityGeneratorPrompt,
                 entitySchema, attributeSchema, relationshipSchema, formcmsClient, modelLogger, entityOperator);
-            const queryGenerator = new QueryGenerator(provider, queryGeneratorPrompt, formcmsClient, modelLogger);
+            const queryGenerator = new QueryGenerator(provider, queryGeneratorPrompt, formcmsClient, queryOperator, modelLogger);
             const pagePlannerAgent = new PagePlanner(provider, pagePlannerPrompt, modelLogger, getTemplateOptions, formcmsClient, pageOperator);
-            const dataGenerator = new DataGenerator(provider, dataGeneratorPrompt, formcmsClient, modelLogger);
+            const dataGenerator = new DataGenerator(provider, dataGeneratorPrompt, formcmsClient, dataOperator, modelLogger);
             const systemArchitect = new SystemArchitect(provider, systemArchitectPrompt, prisma, modelLogger);
 
             const intentClassifier = new IntentClassifier(

@@ -18,7 +18,7 @@ import { StatusService } from './status-service';
 import { formatError } from '../utils/error-formatter';
 import { UserVisibleError } from '../agent/user-visible-error';
 import { FormCmsError } from '../infrastructures/form-cms-error';
-import type { FormCMSClient } from '../infrastructures/formcms-client';
+import type { FormCmsClientBuilder } from '../infrastructures/formcms-client';
 import { AgentProviderError } from '../infrastructures/agent-provider-error';
 import { PAGE_COMPONENT_REGISTRY } from '../agent/page-components';
 
@@ -42,7 +42,7 @@ export class OrchestratorService {
         private readonly statusService: StatusService,
         private readonly logger: ServiceLogger,
         private readonly taskOperator: TaskOperator,
-        private readonly formCMSClient: FormCMSClient,
+        private readonly formCMSClient: FormCmsClientBuilder,
     ) { }
 
 

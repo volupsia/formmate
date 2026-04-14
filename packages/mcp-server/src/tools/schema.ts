@@ -202,7 +202,7 @@ export function registerSchemaTools(server: McpServer, client: FormCmsApiClient)
             ),
         },
         async ({ payload }) => {
-            const data = await client.saveEntityDefine(payload);
+            const data = await client.commitEntityDesign(payload);
             return {
                 content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
             };

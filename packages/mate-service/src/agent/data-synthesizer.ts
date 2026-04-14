@@ -1,5 +1,6 @@
 import type { AIProvider } from '../infrastructures/ai-provider.interface';
-import type { FormCMSClient } from '../infrastructures/formcms-client';
+import type { FormCmsClientBuilder } from '../infrastructures/formcms-client';
+import type { DataOperator } from '../operators/data-operator';
 import type { ServiceLogger } from '../types/logger';
 import { type AgentContext, type Agent, type ThinkResult, type ActResult, type FinalizeResult } from './chat-assistant';
 import { UserVisibleError } from './user-visible-error';
@@ -20,7 +21,8 @@ export class DataGenerator implements Agent<DataGeneratorPlan> {
     constructor(
         private readonly aiProvider: AIProvider,
         private readonly systemPrompt: string,
-        private readonly formCMSClient: FormCMSClient,
+        private readonly formCMSClient: FormCmsClientBuilder,
+        private readonly dataOperator: DataOperator,
         private readonly logger: ServiceLogger,
     ) { }
 
@@ -97,7 +99,7 @@ export class DataGenerator implements Agent<DataGeneratorPlan> {
         const idMaps: Record<string, Record<string, any>> = {};
         for (const item of data) {
             try {
-                await this.formCMSClient.insertData(context.externalCookie, targetEntity, item, idMaps);
+                await this.dataOperator.insertData(context.externalCookie, targetEntity, item, idMaps);
                 successCount++;
             } catch (e) {
                 this.logger.error({ error: e, item }, 'Failed to insert item');

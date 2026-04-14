@@ -1,6 +1,6 @@
 
 import type { AIProvider } from '../infrastructures/ai-provider.interface';
-import type { FormCMSClient } from '../infrastructures/formcms-client';
+import type { FormCmsClientBuilder } from '../infrastructures/formcms-client';
 import type { ServiceLogger } from '../types/logger';
 import { type AgentContext, type Agent, type ThinkResult, type ActResult, type FinalizeResult } from './chat-assistant';
 import { PageOperator } from '../operators/page-operator';
@@ -22,7 +22,7 @@ export class PageArchitect implements Agent<ArchitectDesignerAgentPlan> {
     constructor(
         private readonly aiProvider: AIProvider,
         private readonly architectSystemPrompt: string,
-        private readonly formCMSClient: FormCMSClient,
+        private readonly formCMSClient: FormCmsClientBuilder,
         private readonly logger: ServiceLogger,
         private readonly pageOperator: PageOperator
     ) { }

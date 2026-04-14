@@ -1,10 +1,10 @@
 import type { User } from '@formmate/shared';
 import type { ServiceLogger } from '../types/logger';
-import { FormCMSClient } from '../infrastructures/formcms-client';
+import { FormCmsClientBuilder } from '../infrastructures/formcms-client';
 
 export class AuthService {
     constructor(
-        private readonly client: FormCMSClient,
+        private readonly client: FormCmsClientBuilder,
         private readonly logger: ServiceLogger
     ) { }
 

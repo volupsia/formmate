@@ -4,7 +4,7 @@ import { config, OPENAI_MODELS, GEMINI_MODELS } from '../config';
 
 import { OpenAIProvider } from '../infrastructures/openai-provider';
 import { GeminiProvider } from '../infrastructures/gemini-provider';
-import { FormCMSClient } from '../infrastructures/formcms-client';
+import { FormCmsClientBuilder } from '../infrastructures/formcms-client';
 
 import type { AIProvider } from '../infrastructures/ai-provider.interface';
 
@@ -12,7 +12,7 @@ const infrastructurePlugin: FastifyPluginAsync = async (fastify) => {
     fastify.log.info('Starting infrastructure plugin...');
 
     // 1. FormCMS Client Setup
-    const formcmsClient = new FormCMSClient(config.FORMCMS_BASE_URL);
+    const formcmsClient = new FormCmsClientBuilder(config.FORMCMS_BASE_URL);
     fastify.decorate('formCMS', formcmsClient);
 
     // 2. AI Providers Setup

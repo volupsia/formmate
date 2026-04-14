@@ -1,5 +1,6 @@
 import type { AIProvider } from '../infrastructures/ai-provider.interface';
-import type { FormCMSClient } from '../infrastructures/formcms-client';
+import type { FormCmsClientBuilder } from '../infrastructures/formcms-client';
+import type { QueryOperator } from '../operators/query-operator';
 
 import { type AgentContext, type ThinkResult, type Agent, type ActResult, type FinalizeResult } from './chat-assistant';
 import type { ServiceLogger } from '../types/logger';
@@ -14,7 +15,8 @@ export class QueryGenerator implements Agent<QueryGeneratorPlan> {
     constructor(
         private readonly aiProvider: AIProvider,
         private readonly systemPrompt: string,
-        private readonly formCMSClient: FormCMSClient,
+        private readonly formCMSClient: FormCmsClientBuilder,
+        private readonly queryOperator: QueryOperator,
         private readonly logger: ServiceLogger,
     ) { }
 
@@ -37,7 +39,7 @@ export class QueryGenerator implements Agent<QueryGeneratorPlan> {
             }
         }
 
-        const sdl = await this.formCMSClient.generateSDL(context.externalCookie);
+        const sdl = await this.queryOperator.generateSDL(context.externalCookie);
 
         let developerMessage = `## GraphQL SDL Schema
 ${sdl}
@@ -85,7 +87,7 @@ ${sdl}
             }
 
             // We need to saveQuery which internally does saveSchema.
-            // But FormCMSClient.saveQuery helper simplifies this.
+            // But FormCmsClientBuilder.saveQuery helper simplifies this.
             const newSchemaId = await this.formCMSClient.getClient(context.externalCookie).saveQuery(targetSchemaId, name, source);
             schemaIds.push(newSchemaId);
         }

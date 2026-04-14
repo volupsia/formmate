@@ -1,17 +1,18 @@
-import {
-    type SchemaSummary,
-    type SchemaDto,
-    type SaveSchemaPayload,
-    type EntityDto,
-    type RelationshipDto
-} from '@formmate/shared';
-import type { FormCMSClient } from '../infrastructures/formcms-client';
-import type { ServiceLogger } from '../types/logger';
+import type {
+    SchemaSummary,
+    EntityDto,
+    RelationshipDto
+} from '../index.js';
+import type { IFormCmsClientBuilder } from './formcms-client-builder.interface.js';
+
+export interface EntityOperatorLogger {
+    info(msg: string, ...args: any[]): void;
+}
 
 export class EntityOperator {
     constructor(
-        private readonly formCMSClient: FormCMSClient,
-        private readonly logger: ServiceLogger
+        private readonly formCMSClient: IFormCmsClientBuilder,
+        private readonly logger: EntityOperatorLogger
     ) { }
 
     async prepareSummary(

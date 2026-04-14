@@ -20,3 +20,7 @@ export * from './models/relationship-model.js';
 // utils
 export * from './utils/layout-compiler.js';
 export * from './utils/string.js';
+
+// operators
+export * from './operators/formcms-client-builder.interface.js';
+export * from './operators/entity-operator.js';

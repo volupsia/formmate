@@ -3,7 +3,7 @@ import { type AgentContext, type Agent, type ThinkResult, type ActResult, type F
 import { UserVisibleError } from './user-visible-error';
 import { type TemplateSelectionRequest, type TemplateSelectionResponse, type PagePlanResponse, AGENT_NAMES } from '@formmate/shared';
 import type { AIProvider } from '../infrastructures/ai-provider.interface';
-import type { FormCMSClient } from '../infrastructures/formcms-client';
+import type { FormCmsClientBuilder } from '../infrastructures/formcms-client';
 import { PageOperator } from '../operators/page-operator';
 
 // we should never allow user change PagePlan, 
@@ -14,7 +14,7 @@ export class PagePlanner implements Agent<TemplateSelectionRequest> {
         private readonly plannerSystemPrompt: string,
         private readonly logger: ServiceLogger,
         private readonly getTemplateOptions: () => Promise<{ id: string; name: string; description: string }[]>,
-        private readonly formCMSClient: FormCMSClient,
+        private readonly formCMSClient: FormCmsClientBuilder,
         private readonly pageOperator: PageOperator,
     ) { }
 

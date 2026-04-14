@@ -1,5 +1,5 @@
 import type { AIProvider } from '../../infrastructures/ai-provider.interface';
-import type { FormCMSClient } from '../../infrastructures/formcms-client';
+import type { FormCmsClientBuilder } from '../../infrastructures/formcms-client';
 import type { ServiceLogger } from '../../types/logger';
 import { type AgentContext, type ThinkResult, type Agent, type ActResult, type FinalizeResult } from '../chat-assistant';
 import { type ComponentInstruction, type PageComponentDefinition, type PageMetadata } from '@formmate/shared';
@@ -14,7 +14,7 @@ export class PageComponentBuilder implements Agent<PageComponent> {
         private readonly aiProvider: AIProvider,
         private readonly systemPrompt: string,
         private readonly snippet: string | undefined,
-        private readonly formCMSClient: FormCMSClient,
+        private readonly formCMSClient: FormCmsClientBuilder,
         private readonly logger: ServiceLogger,
         private readonly pageOperator: PageOperator,
         private readonly baseUrl: string,

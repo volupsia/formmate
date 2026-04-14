@@ -44,12 +44,12 @@ export class FormCmsApiClient {
         } as User;
     }
 
-    async register(payload: import('./contracts.js').RegisterReq): Promise<User> {
+    async register(payload: import('../types/contracts.js').RegisterReq): Promise<User> {
         const resp = await this._axios.post('/api/register', payload);
         return resp.data as User;
     }
 
-    async changePassword(payload: import('./contracts.js').ChangePasswordReq): Promise<void> {
+    async changePassword(payload: import('../types/contracts.js').ChangePasswordReq): Promise<void> {
         await this._axios.post('/api/profile/password', payload);
     }
 
@@ -67,7 +67,7 @@ export class FormCmsApiClient {
 
     // ─── System ────────────────────────────────────────────────────────────────
 
-    async getSystemStatus(): Promise<import('./contracts.js').SystemStatusResponse> {
+    async getSystemStatus(): Promise<import('../types/contracts.js').SystemStatusResponse> {
         const resp = await this._axios.get('/api/system/is-ready');
         return resp.data;
     }
@@ -142,7 +142,7 @@ export class FormCmsApiClient {
         return resp.data;
     }
 
-    async commitEntities(summary: SchemaSummary): Promise<string[]> {
+    async commitEntityDesign(summary: { entities: any[], relationships?: any[], userInput?: string }): Promise<string[]> {
         const schemaIds = new Set<string>();
 
         // 1. Commit regular entities
@@ -151,7 +151,7 @@ export class FormCmsApiClient {
                 const payload: SaveSchemaPayload = {
                     schemaId: item.schemaId || null,
                     type: 'entity',
-                    description: summary.userInput,
+                    description: summary.userInput || '',
                     settings: {
                         entity: item as any
                     }

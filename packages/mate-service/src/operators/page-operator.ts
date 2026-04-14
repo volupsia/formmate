@@ -3,17 +3,16 @@ import {
     LayoutCompiler,
     type PageMetadata,
     type PageComponent,
-    type PagePlanResponse,
-    type PageArchitecture
+    type PageArchitecture,
+    type IFormCmsClientBuilder
 } from '@formmate/shared';
-import type { FormCMSClient } from '../infrastructures/formcms-client';
 import type { ServiceLogger } from '../types/logger';
 import type { ISystemSettingRepository } from '../repositories/system-setting-repository';
 import { UserVisibleError } from '../agent/user-visible-error';
 
 export class PageOperator {
     constructor(
-        private readonly formCMSClient: FormCMSClient,
+        private readonly formCMSClient: IFormCmsClientBuilder,
         private readonly logger: ServiceLogger,
         private readonly systemSettingRepository?: ISystemSettingRepository
     ) { }

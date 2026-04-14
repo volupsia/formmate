@@ -4,7 +4,7 @@ import { SocketService } from '../services/socket-service';
 import { StatusService } from '../services/status-service';
 import { IntentClassifier } from '../models/agents/intent-classifier';
 import { AIProvider } from '../infrastructures/ai-provider.interface';
-import { FormCMSClient } from '../infrastructures/formcms-client';
+import { FormCmsClientBuilder } from '../infrastructures/formcms-client';
 import type { ServerToClientEvents, ClientToServerEvents, User } from '@formmate/shared';
 import type { SessionStore } from '@fastify/session';
 import { PrismaClient } from '@prisma/client';
@@ -14,8 +14,10 @@ import { IDesignStyleRepository } from '../repositories/design-style-repository'
 import { ISystemSettingRepository } from '../repositories/system-setting-repository';
 import { IAgentTaskRepository } from '../repositories/agent-task-repository';
 import { TaskOperator } from '../operators/task-operator';
-import { EntityOperator } from '../operators/entity-operator';
 import { PageOperator } from '../operators/page-operator';
+import { EntityOperator } from '@formmate/shared';
+import { QueryOperator } from '../operators/query-operator';
+import { DataOperator } from '../operators/data-operator';
 import '@fastify/session';
 
 declare module 'fastify' {
@@ -26,12 +28,14 @@ declare module 'fastify' {
         taskOperator: TaskOperator;
         entityOperator: EntityOperator;
         pageOperator: PageOperator;
+        queryOperator: QueryOperator;
+        dataOperator: DataOperator;
         authService: AuthService;
         socketService: SocketService;
         statusService: StatusService;
         intentClassifier: Record<string, IntentClassifier>;
         aiProvider: Record<string, AIProvider>;
-        formCMS: FormCMSClient;
+        formCMS: FormCmsClientBuilder;
         sessionStore: SessionStore;
         chatMessageRepository: IChatMessageRepository;
         aiResponseLogRepository: IAiResponseLogRepository;

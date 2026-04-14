@@ -1,11 +1,9 @@
 import type { AIProvider } from '../infrastructures/ai-provider.interface';
-import type { FormCMSClient } from '../infrastructures/formcms-client';
+import type { FormCmsClientBuilder } from '../infrastructures/formcms-client';
 import type { ServiceLogger } from '../types/logger';
 import { type AgentContext, type Agent, type ThinkResult, type ActResult, type FinalizeResult } from './chat-assistant';
-import { type EntityDto, type RelationshipDto, AGENT_NAMES, RelationshipModel } from '@formmate/shared';
+import { type EntityDto, type RelationshipDto, AGENT_NAMES, RelationshipModel, EntityOperator } from '@formmate/shared';
 import { EntityModel } from '../models/entity-model';
-import { EntityOperator } from '../operators/entity-operator';
-
 export interface EntityGeneratorResponse {
     entities: EntityDto[];
     relationships: RelationshipDto[];
@@ -23,7 +21,7 @@ export class EntityGenerator implements Agent<EntityGeneratorPlan> {
         private readonly entitySchema: string,
         private readonly attributeSchema: string,
         private readonly relationshipSchema: string,
-        private readonly formCMSClient: FormCMSClient,
+        private readonly formCMSClient: FormCmsClientBuilder,
         private readonly logger: ServiceLogger,
         private readonly entityOperator: EntityOperator,
     ) { }
@@ -128,7 +126,7 @@ export class EntityGenerator implements Agent<EntityGeneratorPlan> {
         }
         const entityNames = response.entities.map((e: any) => e.name).join(', ');
 
-        const schemaIds = await this.formCMSClient.getClient(context.externalCookie).commitEntities(response);
+        const schemaIds = await this.formCMSClient.getClient(context.externalCookie).commitEntityDesign(response);
         await context.saveAgentMessage(`All confirmed entities have been committed to the system: ${entityNames}`);
         return { syncedSchemaIds: schemaIds };
     }
