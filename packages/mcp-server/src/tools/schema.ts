@@ -171,29 +171,6 @@ export function registerSchemaTools(server: McpServer, client: FormCmsApiClient)
         }
     );
 
-    // Save / update a raw schema (advanced / low-level)
-    server.tool(
-        'save_schema',
-        [
-            'Create or update a raw FormCMS schema record (low-level). Provide the full schema payload.',
-            'Prefer define_entity for structured entity creation — this tool is for advanced use only.',
-        ].join(' '),
-        {
-            payload: z
-                .record(z.unknown())
-                .describe(
-                    'Raw schema payload. Include schemaId for updates; omit it for new schemas. ' +
-                    'Consult the schema://formcms/entity-design resource for the expected shape.'
-                ),
-        },
-        async ({ payload }) => {
-            const data = await client.saveSchema(payload);
-            return {
-                content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
-            };
-        }
-    );
-
     // Delete a schema by its numeric id
     server.tool(
         'delete_schema',
@@ -209,6 +186,7 @@ export function registerSchemaTools(server: McpServer, client: FormCmsApiClient)
         }
     );
 
+    /*
     // Define / update entity structure (strongly typed)
     server.tool(
         'define_entity',
@@ -230,4 +208,5 @@ export function registerSchemaTools(server: McpServer, client: FormCmsApiClient)
             };
         }
     );
+    */
 }

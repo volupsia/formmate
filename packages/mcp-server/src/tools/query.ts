@@ -21,6 +21,22 @@ export function registerQueryTools(server: McpServer, client: FormCmsApiClient) 
     );
 
     server.tool(
+        'save_query',
+        'Save or update a FormCMS named query.',
+        {
+            schemaId: z.string().describe('The schema ID of the query (leave empty string to create a new one)'),
+            queryName: z.string().describe('The name of the named query to save'),
+            query: z.string().describe('The GraphQL query source'),
+        },
+        async ({ schemaId, queryName, query }) => {
+            const result = await client.saveQuery(schemaId, queryName, query);
+            return {
+                content: [{ type: 'text', text: `Query saved successfully. Schema ID: ${result}` }],
+            };
+        }
+    );
+
+    server.tool(
         'list_queries',
         'List all named queries defined in FormCMS.',
         {},

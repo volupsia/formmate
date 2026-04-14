@@ -56,29 +56,6 @@ export class FormCMSClient {
         return printSchema(schema);
     }
 
-    async saveQuery(externalCookie: string, schemaId: string, queryName: string, query: string) {
-        const payload: SaveSchemaPayload = {
-            schemaId: schemaId,
-            type: 'query',
-            settings: {
-                query: {
-                    name: queryName,
-                    entityName: '',
-                    source: query,
-                    filters: [],
-                    sorts: [],
-                    variables: [],
-                    distinct: false,
-                    ideUrl: '',
-                    pagination: { offset: '0', limit: '10' }
-                }
-            }
-        };
-        const client = this.getClient(externalCookie);
-        const saveResp = await client.saveSchema(payload);
-        return saveResp.schemaId;
-    }
-
     async insertSingleData(externalCookie: string, entity: XEntityDto, data: any) {
         // Data cleaning logic
         delete data[entity.primaryKey];

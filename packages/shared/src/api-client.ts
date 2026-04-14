@@ -176,6 +176,28 @@ export class FormCmsApiClient {
 
     // ─── Queries ───────────────────────────────────────────────────────────────
 
+    async saveQuery(schemaId: string, queryName: string, query: string): Promise<string> {
+        const payload: SaveSchemaPayload = {
+            schemaId: schemaId,
+            type: 'query',
+            settings: {
+                query: {
+                    name: queryName,
+                    entityName: '',
+                    source: query,
+                    filters: [],
+                    sorts: [],
+                    variables: [],
+                    distinct: false,
+                    ideUrl: '',
+                    pagination: { offset: '0', limit: '10' }
+                }
+            }
+        };
+        const saveResp = await this.saveSchema(payload);
+        return saveResp.schemaId;
+    }
+
     async requestQuery(queryName: string, limit = 5): Promise<any> {
         const resp = await this._axios.get(`/api/queries/${queryName}?limit=${limit}`);
         return resp.data;

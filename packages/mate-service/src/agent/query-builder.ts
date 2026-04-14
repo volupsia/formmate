@@ -86,7 +86,7 @@ ${sdl}
 
             // We need to saveQuery which internally does saveSchema.
             // But FormCMSClient.saveQuery helper simplifies this.
-            const newSchemaId = await this.formCMSClient.saveQuery(context.externalCookie, targetSchemaId, name, source);
+            const newSchemaId = await this.formCMSClient.getClient(context.externalCookie).saveQuery(targetSchemaId, name, source);
             schemaIds.push(newSchemaId);
         }
 
