@@ -1,4 +1,4 @@
-import type { ChatMessage } from './contracts.js';
+import type { ChatMessage } from '../types/contracts.js';
 import type { AgentName } from './constants.js';
 
 export const SOCKET_EVENTS = {

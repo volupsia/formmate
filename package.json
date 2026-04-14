@@ -20,12 +20,11 @@
         "build:stash": "npm run build --workspace=@formmate/stash",
         "preview:stash": "npm run preview --workspace=@formmate/stash",
         "build:sdk": "npm run build --workspace=@formmate/sdk",
-        "build:shared": "npm run build --workspace=@formmate/shared",
         "build:mate": "npm run build --workspace=@formmate/mate",
         "build:all": "npm run build --workspaces --if-present",
         "install:all": "npm install",
         "dev:mcp": "npm run dev --workspace=@formmate/mcp-server",
-        "setup": "npm run build:shared && npm run db:init --workspace=@formmate/service"
+        "setup": "npm run db:init --workspace=@formmate/service"
     },
     "devDependencies": {
         "concurrently": "^9.2.1",

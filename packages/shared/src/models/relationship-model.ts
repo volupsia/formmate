@@ -1,5 +1,5 @@
-import { type RelationshipDto, type SchemaDto, type AttributeDto } from '@formmate/shared';
-import { camelize } from '../repositories/utils';
+import { type RelationshipDto, type SchemaDto, type AttributeDto } from '../types/cms.dto.js';
+import { camelize } from '../utils/string.js';
 
 export class RelationshipModel {
     constructor(public readonly relationship: RelationshipDto) { }
