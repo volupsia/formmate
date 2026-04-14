@@ -33,20 +33,20 @@ export class DataGenerator implements Agent<DataGeneratorPlan> {
         if (idMatch) {
             const schemaId = idMatch[1];
             try {
-                const schema = await this.formCMSClient.getSchemaBySchemaId(context.externalCookie, schemaId as string);
+                const schema = await this.formCMSClient.getClient(context.externalCookie).getSchemaBySchemaId(schemaId as string);
                 if (schema && schema.settings.entity) {
                     specificEntityName = schema.settings.entity.name;
-                    const xEntity = await this.formCMSClient.getXEntity(context.externalCookie, specificEntityName);
+                    const xEntity = await this.formCMSClient.getClient(context.externalCookie).getXEntity(specificEntityName);
                     entities = [xEntity];
                 } else {
-                    entities = await this.formCMSClient.getAllXEntity(context.externalCookie);
+                    entities = await this.formCMSClient.getClient(context.externalCookie).getAllXEntity();
                 }
             } catch (e) {
                 this.logger.warn({ schemaId, error: e }, 'Failed to fetch specific schema for data generation');
-                entities = await this.formCMSClient.getAllXEntity(context.externalCookie);
+                entities = await this.formCMSClient.getClient(context.externalCookie).getAllXEntity();
             }
         } else {
-            entities = await this.formCMSClient.getAllXEntity(context.externalCookie);
+            entities = await this.formCMSClient.getClient(context.externalCookie).getAllXEntity();
         }
 
 

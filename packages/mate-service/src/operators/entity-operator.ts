@@ -23,7 +23,7 @@ export class EntityOperator {
         externalCookie: string
     ): Promise<SchemaSummary> {
         this.logger.info('Comparing with existing schemas and preparing summary in EntityOperator...');
-        const existingSchemas = await this.formCMSClient.getAllEntities(externalCookie);
+        const existingSchemas = await this.formCMSClient.getClient(externalCookie).getAllEntities();
 
         const summaryEntities = normalizedEntities.map(ne => {
             const existing = existingSchemas.find(es => es.name === ne.name);
@@ -63,7 +63,7 @@ export class EntityOperator {
                 };
 
                 try {
-                    const resp = await this.formCMSClient.saveEntityDefine(externalCookie, payload);
+                    const resp = await this.formCMSClient.getClient(externalCookie).saveEntityDefine(payload);
                     if (resp.data?.schemaId) {
                         schemaIds.add(resp.data.schemaId);
                     }
@@ -78,7 +78,7 @@ export class EntityOperator {
         if (summary.relationships && summary.relationships.length > 0) {
             const resls = summary.relationships.map(rel => new RelationshipModel(rel).normalize());
             this.logger.info('Processing relationships in EntityOperator...');
-            const allEntities = await this.formCMSClient.getAllEntities(externalCookie);
+            const allEntities = await this.formCMSClient.getClient(externalCookie).getAllEntities();
 
             const modifiedIds1 = await this.applyAndSave(resls, allEntities, (model, entities) => model.applyLookupAndJunctionToEntities(entities), externalCookie);
             modifiedIds1.forEach(id => schemaIds.add(id));
@@ -119,7 +119,7 @@ export class EntityOperator {
                 }
             };
             try {
-                await this.formCMSClient.saveEntityDefine(externalCookie, payload);
+                await this.formCMSClient.getClient(externalCookie).saveEntityDefine(payload);
                 this.logger.info({ entityName: entity.name }, 'Successfully updated entity for relationship');
             } catch (saveError) {
                 throw saveError;

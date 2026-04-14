@@ -3,18 +3,22 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { type SchemaDto, type SaveSchemaPayload, type XEntityDto, type AssetListResponse, ENDPOINTS, FormCmsApiClient } from '@formmate/shared';
+import { type SaveSchemaPayload, type XEntityDto, FormCmsApiClient } from '@formmate/shared';
 import { FormCmsError } from './form-cms-error';
 
 export class FormCMSClient {
     private populatingPromise: Promise<void> | null = null;
     constructor(private readonly baseUrl: string) { }
 
-    async getClient(externalCookie: string): Promise<FormCmsApiClient> {
-        return new FormCmsApiClient(this.getRawClient(externalCookie));
+    /**
+     * Returns a FormCmsApiClient for the given cookie.
+     * This is the primary entry point — callers use the shared client directly.
+     */
+    getClient(externalCookie: string): FormCmsApiClient {
+        return new FormCmsApiClient(this.createAxios(externalCookie));
     }
 
-    private getRawClient(externalCookie?: string) {
+    private createAxios(externalCookie?: string) {
         const headers: Record<string, string> = {};
         if (externalCookie) {
             headers['Cookie'] = externalCookie;
@@ -39,61 +43,13 @@ export class FormCMSClient {
         return instance;
     }
 
-    async getMe(externalCookie: string) {
-        return (await this.getClient(externalCookie)).getMe();
-    }
-
-    async getAllEntities(externalCookie: string): Promise<SchemaDto[]> {
-        return (await this.getClient(externalCookie)).getAllEntities();
-    }
-
-    async getAllQueries(externalCookie: string): Promise<SchemaDto[]> {
-        return (await this.getClient(externalCookie)).getAllQueries();
-    }
-
-    async getSchemaByName(externalCookie: string, name: string, type: string): Promise<SchemaDto> {
-        return (await this.getClient(externalCookie)).getSchemaByName(name, type);
-    }
-
-    async getSchemaById(externalCookie: string, id: string): Promise<SchemaDto> {
-        return (await this.getClient(externalCookie)).getSchemaById(id);
-    }
-
-    async getSchemaBySchemaId(externalCookie: string, id: string): Promise<SchemaDto> {
-        return (await this.getClient(externalCookie)).getSchemaBySchemaId(id);
-    }
-
-    async getXEntity(externalCookie: string, entityName: string): Promise<XEntityDto> {
-        return (await this.getClient(externalCookie)).getXEntity(entityName);
-    }
-
-    async getAllXEntity(externalCookie: string): Promise<XEntityDto[]> {
-        return (await this.getClient(externalCookie)).getAllXEntity();
-    }
-
-    async requestQuery(externalCookie: string, queryName: string) {
-        return (await this.getClient(externalCookie)).requestQuery(queryName);
-    }
-
-    async saveEntityDefine(externalCookie: string, payload: SaveSchemaPayload) {
-        return (await this.getClient(externalCookie)).saveEntityDefine(payload);
-    }
-
-    async saveSchema(externalCookie: string, payload: SaveSchemaPayload) {
-        return (await this.getClient(externalCookie)).saveSchema(payload);
-    }
+    // ─── Domain-specific methods with real logic ────────────────────────────────
 
     async generateSDL(externalCookie: string): Promise<string> {
-        // This has complex logic with graphql import, maybe keep as is or move to share?
-        // Shared client doesn't have graphql dep. Keep logic here but use client for call?
-        // The original code imports 'graphql' dynamically.
-        // The call is axios.post(graphql).
-        // I'll keep it as is or wrap axios call.
-
         const { getIntrospectionQuery, buildClientSchema, printSchema } = await import('graphql');
         const query = getIntrospectionQuery();
 
-        const resp = await this.getRawClient(externalCookie).post(ENDPOINTS.GRAPHQL, { query });
+        const resp = await this.createAxios(externalCookie).post('/graphql', { query });
 
         const introspectionResponse = resp.data.data;
         const schema = buildClientSchema(introspectionResponse);
@@ -101,8 +57,6 @@ export class FormCMSClient {
     }
 
     async saveQuery(externalCookie: string, schemaId: string, queryName: string, query: string) {
-        // Uses saveSchema internally.
-        // Map payload constructs here.
         const payload: SaveSchemaPayload = {
             schemaId: schemaId,
             type: 'query',
@@ -120,8 +74,9 @@ export class FormCMSClient {
                 }
             }
         };
-        const saveResp = await this.saveSchema(externalCookie, payload);
-        return saveResp.schemaId; // Verify return type of saveSchema
+        const client = this.getClient(externalCookie);
+        const saveResp = await client.saveSchema(payload);
+        return saveResp.schemaId;
     }
 
     async insertSingleData(externalCookie: string, entity: XEntityDto, data: any) {
@@ -131,14 +86,11 @@ export class FormCMSClient {
         delete data['updatedAt'];
         delete data['createdBy'];
 
-        return (await this.getClient(externalCookie)).insertSingleData(entity.name, data);
+        return this.getClient(externalCookie).insertEntity(entity.name, data);
     }
 
     async insertData(externalCookie: string, entity: XEntityDto, data: any, idMaps: Record<string, Record<string, any>> = {}) {
         await this.populateExamplePics(externalCookie);
-        // ... Logic for lookup/junction recursion ...
-        // This relies on this.insertSingleData, which now uses client.
-        // The recursion logic itself is fine to stay here.
 
         for (const attr of entity.attributes) {
             const field = attr.field;
@@ -153,7 +105,7 @@ export class FormCMSClient {
                     data[field][attr.lookup!.primaryKey] = idMaps[field][originalId];
                 } else {
                     const resp = await this.insertSingleData(externalCookie, attr.lookup!, item);
-                    const newId = resp[target.primaryKey]; // resp.data? insertSingleData returns resp.data from client
+                    const newId = resp[target.primaryKey];
                     if (originalId) idMaps[field][originalId] = newId;
                     item[target.primaryKey] = newId;
                 }
@@ -172,7 +124,8 @@ export class FormCMSClient {
                     }
                 }
             } else if (attr.displayType == 'image') {
-                const assets = await this.getAllAsset(externalCookie);
+                const client = this.getClient(externalCookie);
+                const assets = await client.getAllAsset();
                 if (assets.items.length > 0) {
                     const randomAsset = assets.items[Math.floor(Math.random() * assets.items.length)];
                     if (randomAsset) {
@@ -185,14 +138,14 @@ export class FormCMSClient {
     }
 
     async populateExamplePics(externalCookie: string) {
-        // Keep as is.
         if (this.populatingPromise) {
             return this.populatingPromise;
         }
 
         this.populatingPromise = (async () => {
             try {
-                const assetsResp = await this.getAllAsset(externalCookie);
+                const client = this.getClient(externalCookie);
+                const assetsResp = await client.getAllAsset();
 
                 if (assetsResp.totalRecords !== 0) {
                     return;
@@ -220,7 +173,7 @@ export class FormCMSClient {
                         const blob = new Blob([fileBuffer], { type: 'image/jpeg' });
                         formData.append('Files', blob, file);
 
-                        await this.getRawClient(externalCookie).post('/api/assets', formData, {
+                        await this.createAxios(externalCookie).post('/api/assets', formData, {
                             timeout: 30000,
                         });
                     }
@@ -234,10 +187,4 @@ export class FormCMSClient {
 
         return this.populatingPromise;
     }
-
-    async getAllAsset(externalCookie: string): Promise<AssetListResponse> {
-        return (await this.getClient(externalCookie)).getAllAsset();
-    }
-
 }
-

@@ -28,7 +28,7 @@ export class PageArchitect implements Agent<ArchitectDesignerAgentPlan> {
     ) { }
 
     async think(userInput: string, context: AgentContext): Promise<ThinkResult<ArchitectDesignerAgentPlan>> {
-        const existingSchema = await this.formCMSClient.getSchemaBySchemaId(context.externalCookie, context.schemaId!);
+        const existingSchema = await this.formCMSClient.getClient(context.externalCookie).getSchemaBySchemaId(context.schemaId!);
         if (!existingSchema || !existingSchema.settings?.page?.metadata) {
             throw new UserVisibleError("Schema not found or missing metadata for architecture planning.");
         }
@@ -38,7 +38,7 @@ export class PageArchitect implements Agent<ArchitectDesignerAgentPlan> {
         const actualUserInput = metadata.userInput || userInput;
         const existingArchitecture = metadata.architecture || {};
 
-        const queries = await this.formCMSClient.getAllQueries(context.externalCookie);
+        const queries = await this.formCMSClient.getClient(context.externalCookie).getAllQueries();
 
         const message = {
             "EXISTING STRUCTURE": existingArchitecture,

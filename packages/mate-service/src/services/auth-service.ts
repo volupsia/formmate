@@ -11,7 +11,7 @@ export class AuthService {
 
     async getUserProfile(externalCookie: string): Promise<User | null> {
         try {
-            return await this.client.getMe(externalCookie);
+            return await this.client.getClient(externalCookie).getMe();
         } catch (error: any) {
             return null;
         }

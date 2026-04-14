@@ -1,13 +1,11 @@
 import useSWR from 'swr';
-import axios from 'axios';
-import { ENDPOINTS, type SchemaDto, type SaveSchemaPayload } from '@formmate/shared';
-
-const fetcher = (url: string) => axios.get(url, { withCredentials: true }).then(res => res.data);
+import type { SchemaDto, SaveSchemaPayload } from '@formmate/shared';
+import { getApiClient } from '@formmate/sdk';
 
 export function useSchemaHistory(schemaId: string | null) {
     const { data, error, isLoading } = useSWR<SchemaDto[]>(
-        schemaId ? `${''}${ENDPOINTS.SCHEMA.HISTORY.replace(':schemaId', schemaId)}` : null,
-        fetcher,
+        schemaId ? `schema-history-${schemaId}` : null,
+        () => getApiClient().getSchemaHistory(schemaId!),
         {
             shouldRetryOnError: false,
             revalidateOnFocus: false,
@@ -23,8 +21,8 @@ export function useSchemaHistory(schemaId: string | null) {
 
 export function useSchemas() {
     const { data, error, isLoading, mutate } = useSWR<SchemaDto[]>(
-        `${''}${ENDPOINTS.SCHEMA.ALL}`,
-        fetcher,
+        'schemas-all',
+        () => getApiClient().getAllSchemas(),
         {
             shouldRetryOnError: false,
             revalidateOnFocus: false,
@@ -32,55 +30,26 @@ export function useSchemas() {
     );
 
     const saveSchema = async (payload: SaveSchemaPayload) => {
-        const resp = await axios.post(`${''}${ENDPOINTS.SCHEMA.SAVE}`, payload, {
-            withCredentials: true
-        });
-        if (resp.status === 200) {
-            await mutate();
-            return resp.data;
-        } else {
-            throw new Error(resp.data.error || 'Failed to save entity');
-        }
+        const result = await getApiClient().saveSchema(payload);
+        await mutate();
+        return result;
     };
 
     const defineEntity = async (payload: any) => {
-        // payload is expected to be SaveSchemaPayload but the endpoint might just need { entity: entityDto }
-        // Ideally we follow the payload structure. The user said "save entity define expect schemaDto". 
-        // SaveSchemaPayload essentially wraps EntityDto.
-        // Let's pass the payload directly as the user requested.
-        const resp = await axios.post(`${''}${ENDPOINTS.SCHEMA.DEFINE}`, payload, {
-            withCredentials: true
-        });
-        if (resp.status === 200 || resp.status === 201) {
-            await mutate();
-            return resp.data;
-        } else {
-            throw new Error(resp.data.error || 'Failed to define entity');
-        }
+        const result = await getApiClient().saveEntityDefine(payload);
+        await mutate();
+        return result;
     };
 
     const deleteSchema = async (id: number) => {
-        // Replace :id parameter manually since it's simple
-        const endpoint = ENDPOINTS.SCHEMA.DELETE.replace(':id', id.toString());
-        const url = `${''}${endpoint}`;
-
-        await axios.delete(url, {
-            withCredentials: true
-        });
+        await getApiClient().deleteSchema(id);
         await mutate();
     };
 
     const publishSchema = async (id: number, schemaId: string) => {
-        const url = `${''}${ENDPOINTS.SCHEMA.PUBLISH}`;
-        const resp = await axios.post(url, { id: id.toString(), schemaId }, {
-            withCredentials: true
-        });
-        if (resp.status === 200) {
-            await mutate();
-            return resp.data;
-        } else {
-            throw new Error(resp.data.error || 'Failed to publish schema');
-        }
+        const result = await getApiClient().publishSchema(id, schemaId);
+        await mutate();
+        return result;
     };
 
     return {

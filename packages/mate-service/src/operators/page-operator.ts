@@ -44,7 +44,7 @@ export class PageOperator {
             }
         };
 
-        const saveResp = await this.formCMSClient.saveSchema(externalCookie, payload);
+        const saveResp = await this.formCMSClient.getClient(externalCookie).saveSchema(payload);
         const newSchemaId = saveResp.schemaId;
 
         this.logger.info({ schemaId: newSchemaId }, 'Successfully saved plan and user input via PageOperator');
@@ -52,7 +52,7 @@ export class PageOperator {
     }
 
     async saveArchitecture(schemaId: string, architecture: PageArchitecture, externalCookie: string): Promise<void> {
-        const schema = await this.formCMSClient.getSchemaBySchemaId(externalCookie, schemaId);
+        const schema = await this.formCMSClient.getClient(externalCookie).getSchemaBySchemaId(schemaId);
         if (!schema || !schema.settings.page) {
             throw new UserVisibleError(`Page with schemaId ${schemaId} not found`);
         }
@@ -73,7 +73,7 @@ export class PageOperator {
             }
         };
 
-        await this.formCMSClient.saveSchema(externalCookie, payload);
+        await this.formCMSClient.getClient(externalCookie).saveSchema(payload);
         this.logger.info({ schemaId }, 'Successfully saved architecture via PageOperator');
     }
 
@@ -82,7 +82,7 @@ export class PageOperator {
         component: PageComponent,
         externalCookie: string
     ): Promise<string> {
-        const schema = await this.formCMSClient.getSchemaBySchemaId(externalCookie, schemaId);
+        const schema = await this.formCMSClient.getClient(externalCookie).getSchemaBySchemaId(schemaId);
         if (!schema || !schema.settings.page) {
             throw new UserVisibleError(`Page with schemaId ${schemaId} not found`);
         }
@@ -131,7 +131,7 @@ export class PageOperator {
             }
         };
 
-        const saveResp = await this.formCMSClient.saveSchema(externalCookie, payload);
+        const saveResp = await this.formCMSClient.getClient(externalCookie).saveSchema(payload);
         const newSchemaId = saveResp.schemaId;
 
         this.logger.info({ schemaId: newSchemaId }, 'Successfully saved AI-generated components and compiled HTML via PageOperator');
@@ -139,7 +139,7 @@ export class PageOperator {
     }
 
     async saveHtml(schemaId: string, html: string, title: string | undefined, externalCookie: string): Promise<string> {
-        const schema = await this.formCMSClient.getSchemaBySchemaId(externalCookie, schemaId);
+        const schema = await this.formCMSClient.getClient(externalCookie).getSchemaBySchemaId(schemaId);
         if (!schema || !schema.settings.page) {
             throw new UserVisibleError(`Page with schemaId ${schemaId} not found`);
         }
@@ -157,7 +157,7 @@ export class PageOperator {
             }
         };
 
-        const saveResp = await this.formCMSClient.saveSchema(externalCookie, payload);
+        const saveResp = await this.formCMSClient.getClient(externalCookie).saveSchema(payload);
         const newSchemaId = saveResp.schemaId;
 
         this.logger.info({ schemaId: newSchemaId }, 'Successfully saved page HTML via PageOperator');

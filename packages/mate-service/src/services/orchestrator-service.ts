@@ -207,7 +207,7 @@ export class OrchestratorService {
         const userMessage = await this.saveInputMessage(userId, messageText);
         onEvent(SOCKET_EVENTS.CHAT.MESSAGE_RECEIVED, userMessage);
 
-        const schema = await this.formCMSClient.getSchemaBySchemaId(externalCookie, schemaId);
+        const schema = await this.formCMSClient.getClient(externalCookie).getSchemaBySchemaId(schemaId);
         if (!schema || !schema.settings?.page?.metadata) {
             throw new UserVisibleError(`Page schema not found or missing metadata for ID: ${schemaId}`);
         }

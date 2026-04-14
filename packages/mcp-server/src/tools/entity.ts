@@ -1,8 +1,8 @@
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import type { FormCmsClient } from '../formcms-client.js';
+import type { FormCmsApiClient } from '@formmate/shared';
 
-export function registerEntityTools(server: McpServer, client: FormCmsClient) {
+export function registerEntityTools(server: McpServer, client: FormCmsApiClient) {
     // List records
     server.tool(
         'list_entities',

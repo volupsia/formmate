@@ -26,7 +26,7 @@ export class QueryGenerator implements Agent<QueryGeneratorPlan> {
         const idMatch = userInput.match(new RegExp(`${AGENT_NAMES.QUERY_BUILDER}#([^:]+):`));
         if (idMatch) {
             try {
-                existingSchema = await this.formCMSClient.getSchemaBySchemaId(context.externalCookie, idMatch[1] as string);
+                existingSchema = await this.formCMSClient.getClient(context.externalCookie).getSchemaBySchemaId(idMatch[1] as string);
                 schemaId = idMatch[1] as string;
                 if (existingSchema && existingSchema.type === 'query') {
                     const qName = existingSchema.name;

@@ -1,10 +1,28 @@
+/**
+ * Endpoint constants for mate-service routes (/mateapi/...) and SDK-consumed
+ * FormCMS routes. FormCMS API calls should go through FormCmsApiClient instead
+ * of using these constants directly.
+ */
 export const ENDPOINTS = {
+    // ─── Mate-service routes (/mateapi) ────────────────────────────────────────
     CHAT: {
         HISTORY: '/mateapi/chat/history',
         STATUS: '/mateapi/chat/status',
         PAGE_ADDONS: '/mateapi/page-addons',
         CANCEL: '/mateapi/chat/cancel',
     },
+    AI: {
+        PROVIDERS: '/mateapi/ai/providers',
+        LOGS: '/mateapi/ai/logs',
+        DELETE_LOG: '/mateapi/ai/logs/:id',
+        GENERATE_DATA: '/mateapi/ai/generate-data',
+    },
+    MATE_TASKS: {
+        LATEST: '/mateapi/tasks',
+        TOGGLE_ITEM: '/mateapi/tasks/:taskId/items/:index/toggle',
+    },
+
+    // ─── FormCMS routes consumed by SDK (prefer FormCmsApiClient for new code) ─
     AUTH: {
         LOGIN: '/api/login',
         REGISTER: '/api/register',
@@ -16,12 +34,6 @@ export const ENDPOINTS = {
     SYSTEM: {
         IS_READY: '/api/system/is-ready',
         DOWNLOAD_PLUGINS: '/api/system/download-plugins',
-    },
-    AI: {
-        PROVIDERS: '/mateapi/ai/providers',
-        LOGS: '/mateapi/ai/logs',
-        DELETE_LOG: '/mateapi/ai/logs/:id',
-        GENERATE_DATA: '/mateapi/ai/generate-data',
     },
     SCHEMA: {
         ALL: '/api/schemas?type=',
@@ -62,10 +74,6 @@ export const ENDPOINTS = {
         ARCHIVE: '/api/tasks/export/archive/:id',
         DOWNLOAD: '/api/tasks/export/download/:id',
         IMPORT: '/api/tasks/import',
-    },
-    MATE_TASKS: {
-        LATEST: '/mateapi/tasks',
-        TOGGLE_ITEM: '/mateapi/tasks/:taskId/items/:index/toggle',
     },
     ENTITIES: {
         LIST: '/api/entities/:schemaName',

@@ -5,7 +5,7 @@ import {
     ENTITY_JSON_SCHEMA,
     RELATIONSHIP_JSON_SCHEMA,
 } from '@formmate/shared';
-import type { FormCmsClient } from '../formcms-client.js';
+import type { FormCmsApiClient } from '@formmate/shared';
 
 // ─── Zod schemas – derived from @formmate/shared JSON Schema constants ─────────
 //
@@ -124,7 +124,7 @@ const EntityDesignPayload = z.object({
 
 // ─── Tool registration ────────────────────────────────────────────────────────
 
-export function registerSchemaTools(server: McpServer, client: FormCmsClient) {
+export function registerSchemaTools(server: McpServer, client: FormCmsApiClient) {
     // List all schemas of a given type
     server.tool(
         'list_schemas',
@@ -190,6 +190,21 @@ export function registerSchemaTools(server: McpServer, client: FormCmsClient) {
             const data = await client.saveSchema(payload);
             return {
                 content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
+            };
+        }
+    );
+
+    // Delete a schema by its numeric id
+    server.tool(
+        'delete_schema',
+        'Delete a FormCMS schema by its numeric id. Use list_schemas first to find the id.',
+        {
+            id: z.number().int().positive().describe('Numeric id of the schema to delete'),
+        },
+        async ({ id }) => {
+            await client.deleteSchema(id);
+            return {
+                content: [{ type: 'text', text: `Schema ${id} deleted successfully.` }],
             };
         }
     );

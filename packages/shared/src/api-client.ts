@@ -1,31 +1,22 @@
 import type { AxiosInstance } from 'axios';
-import { ENDPOINTS } from './endpoints.js';
 import type { User } from './contracts.js';
 import type { SchemaDto, SaveSchemaPayload, XEntityDto, AssetListResponse } from './cms.dto.js';
 
 export class FormCmsApiClient {
-    constructor(private readonly axios: AxiosInstance) { }
+    constructor(private readonly _axios: AxiosInstance) { }
+
+    /** Expose raw axios for consumers that need direct access (e.g. GraphQL introspection). */
+    get axios(): AxiosInstance {
+        return this._axios;
+    }
+
+    // ─── Auth ──────────────────────────────────────────────────────────────────
 
     async getMe(): Promise<User> {
-        const resp = await this.axios.get(ENDPOINTS.AUTH.ME);
+        const resp = await this._axios.get('/api/me');
         const externalUser = resp.data;
 
-        // Map fields if necessary, or assume response matches User
-        // Note: formcms-client.ts manually mapped fields. We should preserve that logic if the DTOs differ.
-        // Assuming the upstream returns the raw user object and we need to map it to our User interface.
-        // Or if the upstream IS returning our User interface.
-        // formcms-client.ts logic:
-        /*
-            id: externalUser.id,
-            username: externalUser.name || externalUser.email,
-            avatarUrl: this.baseUrl + externalUser.avatarUrl,
-        */
-        // The baseUrl handling for avatarUrl is tricky in a shared client. 
-        // Iterate: The AxiosInstance has a baseURL. But we might need the full URL for the avatar.
-        // If usage expects absolute URL, we might need to prepend baseURL.
-        // However, axios.defaults.baseURL is accessible?
-
-        const baseURL = this.axios.defaults.baseURL || '';
+        const baseURL = this._axios.defaults.baseURL || '';
 
         return {
             id: externalUser.id,
@@ -34,15 +25,14 @@ export class FormCmsApiClient {
             email: externalUser.email,
             roles: externalUser.roles,
             allowedMenus: externalUser.allowedMenus,
-            // Add other fields as they come from upstream
             ...externalUser
         } as User;
     }
 
     async login(payload: any): Promise<User> {
-        const resp = await this.axios.post(ENDPOINTS.AUTH.LOGIN, payload);
+        const resp = await this._axios.post('/api/login', payload);
         const externalUser = resp.data;
-        const baseURL = this.axios.defaults.baseURL || '';
+        const baseURL = this._axios.defaults.baseURL || '';
 
         return {
             id: externalUser.id,
@@ -53,102 +43,155 @@ export class FormCmsApiClient {
     }
 
     async register(payload: import('./contracts.js').RegisterReq): Promise<User> {
-        const resp = await this.axios.post(ENDPOINTS.AUTH.REGISTER, payload);
+        const resp = await this._axios.post('/api/register', payload);
         return resp.data as User;
     }
 
     async changePassword(payload: import('./contracts.js').ChangePasswordReq): Promise<void> {
-        await this.axios.post(ENDPOINTS.AUTH.PROFILE_PASSWORD, payload);
+        await this._axios.post('/api/profile/password', payload);
     }
 
     async uploadAvatar(file: any): Promise<void> {
         const formData = new FormData();
         formData.append("file", file);
-        await this.axios.post(ENDPOINTS.AUTH.PROFILE_AVATAR, formData, {
+        await this._axios.post('/api/profile/avatar', formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });
     }
 
     async logout(): Promise<void> {
-        await this.axios.get(ENDPOINTS.AUTH.LOGOUT);
+        await this._axios.get('/api/logout');
     }
 
+    // ─── System ────────────────────────────────────────────────────────────────
+
     async getSystemStatus(): Promise<import('./contracts.js').SystemStatusResponse> {
-        const resp = await this.axios.get(ENDPOINTS.SYSTEM.IS_READY);
+        const resp = await this._axios.get('/api/system/is-ready');
+        return resp.data;
+    }
+
+    // ─── Schemas ───────────────────────────────────────────────────────────────
+
+    async listSchemas(type: 'entity' | 'query' | 'page' = 'entity'): Promise<SchemaDto[]> {
+        const resp = await this._axios.get(`/api/schemas?type=${type}`);
+        return resp.data;
+    }
+
+    async getAllSchemas(): Promise<SchemaDto[]> {
+        const resp = await this._axios.get('/api/schemas?type=');
         return resp.data;
     }
 
     async getAllEntities(): Promise<SchemaDto[]> {
-        const resp = await this.axios.get(`${ENDPOINTS.SCHEMA.ALL}entity`);
-        return resp.data;
+        return this.listSchemas('entity');
     }
 
     async getAllQueries(): Promise<SchemaDto[]> {
-        const resp = await this.axios.get(`${ENDPOINTS.SCHEMA.ALL}query`);
-        return resp.data;
+        return this.listSchemas('query');
     }
 
-    async getSchemaByName(name: string, type: string): Promise<SchemaDto> {
-        const url = ENDPOINTS.SCHEMA.GET_BY_NAME.replace(':name', name) + `?type=${type}`;
-        const resp = await this.axios.get(url);
+    async getSchemaByName(name: string, type: string = 'entity'): Promise<SchemaDto> {
+        const resp = await this._axios.get(`/api/schemas/name/${name}?type=${type}`);
         return resp.data;
     }
 
     async getSchemaById(id: string): Promise<SchemaDto> {
-        const url = ENDPOINTS.SCHEMA.GET_BY_ID.replace(':id', id);
-        const resp = await this.axios.get(url);
+        const resp = await this._axios.get(`/api/schemas/${id}`);
         return resp.data;
     }
 
     async getSchemaBySchemaId(id: string): Promise<SchemaDto> {
-        const url = ENDPOINTS.SCHEMA.GET_BY_SCHEMA_ID.replace(':id', id);
-        const resp = await this.axios.get(url);
+        const resp = await this._axios.get(`/api/schemas/schema/${id}`);
+        return resp.data;
+    }
+
+    async getSchemaHistory(schemaId: string): Promise<SchemaDto[]> {
+        const resp = await this._axios.get(`/api/schemas/history/${schemaId}`);
         return resp.data;
     }
 
     async getXEntity(entityName: string): Promise<XEntityDto> {
-        const url = ENDPOINTS.SCHEMA.GET_ENTITY.replace(':entityName', entityName);
-        const resp = await this.axios.get(url);
+        const resp = await this._axios.get(`/api/schemas/entity/${entityName}`);
         return resp.data;
     }
 
     async getAllXEntity(): Promise<XEntityDto[]> {
         const entities = await this.getAllEntities();
-        // Parallel requests
         const promises = entities.map(e => this.getXEntity(e.name));
         return Promise.all(promises);
     }
 
-    async requestQuery(queryName: string, limit = 5): Promise<any> {
-        const url = ENDPOINTS.QUERY.GET_DATA.replace(':id', queryName);
-        const resp = await this.axios.get(`${url}?limit=${limit}`);
-        return resp.data;
-    }
-
     async saveEntityDefine(payload: SaveSchemaPayload): Promise<any> {
-        const resp = await this.axios.post(ENDPOINTS.SCHEMA.DEFINE, payload);
+        const resp = await this._axios.post('/api/schemas/entity/define', payload);
         return resp.data;
     }
 
     async saveSchema(payload: SaveSchemaPayload): Promise<any> {
-        const resp = await this.axios.post(ENDPOINTS.SCHEMA.SAVE, payload);
+        const resp = await this._axios.post('/api/schemas', payload);
         return resp.data;
     }
 
-    async insertSingleData(entityName: string, data: any): Promise<any> {
-        // Data cleaning should probably happen before calling this, or here?
-        // mate-service removes primaryKey, createdAt, etc.
-        // Shared client should probably trust the caller or have a separate helper.
-        // Implementing raw call here.
-        const url = `/api/entities/${entityName}/insert`;
-        const resp = await this.axios.post(url, data);
+    async deleteSchema(id: number): Promise<void> {
+        await this._axios.delete(`/api/schemas/${id}`);
+    }
+
+    async publishSchema(id: number, schemaId: string): Promise<any> {
+        const resp = await this._axios.post('/api/schemas/publish', { id: id.toString(), schemaId });
         return resp.data;
     }
+
+    // ─── Entities (CRUD) ───────────────────────────────────────────────────────
+
+    async listEntities(schemaName: string, qs: Record<string, string> = {}): Promise<any> {
+        const params = new URLSearchParams(qs).toString();
+        const url = `/api/entities/${schemaName}${params ? `?${params}` : ''}`;
+        const resp = await this._axios.get(url);
+        return resp.data;
+    }
+
+    async getEntity(schemaName: string, id: string): Promise<any> {
+        const resp = await this._axios.get(`/api/entities/${schemaName}/${id}`);
+        return resp.data;
+    }
+
+    async insertEntity(schemaName: string, data: any): Promise<any> {
+        const resp = await this._axios.post(`/api/entities/${schemaName}/insert`, data);
+        return resp.data;
+    }
+
+    async updateEntity(schemaName: string, data: any): Promise<any> {
+        const resp = await this._axios.post(`/api/entities/${schemaName}/update`, data);
+        return resp.data;
+    }
+
+    async deleteEntity(schemaName: string, data: any): Promise<any> {
+        const resp = await this._axios.post(`/api/entities/${schemaName}/delete`, data);
+        return resp.data;
+    }
+
+    /** @deprecated Use insertEntity instead */
+    async insertSingleData(entityName: string, data: any): Promise<any> {
+        return this.insertEntity(entityName, data);
+    }
+
+    // ─── Queries ───────────────────────────────────────────────────────────────
+
+    async requestQuery(queryName: string, limit = 5): Promise<any> {
+        const resp = await this._axios.get(`/api/queries/${queryName}?limit=${limit}`);
+        return resp.data;
+    }
+
+    async runQuery(queryName: string, params: Record<string, string> = {}): Promise<any> {
+        const qs = new URLSearchParams(params).toString();
+        const url = `/api/queries/${queryName}${qs ? `?${qs}` : ''}`;
+        const resp = await this._axios.get(url);
+        return resp.data;
+    }
+
+    // ─── Assets ────────────────────────────────────────────────────────────────
 
     async getAllAsset(): Promise<AssetListResponse> {
-        const resp = await this.axios.get(ENDPOINTS.ASSETS.BASE);
+        const resp = await this._axios.get('/api/assets');
         return resp.data;
     }
-
-    // Additional methods can be added as needed
 }

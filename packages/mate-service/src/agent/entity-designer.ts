@@ -65,7 +65,7 @@ export class EntityGenerator implements Agent<EntityGeneratorPlan> {
         if (idMatch) {
             const schemaId = idMatch[1] as string;
             try {
-                const existingSchema = await this.formCMSClient.getSchemaBySchemaId(context.externalCookie, schemaId);
+                const existingSchema = await this.formCMSClient.getClient(context.externalCookie).getSchemaBySchemaId(schemaId);
                 if (existingSchema && existingSchema.settings.entity) {
                     const ent = existingSchema.settings.entity;
                     existingContext = `EXISTING ENTITY SCHEMA FOR "${ent.name}" (ID: ${schemaId}):\n${JSON.stringify({

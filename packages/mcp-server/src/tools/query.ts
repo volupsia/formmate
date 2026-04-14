@@ -1,8 +1,8 @@
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import type { FormCmsClient } from '../formcms-client.js';
+import type { FormCmsApiClient } from '@formmate/shared';
 
-export function registerQueryTools(server: McpServer, client: FormCmsClient) {
+export function registerQueryTools(server: McpServer, client: FormCmsApiClient) {
     server.tool(
         'run_query',
         'Execute a FormCMS named query and return the results.',

@@ -24,7 +24,7 @@ export class PageComponentBuilder implements Agent<PageComponent> {
     async think(userInput: string, context: AgentContext): Promise<ThinkResult<PageComponent>> {
         this.logger.info(`PageComponentBuilder[${this.addonDef.id}] think started`);
 
-        const existingPageSchema = context.schemaId && await this.formCMSClient.getSchemaBySchemaId(context.externalCookie, context.schemaId);
+        const existingPageSchema = context.schemaId && await this.formCMSClient.getClient(context.externalCookie).getSchemaBySchemaId(context.schemaId);
         if (!existingPageSchema || !existingPageSchema.settings?.page?.metadata) {
             throw new UserVisibleError(`Page schema not found or missing metadata for ID: ${context.schemaId}`);
         }
@@ -82,7 +82,7 @@ export class PageComponentBuilder implements Agent<PageComponent> {
     }
 
     private async filterQuery(metadata: PageMetadata, componentInstruction: ComponentInstruction, context: AgentContext) {
-        const qs = await this.formCMSClient.getAllQueries(context.externalCookie);
+        const qs = await this.formCMSClient.getClient(context.externalCookie).getAllQueries();
         const queries = metadata.architecture?.selectedQueries || []
             .filter((sq: SelectedQuery) => componentInstruction.queriesToUse.includes(sq.queryName))
             .map((sq: SelectedQuery) => ({

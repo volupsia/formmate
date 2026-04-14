@@ -18,7 +18,7 @@ const aiDataGeneratorRouter: FastifyPluginAsync = async (fastify) => {
         try {
             // Get formcms client and XEntity schema
             const cookieHeader = request.headers.cookie;
-            const xEntity = await fastify.formCMS.getXEntity(cookieHeader || '', entityName);
+            const xEntity = await fastify.formCMS.getClient(cookieHeader || '').getXEntity(entityName);
             
             if (!xEntity) {
                 return reply.status(404).send({ success: false, error: `Entity ${entityName} not found` });

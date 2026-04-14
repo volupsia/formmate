@@ -21,7 +21,7 @@ export class PagePlanner implements Agent<TemplateSelectionRequest> {
     async think(userInput: string, context: AgentContext): Promise<ThinkResult<TemplateSelectionRequest>> {
 
         // Fetch existing entities to help planner
-        const schemas = await this.formCMSClient.getAllEntities(context.externalCookie);
+        const schemas = await this.formCMSClient.getClient(context.externalCookie).getAllEntities();
         const entityNames = schemas.filter((s: any) => s.type === 'entity').map((s: any) => s.name).filter(Boolean) as string[];
         const existingPageNames = schemas.filter((s: any) => s.type === 'page' && s.settings?.page?.name).map((s: any) => s.settings.page.name) as string[];
 
