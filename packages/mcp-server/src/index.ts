@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { config } from './config.js';
-import { createFormCmsClient } from './formcms-client.js';
+import { McpFormCmsClientBuilder } from './formcms-client.js';
 import { createMcpServer } from './mcp-server.js';
 import { requestContext } from './context.js';
 
@@ -24,8 +24,8 @@ async function start() {
     try {
         // Build FormCMS HTTP client
         // API key is injected per-request from headers via AsyncLocalStorage (see middleware above)
-        const formcmsClient = createFormCmsClient(config.FORMCMS_BASE_URL);
-        const mcpServer = createMcpServer(formcmsClient);
+        const formcmsClientBuilder = new McpFormCmsClientBuilder(config.FORMCMS_BASE_URL);
+        const mcpServer = createMcpServer(formcmsClientBuilder);
 
         const transports = new Map<string, SSEServerTransport>();
 

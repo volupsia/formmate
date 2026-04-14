@@ -126,7 +126,7 @@ export class EntityGenerator implements Agent<EntityGeneratorPlan> {
         }
         const entityNames = response.entities.map((e: any) => e.name).join(', ');
 
-        const schemaIds = await this.formCMSClient.getClient(context.externalCookie).commitEntityDesign(response);
+        const schemaIds = await this.entityOperator.commitEntityDesign(context.externalCookie, response);
         await context.saveAgentMessage(`All confirmed entities have been committed to the system: ${entityNames}`);
         return { syncedSchemaIds: schemaIds };
     }

@@ -5,7 +5,7 @@ import {
     ENTITY_JSON_SCHEMA,
     RELATIONSHIP_JSON_SCHEMA,
 } from '@formmate/shared';
-import type { FormCmsApiClient } from '@formmate/shared';
+import type { FormCmsApiClient, EntityOperator } from '@formmate/shared';
 
 // ─── Zod schemas – derived from @formmate/shared JSON Schema constants ─────────
 //
@@ -124,7 +124,7 @@ const EntityDesignPayload = z.object({
 
 // ─── Tool registration ────────────────────────────────────────────────────────
 
-export function registerSchemaTools(server: McpServer, client: FormCmsApiClient) {
+export function registerSchemaTools(server: McpServer, client: FormCmsApiClient, entityOperator: EntityOperator) {
     // List all schemas of a given type
     server.tool(
         'list_schemas',
@@ -186,7 +186,6 @@ export function registerSchemaTools(server: McpServer, client: FormCmsApiClient)
         }
     );
 
-    /*
     // Define / update entity structure (strongly typed)
     server.tool(
         'define_entity',
@@ -202,11 +201,10 @@ export function registerSchemaTools(server: McpServer, client: FormCmsApiClient)
             ),
         },
         async ({ payload }) => {
-            const data = await client.commitEntityDesign(payload);
+            const data = await entityOperator.commitEntityDesign('', payload);
             return {
                 content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
             };
         }
     );
-    */
 }
