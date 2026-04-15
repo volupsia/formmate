@@ -1,6 +1,6 @@
-import { type EntityDto } from '@formmate/shared';
-import { normalizeAttribute } from './attribute-model';
-import { camelize } from '../repositories/utils';
+import { type EntityDto } from '../types/cms.dto.js';
+import { normalizeAttribute } from './attribute-model.js';
+import { camelize } from '../utils/string.js';
 
 export class EntityModel {
     constructor(public readonly entity: EntityDto) { }

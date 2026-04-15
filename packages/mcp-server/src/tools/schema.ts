@@ -3,7 +3,9 @@ import { z } from 'zod';
 import {
     ATTRIBUTE_JSON_SCHEMA,
     ENTITY_JSON_SCHEMA,
+    EntityModel,
     RELATIONSHIP_JSON_SCHEMA,
+    RelationshipModel,
 } from '@formmate/shared';
 import type { FormCmsApiClient, EntityOperator } from '@formmate/shared';
 
@@ -201,7 +203,20 @@ export function registerSchemaTools(server: McpServer, client: FormCmsApiClient,
             ),
         },
         async ({ payload }) => {
-            const data = await entityOperator.commitEntityDesign('', payload);
+            // Normalize: handle cases where AI might return 'fields' instead of 'attributes'
+            const entities = (payload.entities || []).map((e: any) => ({
+                ...e,
+                attributes: e.attributes || e.fields || []
+            }));
+
+            // normalize attributes using model behavior
+            const normalizedEntities = entities.map((entity: any) => new EntityModel(entity).normalize());
+            const normalizedRelationships = (payload.relationships || []).map(r => new RelationshipModel(r as any).normalize());
+
+
+            // Compare with FormCMS to categorize entities and create summary
+            const summary = await entityOperator.prepareSummary(normalizedEntities, normalizedRelationships, "", "");
+            const data = await entityOperator.commitEntityDesign('', summary);
             return {
                 content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
             };

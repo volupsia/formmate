@@ -1,5 +1,5 @@
-import { type AttributeDto } from '@formmate/shared';
-import { camelize } from '../repositories/utils';
+import { type AttributeDto } from '../types/cms.dto.js';
+import { camelize } from '../utils/string.js';
 
 // Mapping from displayType to dataType
 const displayTypeToDataType: Record<string, string> = {

@@ -2,8 +2,7 @@ import type { AIProvider } from '../infrastructures/ai-provider.interface';
 import type { FormCmsClientBuilder } from '../infrastructures/formcms-client';
 import type { ServiceLogger } from '../types/logger';
 import { type AgentContext, type Agent, type ThinkResult, type ActResult, type FinalizeResult } from './chat-assistant';
-import { type EntityDto, type RelationshipDto, AGENT_NAMES, RelationshipModel, EntityOperator } from '@formmate/shared';
-import { EntityModel } from '../models/entity-model';
+import { type EntityDto, type RelationshipDto, AGENT_NAMES, RelationshipModel, EntityOperator, EntityModel } from '@formmate/shared';
 export interface EntityGeneratorResponse {
     entities: EntityDto[];
     relationships: RelationshipDto[];

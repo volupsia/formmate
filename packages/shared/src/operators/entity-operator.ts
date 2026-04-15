@@ -1,5 +1,6 @@
 import {
     RelationshipModel,
+    EntityModel,
     type SchemaSummary,
     type EntityDto,
     type RelationshipDto,
@@ -50,19 +51,23 @@ export class EntityOperator {
         };
     }
 
-    async commitEntityDesign(externalCookie: string, summary: { entities: any[], relationships?: any[], userInput?: string }): Promise<string[]> {
+    async commitEntityDesign(externalCookie: string,
+        summary: SchemaSummary
+    ): Promise<string[]> {
+
         const client = this.formCMSClientBuilder.getClient(externalCookie);
         const schemaIds = new Set<string>();
 
         // 1. Commit regular entities
         if (summary.entities && summary.entities.length > 0) {
             for (const item of summary.entities) {
+
                 const payload: SaveSchemaPayload = {
-                    schemaId: item.schemaId || null,
+                    schemaId: item.schemaId ?? null,
                     type: 'entity',
                     description: summary.userInput || '',
                     settings: {
-                        entity: item as any
+                        entity: item
                     }
                 };
 
