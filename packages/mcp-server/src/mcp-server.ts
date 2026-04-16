@@ -1,11 +1,11 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { EntityOperator, QueryOperator, type IFormCmsClientBuilder } from '@formmate/shared';
-import { registerSchemaTools } from '../tools/schema.js';
-import { registerEntityTools } from '../tools/entity.js';
-import { registerQueryTools } from '../tools/query.js';
-import { registerSchemaResources } from '../resources/schemas.js';
-import { registerSchemaPrompts } from '../prompts/entity-designer.js';
-import { registerQueryPrompts } from '../prompts/query-builder.js';
+import { registerSchemaTools } from './tools/schema.js';
+import { registerEntityTools } from './tools/entity.js';
+import { registerQueryTools } from './tools/query.js';
+import { registerSchemaResources } from './resources/schemas.js';
+import { registerSchemaPrompts } from './prompts/entity-designer.js';
+import { registerQueryPrompts } from './prompts/query-builder.js';
 
 export function createMcpServer(clientBuilder: IFormCmsClientBuilder): McpServer {
     const server = new McpServer({

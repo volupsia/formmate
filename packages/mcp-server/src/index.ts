@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
-import { config } from './server/config.js';
+import { config } from './config.js';
 import { McpFormCmsClientBuilder } from './infrastructure/formcms-client.js';
-import { createMcpServer } from './server/mcp-server.js';
-import { requestContext } from './server/context.js';
+import { createMcpServer } from './mcp-server.js';
+import { requestContext } from './context.js';
 import { EventEmitter } from 'events';
 import { adminHtml } from './ui/admin-ui.js';
 import { insertLog, getRecentLogs } from './infrastructure/db.js';
