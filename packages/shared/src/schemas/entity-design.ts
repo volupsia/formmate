@@ -12,6 +12,9 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // ─── JSON Schema Loading ─────────────────────────────────────────────────────
 
 const loadJson = (fileName: string) => JSON.parse(fs.readFileSync(path.join(__dirname, fileName), 'utf-8'));
@@ -47,9 +50,6 @@ export const RELATIONSHIP_JSON_SCHEMA_STR = JSON.stringify(RELATIONSHIP_JSON_SCH
 
 // ─── Entity-Designer LLM System Prompt ───────────────────────────────────────
 // Single source of truth for the entity-designer prompt. Read directly from the unified Markdown file.
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export const ENTITY_DESIGNER_PROMPT = fs.readFileSync(path.join(__dirname, 'entity-designer.md'), 'utf-8');
 export const QUERY_BUILDER_PROMPT = fs.readFileSync(path.join(__dirname, 'query-builder.md'), 'utf-8');

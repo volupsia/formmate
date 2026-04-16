@@ -61,7 +61,6 @@ const agentsPlugin: FastifyPluginAsync = async (fastify) => {
 
     const [
         intentClassifierPrompt,
-        queryGeneratorPrompt,
         dataGeneratorPrompt,
         pageArchitectPrompt,
         pagePlannerPrompt,

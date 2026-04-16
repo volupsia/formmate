@@ -4,7 +4,8 @@ import { registerSchemaTools } from './tools/schema.js';
 import { registerEntityTools } from './tools/entity.js';
 import { registerQueryTools } from './tools/query.js';
 import { registerSchemaResources } from './resources/schemas.js';
-import { registerSchemaPrompts, registerQueryPrompts } from './prompts/entity-designer.js';
+import { registerSchemaPrompts } from './prompts/entity-designer.js';
+import { registerQueryPrompts } from './prompts/query-builder.js';
 
 export function createMcpServer(clientBuilder: IFormCmsClientBuilder): McpServer {
     const server = new McpServer({
