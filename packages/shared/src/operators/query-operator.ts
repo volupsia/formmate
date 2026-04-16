@@ -1,4 +1,4 @@
-import type { IFormCmsClientBuilder } from '@formmate/shared';
+import type { IFormCmsClientBuilder } from '../index.js';
 
 export class QueryOperator {
     constructor(private readonly formCMSClient: IFormCmsClientBuilder) {}

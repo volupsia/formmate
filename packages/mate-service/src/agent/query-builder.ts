@@ -1,6 +1,6 @@
 import type { AIProvider } from '../infrastructures/ai-provider.interface';
 import type { FormCmsClientBuilder } from '../infrastructures/formcms-client';
-import type { QueryOperator } from '../operators/query-operator';
+import type { QueryOperator } from '@formmate/shared';
 
 import { type AgentContext, type ThinkResult, type Agent, type ActResult, type FinalizeResult } from './chat-assistant';
 import type { ServiceLogger } from '../types/logger';

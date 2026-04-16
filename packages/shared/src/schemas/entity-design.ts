@@ -52,3 +52,4 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export const ENTITY_DESIGNER_PROMPT = fs.readFileSync(path.join(__dirname, 'entity-designer.md'), 'utf-8');
+export const QUERY_BUILDER_PROMPT = fs.readFileSync(path.join(__dirname, 'query-builder.md'), 'utf-8');

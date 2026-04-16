@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { XEntityDto, IFormCmsClientBuilder } from '@formmate/shared';
+import type { XEntityDto, IFormCmsClientBuilder } from '../index.js';
 
 export class DataOperator {
     private populatingPromise: Promise<void> | null = null;

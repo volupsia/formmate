@@ -15,9 +15,7 @@ import { ISystemSettingRepository } from '../repositories/system-setting-reposit
 import { IAgentTaskRepository } from '../repositories/agent-task-repository';
 import { TaskOperator } from '../operators/task-operator';
 import { PageOperator } from '../operators/page-operator';
-import { EntityOperator } from '@formmate/shared';
-import { QueryOperator } from '../operators/query-operator';
-import { DataOperator } from '../operators/data-operator';
+import { EntityOperator, QueryOperator, DataOperator } from '@formmate/shared';
 import '@fastify/session';
 
 declare module 'fastify' {

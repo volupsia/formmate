@@ -8,6 +8,7 @@ import {
     ATTRIBUTE_JSON_SCHEMA_STR,
     RELATIONSHIP_JSON_SCHEMA_STR,
     ENTITY_DESIGNER_PROMPT,
+    QUERY_BUILDER_PROMPT,
     AGENT_NAMES,
 } from '@formmate/shared';
 import { config } from '../config';
@@ -56,6 +57,7 @@ const agentsPlugin: FastifyPluginAsync = async (fastify) => {
 
     // entity-designer prompt comes from @formmate/shared
     const entityGeneratorPrompt = ENTITY_DESIGNER_PROMPT;
+    const queryGeneratorPrompt = QUERY_BUILDER_PROMPT;
 
     const [
         intentClassifierPrompt,
@@ -66,7 +68,6 @@ const agentsPlugin: FastifyPluginAsync = async (fastify) => {
         systemArchitectPrompt,
     ] = await Promise.all([
         loadPrompt('intent-classifier.md'),
-        loadPrompt('query-builder.md'),
         loadPrompt('data-synthesizer.md'),
         loadPrompt('page-architect.md'),
         loadPrompt('page-planner.md'),

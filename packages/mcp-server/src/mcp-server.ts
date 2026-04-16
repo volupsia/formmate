@@ -4,7 +4,7 @@ import { registerSchemaTools } from './tools/schema.js';
 import { registerEntityTools } from './tools/entity.js';
 import { registerQueryTools } from './tools/query.js';
 import { registerSchemaResources } from './resources/schemas.js';
-import { registerSchemaPrompts } from './prompts/entity-designer.js';
+import { registerSchemaPrompts, registerQueryPrompts } from './prompts/entity-designer.js';
 
 export function createMcpServer(clientBuilder: IFormCmsClientBuilder): McpServer {
     const server = new McpServer({
@@ -25,6 +25,7 @@ export function createMcpServer(clientBuilder: IFormCmsClientBuilder): McpServer
 
     // Prompts — reusable prompt templates
     registerSchemaPrompts(server);
+    registerQueryPrompts(server);
 
     return server;
 }

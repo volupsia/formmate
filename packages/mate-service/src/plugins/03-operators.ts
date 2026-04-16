@@ -1,10 +1,8 @@
 import type { FastifyPluginAsync } from 'fastify';
 import fp from 'fastify-plugin';
-import { EntityOperator } from '@formmate/shared';
+import { EntityOperator, QueryOperator, DataOperator } from '@formmate/shared';
 import { PageOperator } from '../operators/page-operator';
 import { TaskOperator } from '../operators/task-operator';
-import { QueryOperator } from '../operators/query-operator';
-import { DataOperator } from '../operators/data-operator';
 import { config } from '../config';
 
 const operatorsPlugin: FastifyPluginAsync = async (fastify) => {
