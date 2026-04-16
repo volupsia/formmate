@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Entity",
+  "type": "object",
+  "required": [
+    "name",
+    "displayName",
+    "tableName",
+    "labelAttributeName",
+    "attributes"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Internal entity name used in code and database (camelCase)"
+    },
+    "displayName": {
+      "type": "string",
+      "description": "Human-readable name for this entity, shown in the UI"
+    },
+    "tableName": {
+      "type": "string",
+      "description": "Name of the database table that stores this entity"
+    },
+    "labelAttributeName": {
+      "type": "string",
+      "description": "The main attribute that represents this entity, used as a label in lists or dropdowns"
+    },
+    "attributes": {
+      "type": "array",
+      "description": "List of attributes (fields) for this entity",
+      "minItems": 1
+    }
+  }
+}

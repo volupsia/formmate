@@ -59,7 +59,9 @@ Output ONLY valid JSON. No markdown, no conversational text.
   "entities": [
     {
       "name": "camelCaseName",
+      "displayName": "Human Readable Name",
       "tableName": "camelCaseName",
+      "labelAttributeName": "camelCaseField",
       "attributes": [
         {
           "field": "camelCaseField",

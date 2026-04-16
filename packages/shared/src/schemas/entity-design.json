@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EntityDesign",
+  "description": "Top-level payload for creating or updating FormCMS entity designs",
+  "type": "object",
+  "required": [
+    "entities",
+    "relationships"
+  ],
+  "properties": {
+    "entities": {
+      "type": "array",
+      "description": "Entities to create or update",
+      "items": {
+        "$ref": "#/definitions/entity"
+      },
+      "minItems": 1
+    },
+    "relationships": {
+      "type": "array",
+      "description": "Cross-entity relationships. Do NOT model relationships as attributes — they belong here only.",
+      "items": {
+        "$ref": "#/definitions/relationship"
+      }
+    }
+  }
+}
