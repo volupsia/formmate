@@ -1,15 +1,17 @@
 import axios from 'axios';
 import { FormCmsApiClient, type IFormCmsClientBuilder } from '@formmate/shared';
-import { requestContext } from './context.js';
 
 /**
  * Creates a FormCmsApiClient configured for the MCP server.
- * API key is injected per-request from AsyncLocalStorage.
+ * API key is injected per-request via the getKey callback.
  */
 export class McpFormCmsClientBuilder implements IFormCmsClientBuilder {
     private client: FormCmsApiClient;
 
-    constructor(private readonly baseUrl: string) {
+    constructor(
+        private readonly baseUrl: string,
+        private readonly getKey: () => string | undefined
+    ) {
         const instance = axios.create({
             baseURL: this.baseUrl,
             headers: {
@@ -18,8 +20,7 @@ export class McpFormCmsClientBuilder implements IFormCmsClientBuilder {
         });
 
         instance.interceptors.request.use(config => {
-            const store = requestContext.getStore();
-            const key = store?.apiKey;
+            const key = this.getKey();
             if (key) {
                 config.headers['X-Api-Key'] = key;
             }
