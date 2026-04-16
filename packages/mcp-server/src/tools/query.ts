@@ -1,8 +1,20 @@
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import type { FormCmsApiClient } from '@formmate/shared';
+import type { FormCmsApiClient, QueryOperator } from '@formmate/shared';
 
-export function registerQueryTools(server: McpServer, client: FormCmsApiClient) {
+export function registerQueryTools(server: McpServer, client: FormCmsApiClient, queryOperator: QueryOperator) {
+    server.tool(
+        'get_graphql_sdl',
+        'Retrieve the complete GraphQL Schema Definition Language (SDL) for the FormCMS backend. Use this when you need schema context to write queries.',
+        {},
+        async () => {
+            const sdl = await queryOperator.generateSDL(''); 
+            return {
+                content: [{ type: 'text', text: sdl }],
+            };
+        }
+    );
+
     server.tool(
         'run_query',
         'Execute a FormCMS named query and return the results.',

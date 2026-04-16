@@ -1,5 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { type FormCmsApiClient, EntityOperator, type IFormCmsClientBuilder } from '@formmate/shared';
+import { type FormCmsApiClient, EntityOperator, QueryOperator, type IFormCmsClientBuilder } from '@formmate/shared';
 import { registerSchemaTools } from './tools/schema.js';
 import { registerEntityTools } from './tools/entity.js';
 import { registerQueryTools } from './tools/query.js';
@@ -14,11 +14,12 @@ export function createMcpServer(clientBuilder: IFormCmsClientBuilder): McpServer
 
     const client = clientBuilder.getClient('');
     const entityOperator = new EntityOperator(clientBuilder, console);
+    const queryOperator = new QueryOperator(clientBuilder);
 
     // Tools — actions the LLM can call
     registerSchemaTools(server, client, entityOperator);
     registerEntityTools(server, client);
-    registerQueryTools(server, client);
+    registerQueryTools(server, client, queryOperator);
 
     // Resources — static context the LLM can read
     registerSchemaResources(server);
