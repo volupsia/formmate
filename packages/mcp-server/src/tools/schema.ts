@@ -6,6 +6,7 @@ import {
     EntityModel,
     RELATIONSHIP_JSON_SCHEMA,
     RelationshipModel,
+    ENTITY_DESIGNER_PROMPT,
 } from '@formmate/shared';
 import type { FormCmsApiClient, EntityOperator } from '@formmate/shared';
 
@@ -194,12 +195,12 @@ export function registerSchemaTools(server: McpServer, client: FormCmsApiClient,
         [
             'Define or update FormCMS entity schemas (attributes + relationships) and apply them to the database.',
             'Always read the schema://formcms/entity-design resource first to understand the required shape.',
-            'Use the design-entity prompt to generate a valid payload from a natural language description.',
-        ].join(' '),
+            'CRITICAL GUIDELINES FOR THIS TOOL:\n-----\n' + ENTITY_DESIGNER_PROMPT + '\n-----'
+        ].join(' \n'),
         {
             payload: EntityDesignPayload.describe(
                 'Entity design payload with entities[] and relationships[]. ' +
-                'Use the design-entity prompt or schema://formcms/entity-design resource for the exact shape.'
+                'Follow the critical guidelines strictly when designing this payload.'
             ),
         },
         async ({ payload }) => {

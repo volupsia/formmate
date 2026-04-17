@@ -7,7 +7,7 @@ import { createMcpServer } from './mcp-server.js';
 import { requestContext } from './context.js';
 import { EventEmitter } from 'events';
 import { adminHtml } from './ui/admin-ui.js';
-import { insertLog, getRecentLogs } from './infrastructure/db.js';
+import { insertLog, getRecentLogs, clearAllLogs } from './infrastructure/db.js';
 
 const logEmitter = new EventEmitter();
 
@@ -92,6 +92,11 @@ async function start() {
         app.get('/admin/history', (req, res) => {
             const limit = parseInt(req.query.limit as string) || 200;
             res.json(getRecentLogs(limit));
+        });
+
+        app.delete('/admin/history', (req, res) => {
+            clearAllLogs();
+            res.json({ status: 'ok' });
         });
 
         app.get('/admin/stream', (req, res) => {

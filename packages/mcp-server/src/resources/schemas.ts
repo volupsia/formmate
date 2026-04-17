@@ -4,6 +4,7 @@ import {
     ENTITY_JSON_SCHEMA,
     RELATIONSHIP_JSON_SCHEMA,
     ENTITY_DESIGN_JSON_SCHEMA,
+    ENTITY_DESIGNER_PROMPT,
 } from '@formmate/shared';
 
 export function registerSchemaResources(server: McpServer): void {
@@ -82,6 +83,26 @@ export function registerSchemaResources(server: McpServer): void {
                     uri: uri.href,
                     mimeType: 'application/json',
                     text: JSON.stringify(ENTITY_DESIGN_JSON_SCHEMA, null, 2),
+                },
+            ],
+        })
+    );
+
+    server.resource(
+        'entity-design-guidelines',
+        'schema://formcms/entity-design-guidelines',
+        {
+            description:
+                'Comprehensive guidelines and strictly required constraints for designing FormCMS entities. ' +
+                'AI assistants MUST read this resource before calling the define_entity tool.',
+            mimeType: 'text/markdown',
+        },
+        async (uri) => ({
+            contents: [
+                {
+                    uri: uri.href,
+                    mimeType: 'text/markdown',
+                    text: ENTITY_DESIGNER_PROMPT,
                 },
             ],
         })

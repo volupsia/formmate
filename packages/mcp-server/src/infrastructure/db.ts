@@ -62,3 +62,13 @@ export function getRecentLogs(limit: number = 200) {
         };
     }).reverse();
 }
+
+const deleteAllStmt = db.prepare(`DELETE FROM rpc_logs`);
+
+export function clearAllLogs() {
+    try {
+        deleteAllStmt.run();
+    } catch (e) {
+        console.error('Failed to clear RPC logs:', e);
+    }
+}
