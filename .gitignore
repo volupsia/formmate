@@ -33,6 +33,7 @@ packages/backend/dev.db
 packages/backend/dev.db-journal
 packages/shared/dist/
 packages/frontend/dist/
+packages/mcp-server/data/
 publish.sh
 myapp.tar.gz
 
