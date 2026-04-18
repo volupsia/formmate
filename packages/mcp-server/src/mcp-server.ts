@@ -3,9 +3,6 @@ import { EntityOperator, QueryOperator, type IFormCmsClientBuilder } from '@form
 import { registerSchemaTools } from './tools/schema.js';
 import { registerEntityTools } from './tools/entity.js';
 import { registerQueryTools } from './tools/query.js';
-import { registerSchemaResources } from './resources/schemas.js';
-import { registerSchemaPrompts } from './prompts/entity-designer.js';
-import { registerQueryPrompts } from './prompts/query-builder.js';
 
 export function createMcpServer(clientBuilder: IFormCmsClientBuilder): McpServer {
     const server = new McpServer({
@@ -21,13 +18,6 @@ export function createMcpServer(clientBuilder: IFormCmsClientBuilder): McpServer
     registerSchemaTools(server, client, entityOperator);
     registerEntityTools(server, client);
     registerQueryTools(server, client, queryOperator);
-
-    // Resources — static context the LLM can read
-    registerSchemaResources(server);
-
-    // Prompts — reusable prompt templates
-    registerSchemaPrompts(server);
-    registerQueryPrompts(server);
 
     return server;
 }

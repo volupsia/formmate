@@ -30,8 +30,35 @@ export class McpFormCmsClientBuilder implements IFormCmsClientBuilder {
         instance.interceptors.response.use(
             response => response,
             error => {
-                const title = error.response?.data?.title ?? error.response?.data?.error ?? error.message;
-                throw new Error(title ?? 'FormCMS request failed');
+                const status: number | undefined = error.response?.status;
+                const data = error.response?.data;
+
+                // Build a rich error message with all available upstream detail
+                const parts: string[] = [];
+                if (status) parts.push(`HTTP ${status}`);
+
+                const title: string | undefined =
+                    data?.title ?? data?.error ?? data?.message ?? error.message;
+                if (title) parts.push(title);
+
+                const detail: string | undefined = data?.detail;
+                if (detail) parts.push(`Detail: ${detail}`);
+
+                // Include validation errors or arbitrary body for debugging
+                const extra = data?.errors ?? (typeof data === 'string' ? data : undefined);
+                if (extra) parts.push(`Body: ${typeof extra === 'string' ? extra : JSON.stringify(extra)}`);
+
+                const message = parts.join(' | ') || 'FormCMS request failed';
+
+                // Always log the full upstream response to the server console
+                console.error('[FormCMS upstream error]', {
+                    method: error.config?.method?.toUpperCase(),
+                    url: error.config?.url,
+                    status,
+                    data,
+                });
+
+                throw new Error(message);
             }
         );
 

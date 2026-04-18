@@ -128,46 +128,28 @@ const EntityDesignPayload = z.object({
 // ─── Tool registration ────────────────────────────────────────────────────────
 
 export function registerSchemaTools(server: McpServer, client: FormCmsApiClient, entityOperator: EntityOperator) {
-    // List all schemas of a given type
+    // List all entity schemas
     server.tool(
         'list_schemas',
-        'List all FormCMS schemas. Use type="entity" for data entities, type="query" for named queries.',
-        {
-            type: z.enum(['entity', 'query']).default('entity').describe('Schema type to list'),
-        },
-        async ({ type }) => {
-            const data = await client.listSchemas(type);
+        'List all FormCMS entity schemas.',
+        {},
+        async () => {
+            const data = await client.listSchemas('entity');
             return {
                 content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
             };
         }
     );
 
-    // Get a schema by name
+    // Get an entity schema by name
     server.tool(
         'get_schema',
-        'Get a FormCMS schema definition by its name.',
+        'Get a FormCMS entity schema definition by its name.',
         {
-            name: z.string().describe('Schema name (e.g. "post", "category")'),
-            type: z.enum(['entity', 'query']).default('entity').describe('Schema type'),
+            name: z.string().describe('Entity schema name (e.g. "post", "category")'),
         },
-        async ({ name, type }) => {
-            const data = await client.getSchemaByName(name, type);
-            return {
-                content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
-            };
-        }
-    );
-
-    // Get expanded entity definition (attributes, relations, etc.)
-    server.tool(
-        'get_entity_definition',
-        'Get the full expanded entity definition including all attributes, lookups, and junctions.',
-        {
-            entityName: z.string().describe('Entity name (e.g. "post")'),
-        },
-        async ({ entityName }) => {
-            const data = await client.getXEntity(entityName);
+        async ({ name }) => {
+            const data = await client.getSchemaByName(name, 'entity');
             return {
                 content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
             };
@@ -195,7 +177,8 @@ export function registerSchemaTools(server: McpServer, client: FormCmsApiClient,
         [
             'Define or update FormCMS entity schemas (attributes + relationships) and apply them to the database.',
             'Always read the schema://formcms/entity-design resource first to understand the required shape.',
-            'CRITICAL GUIDELINES FOR THIS TOOL:\n-----\n' + ENTITY_DESIGNER_PROMPT + '\n-----'
+            'CRITICAL GUIDELINES FOR THIS TOOL:\n-----\n' +
+            ENTITY_DESIGNER_PROMPT + '\n-----'
         ].join(' \n'),
         {
             payload: EntityDesignPayload.describe(

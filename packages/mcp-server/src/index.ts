@@ -33,8 +33,6 @@ async function start() {
             config.FORMCMS_BASE_URL,
             () => requestContext.getStore()?.apiKey
         );
-        const mcpServer = createMcpServer(formcmsClientBuilder);
-
         const transports = new Map<string, SSEServerTransport>();
 
         app.get('/sse', async (req, res) => {
@@ -42,10 +40,17 @@ async function start() {
             transports.set(transport.sessionId, transport);
             console.log(`📡 New SSE session: ${transport.sessionId}`);
 
+            const mcpServer = createMcpServer(formcmsClientBuilder);
+
             // Clean up when the client disconnects
-            res.on('close', () => {
+            res.on('close', async () => {
                 console.log(`🔌 SSE session closed: ${transport.sessionId}`);
                 transports.delete(transport.sessionId);
+                try {
+                    await mcpServer.close();
+                } catch (err) {
+                    console.error('Error closing MCP server:', err);
+                }
             });
 
             await mcpServer.connect(transport);
