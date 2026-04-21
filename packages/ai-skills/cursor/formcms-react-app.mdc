@@ -1,0 +1,44 @@
+---
+description: FormCMS React app patterns — auth, entity CRUD, named queries. Apply when building frontend apps on top of FormCMS.
+globs: ["src/**/*.tsx", "src/**/*.ts"]
+alwaysApply: false
+---
+
+# FormCMS React App Patterns
+
+## Configuration
+```typescript
+// src/config.ts
+export const CONFIG = { API_BASE_URL: import.meta.env.VITE_API_BASE_URL || '' };
+```
+
+## Authentication (Cookie-based)
+All fetch calls MUST include `credentials: 'include'` — no exceptions.
+
+| Method | Path | Body |
+|--------|------|------|
+| `GET`  | `/api/me` | — (check session) |
+| `POST` | `/api/login` | `{ usernameOrEmail, password }` |
+| `POST` | `/api/register` | `{ email, password, userName }` |
+| `GET`  | `/api/logout` | — |
+| `POST` | `/api/profile/password` | `{ oldPassword, password }` |
+
+Create an `AuthContext` with `user`, `loading`, `login()`, `register()`, `logout()` and wrap `<App>` in `<AuthProvider>`. Call `GET /api/me` on mount to restore the session.
+
+## Entity CRUD
+```
+GET    /api/entities/{entity}         – list (supports limit, offset, filters)
+GET    /api/entities/{entity}/{id}    – single record
+POST   /api/entities/{entity}/insert  – create
+POST   /api/entities/{entity}/update  – update
+POST   /api/entities/{entity}/delete  – delete
+```
+
+## Named Queries
+```
+GET /api/queries/{queryName}?param=value
+```
+
+## UI Stack
+- Icons: Lucide React
+- Animations: Framer Motion
