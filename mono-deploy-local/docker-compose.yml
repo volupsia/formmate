@@ -22,6 +22,10 @@ services:
       - FORMCMS_BASE_URL=http://127.0.0.1:5001 # Internal URL to reach .NET (matches entrypoint.sh)
       - DATABASE_URL=file:/data/mate/sqlite.db
 
+      # --- MCP Server Settings ---
+      - MCP_PORT=3002
+      - MCP_FORMCMS_BASE_URL=http://127.0.0.1:5001
+
     depends_on:
       - db
     restart: unless-stopped

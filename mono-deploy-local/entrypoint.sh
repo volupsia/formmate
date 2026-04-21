@@ -8,6 +8,8 @@ export DATABASE_URL=${DATABASE_URL:-"file:/app/packages/mate-service/sessions.db
 export PORT=${PORT:-"3001"}
 export FORMCMS_BASE_URL=${FORMCMS_BASE_URL:-"http://127.0.0.1:5001"} # Internal .NET port
 export FRONTEND_URL=${FRONTEND_URL:-"http://127.0.0.1:3001"}
+export MCP_PORT=${MCP_PORT:-"3002"}
+export MCP_FORMCMS_BASE_URL=${MCP_FORMCMS_BASE_URL:-"http://127.0.0.1:5001"} # MCP talks directly to .NET
 
 # FormCMS Configuration from Environment Variables
 export DATABASE_PROVIDER=${DATABASE_PROVIDER:-0}  # Default to Sqlite
@@ -51,6 +53,11 @@ echo "[ENTRYPOINT] Starting FormMate (Node.js) on port 3001..."
 cd /app/packages/mate-service
 npx prisma db push --accept-data-loss
 tsx src/index.ts &
+
+# Start MCP Server in background
+echo "[ENTRYPOINT] Starting MCP Server (Node.js) on port ${MCP_PORT}..."
+cd /app/packages/mcp-server
+PORT=${MCP_PORT} FORMCMS_BASE_URL=${MCP_FORMCMS_BASE_URL} tsx src/index.ts &
 
 # Start FormCMS (.NET) in a loop
 echo "[ENTRYPOINT] Starting FormCMS (.NET) loop on port 5001..."

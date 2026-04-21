@@ -12,6 +12,7 @@ COPY formmate/packages/mate-service/package.json ./packages/mate-service/
 COPY formmate/packages/mate/package.json ./packages/mate/
 # Also copy SDK which is a dependency now
 COPY formmate/packages/sdk/package.json ./packages/sdk/
+COPY formmate/packages/mcp-server/package.json ./packages/mcp-server/
 
 # 2. Install PROD dependencies
 # Note: In multi-arch, we might need to be careful with native modules, but pure JS deps are fine.
@@ -27,6 +28,10 @@ COPY formmate/packages/mate-service/resources ./packages/mate-service/resources
 COPY formmate/packages/mate-service/public ./packages/mate-service/public
 COPY formmate/packages/mate-service/prisma ./packages/mate-service/prisma
 
+# Copy MCP server source (runs via tsx, no pre-compiled dist needed)
+COPY formmate/packages/mcp-server/src ./packages/mcp-server/src
+COPY formmate/packages/mcp-server/tsconfig.json ./packages/mcp-server/
+
 # Generate Prisma Client (needs to run on target arch)
 RUN cd packages/mate-service && npx prisma generate
 
@@ -41,9 +46,9 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 
 # Start Node.js & Nginx
-RUN apt-get update && apt-get install -y curl nginx procps dos2unix ffmpeg && \
+RUN apt-get update && apt-get install -y --no-install-recommends curl nginx procps dos2unix ffmpeg && \
     curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
-    apt-get install -y nodejs && \
+    apt-get install -y --no-install-recommends nodejs && \
     npm install -g tsx && \
     rm -rf /var/lib/apt/lists/*
 
