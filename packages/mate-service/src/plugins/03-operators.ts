@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import fp from 'fastify-plugin';
-import { EntityOperator, QueryOperator, DataOperator } from '@formmate/shared';
+import { EntityOperator, QueryOperator } from '@formmate/shared';
+import { DataOperator } from '@formmate/shared/operators/data-operator';
 import { PageOperator } from '../operators/page-operator';
 import { TaskOperator } from '../operators/task-operator';
 import { config } from '../config';

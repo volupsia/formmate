@@ -1,4 +1,4 @@
-import type { LayoutSection, PageComponent } from '../mate.dto.js';
+import type { LayoutSection, PageComponent } from '../types/mate.dto.js';
 
 export interface CompileOptions {
     enableVisitTrack?: boolean;

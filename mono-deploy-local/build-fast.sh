@@ -10,9 +10,6 @@ cd "$REPO_ROOT/formmate"
 # Install deps if needed (fast if cached)
 npm install --silent
 
-# Build Shared
-npm run build:shared --silent
-
 # Build Frontend
 npm run build --workspace=@formmate/mate --silent
 npm run build --workspace=@formmate/admin --silent

@@ -5,10 +5,6 @@ import { camelize } from '../utils/string.js';
 export class EntityModel {
     constructor(public readonly entity: EntityDto) { }
 
-    private get attributes() {
-        return this.entity.attributes || [];
-    }
-
     normalize(): EntityDto {
         const entity = { ...this.entity };
 

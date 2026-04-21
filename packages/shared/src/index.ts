@@ -8,7 +8,7 @@ export * from './types/cms.dto.js';
 export * from './types/mate.dto.js';
 
 // schemas
-export * from './schemas/entity-design.js';
+// export * from './schemas/entity-design.js';
 
 // core
 export * from './core/constants.js';
@@ -27,5 +27,4 @@ export * from './utils/string.js';
 export * from './operators/formcms-client-builder.interface.js';
 export * from './operators/entity-operator.js';
 export * from './operators/query-operator.js';
-export * from './operators/data-operator.js';
-
+// export * from './operators/data-operator.js';

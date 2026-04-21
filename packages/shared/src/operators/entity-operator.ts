@@ -1,6 +1,5 @@
 import {
     RelationshipModel,
-    EntityModel,
     type SchemaSummary,
     type EntityDto,
     type RelationshipDto,

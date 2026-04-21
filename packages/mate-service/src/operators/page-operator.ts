@@ -4,7 +4,8 @@ import {
     type PageMetadata,
     type PageComponent,
     type PageArchitecture,
-    type IFormCmsClientBuilder
+    type IFormCmsClientBuilder,
+    type PagePlanResponse
 } from '@formmate/shared';
 import type { ServiceLogger } from '../types/logger';
 import type { ISystemSettingRepository } from '../repositories/system-setting-repository';

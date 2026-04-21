@@ -3,7 +3,7 @@ FROM node:24-slim AS node-base
 WORKDIR /app
 
 # Install runtime dependencies for backend (openssl for prisma)
-RUN apt-get update -y && apt-get install -y openssl procps curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y && apt-get install -y openssl procps curl python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 # 1. Copy package definitions to install dependencies
 COPY formmate/package.json formmate/package-lock.json ./
@@ -21,10 +21,11 @@ RUN npm install --omit=dev
 
 # 3. Copy pre-built artifacts from LOCAL machine
 COPY formmate/packages/shared/dist ./packages/shared/dist
+COPY formmate/packages/shared/src ./packages/shared/src
 # Copy backend artifacts AND source files (for tsx if needed, though we should run compiled js)
 COPY formmate/packages/mate-service/dist ./packages/mate-service/dist
 COPY formmate/packages/mate-service/src ./packages/mate-service/src
-COPY formmate/packages/mate-service/resources ./packages/mate-service/resources
+
 COPY formmate/packages/mate-service/public ./packages/mate-service/public
 COPY formmate/packages/mate-service/prisma ./packages/mate-service/prisma
 

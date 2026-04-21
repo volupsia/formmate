@@ -3,14 +3,14 @@ import fp from 'fastify-plugin';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { AGENT_NAMES } from '@formmate/shared';
 import {
     ENTITY_JSON_SCHEMA_STR,
     ATTRIBUTE_JSON_SCHEMA_STR,
     RELATIONSHIP_JSON_SCHEMA_STR,
     ENTITY_DESIGNER_PROMPT,
     QUERY_BUILDER_PROMPT,
-    AGENT_NAMES,
-} from '@formmate/shared';
+} from '@formmate/shared/schemas/entity-design';
 import { config } from '../config';
 
 import { IntentClassifier } from '../agent/intent-classifier';

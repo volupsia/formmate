@@ -9,6 +9,16 @@
             "types": "./src/index.ts",
             "import": "./src/index.ts",
             "default": "./src/index.ts"
+        },
+        "./schemas/entity-design": {
+            "types": "./src/schemas/entity-design.ts",
+            "import": "./src/schemas/entity-design.ts",
+            "default": "./src/schemas/entity-design.ts"
+        },
+        "./operators/data-operator": {
+            "types": "./src/operators/data-operator.ts",
+            "import": "./src/operators/data-operator.ts",
+            "default": "./src/operators/data-operator.ts"
         }
     },
     "scripts": {

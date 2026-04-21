@@ -1,13 +1,15 @@
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import {
+    EntityModel,
+    RelationshipModel,
+} from '@formmate/shared';
+import {
     ATTRIBUTE_JSON_SCHEMA,
     ENTITY_JSON_SCHEMA,
-    EntityModel,
     RELATIONSHIP_JSON_SCHEMA,
-    RelationshipModel,
     ENTITY_DESIGNER_PROMPT,
-} from '@formmate/shared';
+} from '@formmate/shared/schemas/entity-design';
 import type { FormCmsApiClient, EntityOperator } from '@formmate/shared';
 
 // ─── Zod schemas – derived from @formmate/shared JSON Schema constants ─────────
