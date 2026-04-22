@@ -35,8 +35,8 @@ async function start() {
         );
         const transports = new Map<string, SSEServerTransport>();
 
-        app.get('/sse', async (req, res) => {
-            const transport = new SSEServerTransport('/messages', res);
+        app.get('/mcp/sse', async (req, res) => {
+            const transport = new SSEServerTransport('/mcp/messages', res);
             transports.set(transport.sessionId, transport);
             console.log(`📡 New SSE session: ${transport.sessionId}`);
 
@@ -76,7 +76,7 @@ async function start() {
             }
         });
 
-        app.post('/messages', async (req, res) => {
+        app.post('/mcp/messages', async (req, res) => {
             const sessionId = req.query.sessionId as string;
             const transport = transports.get(sessionId);
             if (!transport) {
@@ -86,25 +86,25 @@ async function start() {
             await transport.handlePostMessage(req, res);
         });
 
-        app.get('/health', (req, res) => {
+        app.get('/mcp/health', (req, res) => {
             res.json({ status: 'ok', service: 'formcms-mcp-server' });
         });
 
-        app.get('/admin', (req, res) => {
+        app.get('/mcp/admin', (req, res) => {
             res.send(adminHtml);
         });
 
-        app.get('/admin/history', (req, res) => {
+        app.get('/mcp/admin/history', (req, res) => {
             const limit = parseInt(req.query.limit as string) || 200;
             res.json(getRecentLogs(limit));
         });
 
-        app.delete('/admin/history', (req, res) => {
+        app.delete('/mcp/admin/history', (req, res) => {
             clearAllLogs();
             res.json({ status: 'ok' });
         });
 
-        app.get('/admin/stream', (req, res) => {
+        app.get('/mcp/admin/stream', (req, res) => {
             res.setHeader('Content-Type', 'text/event-stream');
             res.setHeader('Cache-Control', 'no-cache');
             res.setHeader('Connection', 'keep-alive');
@@ -125,10 +125,10 @@ async function start() {
 
         app.listen(config.PORT, () => {
             console.log(`🤖 FormCMS MCP Server ready`);
-            console.log(`   Legacy SSE      : http://localhost:${config.PORT}/sse`);
-            console.log(`   Messages        : http://localhost:${config.PORT}/messages`);
-            console.log(`   Health          : http://localhost:${config.PORT}/health`);
-            console.log(`   Live Logs UI    : http://localhost:${config.PORT}/admin`);
+            console.log(`   Legacy SSE      : http://localhost:${config.PORT}/mcp/sse`);
+            console.log(`   Messages        : http://localhost:${config.PORT}/mcp/messages`);
+            console.log(`   Health          : http://localhost:${config.PORT}/mcp/health`);
+            console.log(`   Live Logs UI    : http://localhost:${config.PORT}/mcp/admin`);
             console.log(`   Upstream        : ${config.FORMCMS_BASE_URL}`);
         });
     } catch (err) {
