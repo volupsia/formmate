@@ -14,12 +14,17 @@ export default defineConfig({
       // In Docker, nginx (default port 5000) is the single gateway:
       //   /api/ → .NET FormCMS backend
       //   /mcp/ → MCP server
+      //   /files/ → FormCMS files storage
       // Point the proxy target at your Docker nginx URL.
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
       '/mcp': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      }
+      '/files': {
         target: 'http://localhost:5000',
         changeOrigin: true,
       }
