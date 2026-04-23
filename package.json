@@ -22,6 +22,7 @@
         "build:sdk": "npm run build --workspace=@formmate/sdk",
         "build:mate": "npm run build --workspace=@formmate/mate",
         "build:all": "npm run build --workspaces --if-present",
+        "build:skills": "npm run build --workspace=@formmate/ai-skills",
         "install:all": "npm install",
         "dev:mcp": "npm run dev --workspace=@formmate/mcp-server",
         "setup": "npm run db:init --workspace=@formmate/service"

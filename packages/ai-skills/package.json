@@ -1,0 +1,7 @@
+{
+    "name": "@formmate/ai-skills",
+    "private": true,
+    "scripts": {
+        "build": "npx tsx build.ts"
+    }
+}
