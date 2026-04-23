@@ -20,6 +20,7 @@ const config    = read('config.md');
 const auth      = read('auth.md');
 const entityApi = read('entity-api.md');
 const queries   = read('queries.md');
+const assets    = read('assets.md');
 const ui        = read('ui.md');
 
 function write(relPath: string, content: string) {
@@ -32,7 +33,7 @@ function write(relPath: string, content: string) {
 // ── 1. Gemini SKILL.md ─────────────────────────────────────────────────────
 const geminiSkill = `---
 name: Build FormCMS React App
-description: Guidelines and patterns for building React applications that integrate with FormCMS backend. Covers configuration, authentication, data fetching (Entity API + Named Queries).
+description: Guidelines and patterns for building React applications that integrate with FormCMS backend. Covers configuration, authentication, data fetching, and asset management.
 ---
 
 # Building a React App with FormCMS
@@ -50,6 +51,8 @@ ${auth}
 ${entityApi}
 
 ${queries}
+
+${assets}
 
 ---
 
@@ -74,6 +77,8 @@ ${auth}
 ${entityApi}
 
 ${queries}
+
+${assets}
 
 ${ui}
 `;
@@ -100,6 +105,8 @@ ${entityApi}
 
 ${queries}
 
+${assets}
+
 ## Coding Guidelines
 - Use a Vite proxy (in \`vite.config.ts\`) for \`/api\` requests to avoid CORS issues.
 - Prefer named exports for components.
@@ -115,6 +122,7 @@ write('copilot/copilot-instructions.md', copilotInstructions);
 const escapedAuth = auth.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
 const escapedEntity = entityApi.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
 const escapedQueries = queries.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+const escapedAssets = assets.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
 
 const mcpPromptTs = `import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
@@ -128,13 +136,15 @@ ${escapedAuth}
 ${escapedEntity}
 
 ${escapedQueries}
+
+${escapedAssets}
 \`;
 
 export function registerAuthPrompts(server: McpServer): void {
     server.prompt(
         'formcms-auth-api',
-        'FormCMS API reference — authentication, entity CRUD, and named queries. ' +
-        'Use this when building login, register, logout, data fetching, or session-management features.',
+        'FormCMS API reference — authentication, entity CRUD, named queries, and asset management. ' +
+        'Use this when building login, register, logout, data fetching, file uploads, or session-management features.',
         () => ({
             messages: [
                 {
