@@ -1,6 +1,8 @@
 ## Configuration
 
-FormCMS apps typically communicate with the backend via API. To avoid CORS issues during development, use a proxy in your Vite configuration instead of hardcoding an API base URL.
+FormCMS apps communicate with the backend via proxy to avoid CORS issues during development.
+
+> **If you have the MCP server connected:** call `get_server_info` first — it returns `formcmsBaseUrl`, which is the correct proxy target. Use that value instead of the placeholder below.
 
 ### `vite.config.ts`
 ```typescript
@@ -11,21 +13,14 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // In Docker, nginx (default port 5000) is the single gateway:
-      //   /api/ → .NET FormCMS backend
-      //   /mcp/ → MCP server
-      //   /files/ → FormCMS files storage
-      // Point the proxy target at your Docker nginx URL.
+      // Replace <FORMCMS_BASE_URL> with the value returned by the get_server_info MCP tool.
+      // Both /api and /files must point to the same FormCMS backend URL.
       '/api': {
-        target: 'http://localhost:5000',
+        target: '<FORMCMS_BASE_URL>', // e.g. http://localhost:5000
         changeOrigin: true,
       },
-      '/mcp': {
-        target: 'http://localhost:5000',
-        changeOrigin: true,
-      }
       '/files': {
-        target: 'http://localhost:5000',
+        target: '<FORMCMS_BASE_URL>', // e.g. http://localhost:5000
         changeOrigin: true,
       }
     }

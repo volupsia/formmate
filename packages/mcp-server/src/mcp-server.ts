@@ -3,6 +3,7 @@ import { EntityOperator, QueryOperator, type IFormCmsClientBuilder } from '@form
 import { registerSchemaTools } from './tools/schema.js';
 import { registerEntityTools } from './tools/entity.js';
 import { registerQueryTools } from './tools/query.js';
+import { registerInfoTools } from './tools/info.js';
 import { registerAuthPrompts } from './prompts/auth.js';
 
 export function createMcpServer(clientBuilder: IFormCmsClientBuilder): McpServer {
@@ -16,6 +17,7 @@ export function createMcpServer(clientBuilder: IFormCmsClientBuilder): McpServer
     const queryOperator = new QueryOperator(clientBuilder);
 
     // Tools — actions the LLM can call
+    registerInfoTools(server);
     registerSchemaTools(server, client, entityOperator);
     registerEntityTools(server, client);
     registerQueryTools(server, client, queryOperator);

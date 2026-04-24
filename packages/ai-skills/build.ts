@@ -17,6 +17,7 @@ const read = (name: string) => readFileSync(resolve(DOCS, name), 'utf-8').trim()
 
 // ── Load partials ──────────────────────────────────────────────────────────
 const config    = read('config.md');
+const mcp       = read('mcp.md');
 const auth      = read('auth.md');
 const entityApi = read('entity-api.md');
 const queries   = read('queries.md');
@@ -43,6 +44,8 @@ This skill outlines the standard patterns for connecting a React frontend to a F
 ${config}
 
 ---
+
+${mcp}
 
 ${auth}
 
@@ -72,6 +75,8 @@ alwaysApply: false
 
 ${config}
 
+${mcp}
+
 ${auth}
 
 ${entityApi}
@@ -98,6 +103,8 @@ Frontend apps are built with React + TypeScript + Vite, connected to the FormCMS
 - MCP Server: Node.js + Express + \`@modelcontextprotocol/sdk\`
 
 ${config}
+
+${mcp}
 
 ${auth}
 
