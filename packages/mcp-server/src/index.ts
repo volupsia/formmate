@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import { Readable } from 'node:stream';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { config } from './config.js';
 import { McpFormCmsClientBuilder } from './infrastructure/formcms-client.js';
@@ -22,7 +23,10 @@ app.use(cors({
 app.use((req, res, next) => {
     const auth = req.headers.authorization ?? '';
     const apiKey = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-    requestContext.run({ apiKey }, next);
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const baseUrl = `${protocol}://${host}`;
+    requestContext.run({ apiKey, baseUrl }, next);
 });
 
 async function start() {
@@ -53,9 +57,7 @@ async function start() {
                 }
             });
 
-            await mcpServer.connect(transport);
-
-            // 1. Intercept outgoing messages (Server -> Client)
+            // Intercept outgoing messages BEFORE connect() so no message is missed
             const originalSend = transport.send.bind(transport);
             transport.send = async (message) => {
                 const timestamp = new Date().toISOString();
@@ -64,26 +66,36 @@ async function start() {
                 return originalSend(message);
             };
 
-            // 2. Intercept incoming messages (Client -> Server)
-            const originalOnMessage = transport.onmessage?.bind(transport);
-            if (originalOnMessage) {
-                transport.onmessage = async (message) => {
-                    const timestamp = new Date().toISOString();
-                    logEmitter.emit('log', { timestamp, type: 'incoming', sessionId: transport.sessionId, message });
-                    insertLog(timestamp, 'incoming', transport.sessionId, message);
-                    return originalOnMessage(message);
-                };
-            }
+            await mcpServer.connect(transport);
         });
 
-        app.post('/mcp/messages', async (req, res) => {
+        // Use express.raw() to buffer the body so we can log it AND still pass
+        // it to handlePostMessage (which reads the stream internally)
+        app.post('/mcp/messages', express.raw({ type: 'application/json' }), async (req, res) => {
             const sessionId = req.query.sessionId as string;
             const transport = transports.get(sessionId);
             if (!transport) {
                 res.status(404).send('Session not found');
                 return;
             }
-            await transport.handlePostMessage(req, res);
+            const rawBody = req.body as Buffer;
+            // Log the incoming message
+            if (rawBody?.length) {
+                const timestamp = new Date().toISOString();
+                try {
+                    const parsed = JSON.parse(rawBody.toString('utf-8'));
+                    logEmitter.emit('log', { timestamp, type: 'incoming', sessionId, message: parsed });
+                    insertLog(timestamp, 'incoming', sessionId, parsed);
+                } catch { /* ignore parse errors */ }
+            }
+            // Reconstruct a readable stream from the buffered body for the SDK
+            const fakeReq = Object.assign(
+                new Readable({ read() {} }),
+                { headers: req.headers, method: req.method, url: req.url }
+            );
+            fakeReq.push(rawBody ?? Buffer.alloc(0));
+            fakeReq.push(null);
+            await transport.handlePostMessage(fakeReq as any, res);
         });
 
         app.get('/mcp/health', (req, res) => {
@@ -108,16 +120,16 @@ async function start() {
             res.setHeader('Content-Type', 'text/event-stream');
             res.setHeader('Cache-Control', 'no-cache');
             res.setHeader('Connection', 'keep-alive');
-            
+
             // Ensure connection stays open
             res.flushHeaders();
 
             const onLog = (logData: any) => {
                 res.write(`data: ${JSON.stringify(logData)}\n\n`);
             };
-            
+
             logEmitter.on('log', onLog);
-            
+
             res.on('close', () => {
                 logEmitter.off('log', onLog);
             });

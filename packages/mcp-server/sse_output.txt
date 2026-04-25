@@ -1,0 +1,6 @@
+event: endpoint
+data: /mcp/messages?sessionId=117be8ea-f122-4a2d-a15a-7ca60281c0b2
+
+event: message
+data: {"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{"listChanged":true},"prompts":{"listChanged":true}},"serverInfo":{"name":"formcms-mcp","version":"1.0.0"}},"jsonrpc":"2.0","id":1}
+

@@ -81,7 +81,7 @@ export const adminHtml = `<!DOCTYPE html>
         let selectedRow = null;
 
         window.clearLogs = function() {
-            fetch('/admin/history', { method: 'DELETE' }).then(() => {
+            fetch('/mcp/admin/history', { method: 'DELETE' }).then(() => {
                 tbody.innerHTML = '';
                 hasLogs = false;
                 if (selectedRow) selectedRow = null;
@@ -188,7 +188,7 @@ export const adminHtml = `<!DOCTYPE html>
         }
 
         // Fetch historical logs first
-        fetch('/admin/history?limit=200')
+        fetch('/mcp/admin/history?limit=200')
             .then(res => res.json())
             .then(history => {
                 if (history && history.length > 0) {
@@ -199,7 +199,7 @@ export const adminHtml = `<!DOCTYPE html>
             })
             .finally(() => {
                 // Connect live stream after history is loaded
-                const evtSource = new EventSource("/admin/stream");
+                const evtSource = new EventSource("/mcp/admin/stream");
                 evtSource.onmessage = function(event) {
                     if (!hasLogs) { tbody.innerHTML = ''; hasLogs = true; }
                     let data;

@@ -1,5 +1,6 @@
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { config } from '../config.js';
+import { requestContext } from '../context.js';
 
 /**
  * Registers informational tools that expose server configuration.
@@ -16,14 +17,14 @@ export function registerInfoTools(server: McpServer): void {
         ].join(' '),
         {},
         async () => {
+            const baseUrl = requestContext.getStore()?.baseUrl;
             return {
                 content: [
                     {
                         type: 'text',
                         text: JSON.stringify(
                             {
-                                formcmsBaseUrl: config.FORMCMS_BASE_URL,
-                                mcpServerPort: config.PORT,
+                                formcmsBaseUrl: baseUrl,
                                 note: 'Use formcmsBaseUrl as the proxy target for /api and /files in vite.config.ts',
                             },
                             null,
