@@ -6,6 +6,7 @@ const envSchema = z.object({
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     FORMCMS_BASE_URL: z.string().url().default('http://127.0.0.1:3001'),
     LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('warn'),
+    FORMCMS_MAX_REQUEST_SIZE: z.string().default('50mb'),
 });
 
 const _env = envSchema.safeParse(process.env);

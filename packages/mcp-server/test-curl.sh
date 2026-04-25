@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PORT=3002
+PORT=8001
 HOST="http://localhost:$PORT"
 
 # 1. Start the SSE stream in the background and save its output to a file

@@ -71,7 +71,7 @@ async function start() {
 
         // Use express.raw() to buffer the body so we can log it AND still pass
         // it to handlePostMessage (which reads the stream internally)
-        app.post('/mcp/messages', express.raw({ type: 'application/json' }), async (req, res) => {
+        app.post('/mcp/messages', express.raw({ type: 'application/json', limit: config.FORMCMS_MAX_REQUEST_SIZE }), async (req, res) => {
             const sessionId = req.query.sessionId as string;
             const transport = transports.get(sessionId);
             if (!transport) {
@@ -102,8 +102,9 @@ async function start() {
             res.json({ status: 'ok', service: 'formcms-mcp-server' });
         });
 
+        const SERVER_START_TIME = new Date().toLocaleString();
         app.get('/mcp/admin', (req, res) => {
-            res.send(adminHtml);
+            res.send(adminHtml.replace('{{SERVER_START_TIME}}', SERVER_START_TIME));
         });
 
         app.get('/mcp/admin/history', (req, res) => {

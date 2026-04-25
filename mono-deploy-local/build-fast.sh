@@ -22,6 +22,10 @@ npm install --silent # Ensure local backend deps are simpler to find
 npx prisma generate
 npm run build --silent
 
+# Build MCP Server
+cd "$REPO_ROOT/formmate/packages/mcp-server"
+npm run build --silent
+
 echo "🚀 Building FormCMS (.NET) locally..."
 cd "$REPO_ROOT/formcms"
 # Clean previous publish to avoid stale files

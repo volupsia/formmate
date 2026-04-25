@@ -29,7 +29,7 @@ export const adminHtml = `<!DOCTYPE html>
                 <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 MCP Server Live Logs
             </h1>
-            <p class="text-xs text-gray-500 mt-1">Intercepting live JSON-RPC traffic between any MCP client and this server</p>
+            <p class="text-xs text-gray-500 mt-1">Intercepting live JSON-RPC traffic between any MCP client and this server. <span class="text-gray-400 font-mono">Started: {{SERVER_START_TIME}}</span></p>
         </div>
         <button onclick="clearLogs()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 active:bg-gray-600 rounded cursor-pointer transition-colors border border-gray-700 text-xs shadow-sm font-semibold flex items-center gap-2">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -61,7 +61,7 @@ export const adminHtml = `<!DOCTYPE html>
         <div class="w-1/2 bg-[#181825] flex flex-col relative">
             <div class="p-3 bg-dark min-h-[44px] border-b border-gray-800 flex items-center justify-between text-xs font-semibold text-gray-400 shrink-0 z-10 shadow-sm">
                 <span>Message Details</span>
-                <span id="detail-session" class="text-gray-600 truncate max-w-[250px] font-mono text-[10px]"></span>
+                <span id="detail-session" class="text-gray-600 truncate font-mono text-[10px]"></span>
             </div>
             <div class="p-4 overflow-auto custom-scrollbar flex-1 relative bg-[#11111b]/50">
                 <pre id="detail-content" class="text-[13px] text-gray-300 whitespace-pre-wrap break-all hidden font-mono leading-relaxed"></pre>
@@ -152,7 +152,7 @@ export const adminHtml = `<!DOCTYPE html>
                 row.classList.add('border-l-2');
                 row.classList.add('border-primary');
                 
-                detailSession.innerText = \`Session: \${data.sessionId}\`;
+                detailSession.innerText = \`Time: \${new Date(data.timestamp).toLocaleString()} | Session: \${data.sessionId}\`;
                 detailContent.innerHTML = syntaxHighlight(JSON.stringify(data.message, null, 2));
                 detailContent.classList.remove('hidden');
                 detailEmpty.classList.add('hidden');
