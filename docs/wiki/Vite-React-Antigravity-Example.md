@@ -1,12 +1,14 @@
-# Building with Vite, React, and AI (Antigravity/Cursor)
+# Build a Full-Stack React App with FormCMS and AI Agents (Antigravity, Cursor, Codex)
 
-FormCMS is designed to be fully headless. This means you can run FormCMS as your robust backend and build your frontend using your favorite tools like **Vite** and **React**, while leveraging AI coding agents like **Antigravity** or **Cursor** to write the code for you.
+> **Step-by-step config is shown for Antigravity**, but the MCP server and skill file work with any MCP-compatible agent — **Cursor, Codex, Claude Desktop, and more**. See Step 2 for your agent's setup.
 
-This guide walks you through setting up a modern frontend stack connected to a FormCMS backend.
+FormCMS is a fully headless CMS with a built-in **MCP server** — so AI agents like Antigravity, Cursor, and Codex can design your schema, seed data, and deploy your React app through tool calls, all without leaving the chat.
+
+This guide walks you through the full setup.
 
 ## 1. Start the FormCMS Backend
 
-First, ensure your FormCMS backend is running via Docker. This provides all your APIs, database, and the admin portal without needing to write any backend code.
+Run the all-in-one Docker image. It exposes port `5000` for everything: the REST API, the admin portal, and the MCP server.
 
 ```bash
 docker run -d \
@@ -18,14 +20,96 @@ docker run -d \
   -e FORMCMS_DATA_PATH=/data \
   -e "DATABASE_URL=file:/data/mate.db" \
   jaike/formcms-mono:latest
-
 ```
 
-Open **http://localhost:5000/mate** to set up your entities (e.g., "Articles", "Products", "Tasks") using the AI schema builder.
+| Service | URL |
+|---------|-----|
+| Admin portal (FormMate) | `http://localhost:5000/mate` |
+| REST API | `http://localhost:5000/api/` |
+| **MCP server (SSE)** | **`http://localhost:5000/mcp/sse`** |
 
-## 2. Initialize your Vite + React Project
+## 2. Connect Antigravity to FormCMS
 
-Open a new terminal and create a new Vite project:
+> **This section is Antigravity-specific.** If you use **Cursor**, **Codex**, or **Claude Desktop**, the FormCMS MCP server still works — connect them to `http://localhost:5000/mcp/sse` using their own MCP config format. The skill file (Step 2b) can be added to any agent that supports context/rule files.
+
+### 2a. Add the MCP Server
+
+Create (or edit) `antigravity.yaml` at the **root of your project** and add the FormCMS MCP server:
+
+```yaml
+# antigravity.yaml
+mcpServers:
+  formcms:
+    type: sse
+    url: http://localhost:5000/mcp/sse
+```
+
+If your FormCMS instance has an API key configured, add the `Authorization` header:
+
+```yaml
+mcpServers:
+  formcms:
+    type: sse
+    url: http://localhost:5000/mcp/sse
+    headers:
+      Authorization: "Bearer <your-api-key>"
+```
+
+To generate an API key:
+1. Open FormMate at `http://localhost:5000/mate`
+2. Go to **Settings** → **API Key Configuration**
+3. Click **Generate** to create a key, then **Save Changes**
+4. Copy the key and paste it into the `Authorization` header above
+
+Antigravity will pick up this config automatically when you open the project. Call `get_server_info` first to confirm the connection and retrieve the backend base URL.
+
+### 2b. Add the FormCMS React App Skill
+
+The FormCMS skill file teaches Antigravity the REST API patterns, authentication flow, relationship endpoints, and SPA deployment workflow — so you don't have to explain them in every prompt.
+
+Copy the skill file into your project:
+
+```bash
+# From your project root
+mkdir -p .agent/skills/formcms-react-app
+curl -o .agent/skills/formcms-react-app/SKILL.md \
+  https://raw.githubusercontent.com/formcms/formmate/main/packages/ai-skills/gemini/formcms-react-app/SKILL.md
+```
+
+Or copy it manually from the FormCMS repo:
+```
+packages/ai-skills/gemini/formcms-react-app/SKILL.md
+  → .agent/skills/formcms-react-app/SKILL.md
+```
+
+Your project structure should look like:
+```
+my-app/
+├── antigravity.yaml          ← MCP server config
+├── .agent/
+│   └── skills/
+│       └── formcms-react-app/
+│           └── SKILL.md      ← FormCMS API patterns & rules
+├── src/
+└── ...
+```
+
+Antigravity automatically loads all skill files under `.agent/skills/` — no extra config needed.
+
+### Available MCP Tools
+
+| Tool | Purpose |
+|------|---------|
+| `get_server_info` | Get the FormCMS base URL — **call this first** |
+| `define_entity` | Create or update entity schemas (attributes + relationships) |
+| `list_schemas` / `get_schema` | Inspect existing schemas |
+| `get_graphql_sdl` | Fetch the GraphQL SDL before writing queries |
+| `save_query` / `run_query` | Create and execute named queries |
+| `insert_entity` / `update_entity` | Seed or manage data |
+| `deploy_spa` | Deploy your built React app directly to FormCMS |
+| `list_spas` | List all deployed SPAs |
+
+## 3. Initialize your Vite + React Project
 
 ```bash
 npm create vite@latest my-app -- --template react-ts
@@ -33,21 +117,26 @@ cd my-app
 npm install
 ```
 
-## 3. Configure the API Connection
+## 4. Configure the API Proxy
 
-Since your React app will run on a different port than FormCMS during development, you need to set up a proxy to avoid CORS issues. Edit your `vite.config.ts`:
+Ask your agent to call `get_server_info` — it returns the `formcmsBaseUrl` (e.g. `http://localhost:5000`). Use that value as the proxy target in `vite.config.ts`:
 
 ```typescript
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
+      // Both /api and /files must point to the same FormCMS base URL.
+      // Use the value returned by the get_server_info MCP tool.
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5000', // ← from get_server_info
+        changeOrigin: true,
+      },
+      '/files': {
+        target: 'http://localhost:5000', // ← from get_server_info
         changeOrigin: true,
       }
     }
@@ -55,57 +144,78 @@ export default defineConfig({
 })
 ```
 
-Now, any request to `/api` from your React app will be flawlessly forwarded to FormCMS.
+## 5. Design your Schema with MCP Tools
 
-## 4. Build the UI with Antigravity
+Instead of manually clicking through the FormMate UI, let your agent do it via MCP tools:
 
-With your backend running and frontend initialized, start your React dev server:
+```
+"Create a blog app with posts, authors, and categories.
+ Posts have a title, body (rich text), and cover image.
+ Each post belongs to one category (many-to-one) and
+ can have multiple tags (many-to-many)."
+```
+
+Your agent will:
+1. Call `define_entity` for each entity with attributes and relationships
+2. Call `get_schema` to verify the schema was applied
+3. Call `get_graphql_sdl` + `save_query` to create named queries for data fetching
+4. Call `insert_entity` to seed sample data
+
+## 6. Build the React Frontend
+
+With the backend schema in place, start the dev server and ask your agent to build the UI:
 
 ```bash
 npm run dev
 ```
 
-Now, use your AI development agent (like Antigravity or Cursor) to build the application. Try giving the agent prompts like these:
+Example prompts:
+- *"Build a `PostList` component that fetches from `/api/entities/post` and displays cards in a responsive grid."*
+- *"Create a `PostDetail` page that reads the post ID from the URL, fetches `/api/entities/post/{id}`, and renders the cover image, title, body, and category."*
+- *"Add a category filter sidebar to `PostList` that calls `/api/entities/category` and filters posts client-side."*
 
-- *"Create a beautiful `ProductList` component that fetches data from `/api/products` and displays it in a responsive grid. Make it look modern and sleek."*
-- *"Build an `ArticleDetail` page that takes an ID from the URL, fetches `/api/articles/{id}`, and renders the title and content with good typography."*
-- *"Generate an API service file `src/services/api.ts` using `fetch` to handle standard CRUD operations against our `/api` endpoints."*
+> **Tip:** The agent already knows your schema from the MCP tools — it can build components with the correct field names and relationship structures without you having to describe them.
 
-### Tips for Better AI Prompts
+## 7. Deploy your React App via MCP
 
-- **Be specific about endpoints**: Tell the AI exactly where to fetch data based on the entities you created in FormCMS (e.g., `/api/{entity-name}`).
-- **Share your schemas**: If you created a `Product` entity with `title` and `price`, explicitly tell the AI about these fields in your prompt so it knows the exact data structure.
-- **Request specific styling**: Mention if you want vanilla CSS, Tailwind CSS, or a specific component library. By default, agents are great at writing custom, modern CSS if you ask them to "make it look premium".
+When you're ready to publish, ask your agent to deploy:
 
-## 5. Enable CORS (If Running Frontend Separately)
+```
+"Build and deploy my app as the home page on FormCMS."
+```
 
-If you are not using the Vite proxy from Step 3 and want your frontend (e.g., `http://localhost:5173`) to talk directly to FormCMS (e.g., `http://localhost:5000`), you must enable Cross-Origin Resource Sharing (CORS).
+The agent will:
+1. Run `npm run build` to produce the `dist/` directory
+2. Zip and base64-encode the output
+3. Call `deploy_spa` with `urlPath: "/"` to serve it from the FormCMS root
+4. Call `list_spas` to confirm it's live
 
-1. Open FormMate at `http://localhost:5000/mate`.
-2. Go to the **Settings** page.
-3. Find the **CORS Configuration** section.
-4. Add your frontend's URL (`http://localhost:5173`) to the allowed origins.
+You can also do it manually:
+1. `npm run build`
+2. Zip the **contents** of `dist/` (so `index.html` is at the zip root)
+3. Open **http://localhost:5000/mate** → **Settings** → **Frontend Apps** → Upload
 
-## 6. Deploying your React App
+Your entire full-stack application — frontend and backend APIs — is now served from a single FormCMS container.
 
-FormCMS includes a built-in static file server, making deployment incredibly simple. You don't need a separate host (like Vercel or Netlify) for your frontend—FormCMS can serve your React app directly!
+## 8. Enable CORS (If Running Frontend Separately)
 
-1. Build your Vite project for production:
-   ```bash
-   npm run build
-   ```
-2. Compress the contents of the generated `dist` folder into a `.zip` file. (Make sure you zip the *contents* of the folder, so `index.html` is at the root of the zip archive).
-3. Open FormMate at `http://localhost:5000/mate`.
-4. Go to **Settings** -> **Frontend Apps**.
-5. Upload your `dist.zip` file.
+If you skip the Vite proxy and want your frontend (`http://localhost:5173`) to call FormCMS directly:
 
-Now, your entire full-stack application (frontend and backend APIs) is served from a single FormCMS server instance!
+1. Open FormMate at `http://localhost:5000/mate`
+2. Go to **Settings** → **CORS Configuration**
+3. Add `http://localhost:5173` to the allowed origins
 
-## 7. Iterate Rapidly
+## 9. Iterate Rapidly
 
-The true power of this stack is your development velocity:
-1. **Need a new feature?** Ask FormCMS (via the `http://localhost:5000/mate` UI) to generate new entities, relationships, or fields.
-2. **Need to show it?** Ask Antigravity to create or update the React components to consume the new endpoints.
-3. **Ready to ship?** Build, zip, and upload to FormCMS.
+```
+Need a new feature?
+  → Ask the agent to call define_entity to add fields or a new entity.
 
-This clean separation—AI handles the backend in FormCMS, AI handles the frontend in React—gives you the ultimate full-stack development experience with zero boilerplate.
+Need to show it?
+  → Ask the agent to update the React components.
+
+Ready to ship?
+  → Ask the agent to build and call deploy_spa.
+```
+
+This clean separation — **MCP tools set up the backend**, **React components consume the APIs** — gives you a true AI-powered full-stack workflow with zero context switching.

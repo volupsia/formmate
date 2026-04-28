@@ -9,16 +9,21 @@ This guide explains how to deploy FormCMS using Docker Compose. The setup includ
 The `formcms-mono-deploy` image consolidates multiple services:
 1.  **Nginx (Port 5000)**: Used as the gateway. Proxies requests to internal services.
     *   `/mate/*`, `/admin/*`, `/portal/*`, `/static/*` → Node.js (Port 3001)
-    *   `/api/*` → .NET CMS (Port 5001)
+    *   `/api/*`, `/files/*` → .NET CMS (Port 5001)
+    *   `/mcp/*` → MCP Server (Port 3002)
 2.  **Node.js Backend**: Runs the AI Schema Builder (`formmate`) which makes schema generation easy, and serves the frontend SPA.
 3.  **ASP.NET Core CMS**: Runs the core CMS logic and API.
+4.  **MCP Server**: Exposes dev-time tools (schema management, data seeding, SPA deployment) for AI agents via the Model Context Protocol.
 
 ### Service Map
 ```mermaid
 graph TD
     Client[Browser] -->|Port 5000| Nginx[Nginx Proxy]
+    Agent[AI Agent] -->|Port 5000| Nginx
     Nginx -->|/mate, /admin, /portal, /static| Node[Node.js Service :3001]
-    Nginx -->|/api| DotNet[.NET CMS Service :5001]
+    Nginx -->|/api, /files| DotNet[.NET CMS Service :5001]
+    Nginx -->|/mcp| MCP[MCP Server :3002]
+    MCP --> DotNet
     DotNet --> DB[(Postgres/SQLite)]
 ```
 
@@ -102,6 +107,32 @@ Nginx access logs are stored inside the container at `/var/log/nginx/access.log`
 ```bash
 docker-compose exec app tail -f /var/log/nginx/access.log
 ```
+
+---
+
+## 🤖 MCP Server & AI Agent Integration
+
+The Docker image includes an MCP server that AI agents (Antigravity, Cursor, Codex, Claude Desktop) can connect to for schema design, data seeding, and SPA deployment.
+
+### Endpoint
+
+| Service | URL |
+|---------|-----|
+| MCP Server (SSE) | `http://localhost:5000/mcp/sse` |
+
+### API Key Authentication
+
+The MCP server is protected by an optional API key. To configure it:
+
+1. Open FormMate at `http://localhost:5000/mate`
+2. Go to **Settings** → **API Key Configuration**
+3. Click **Generate** to create a key, then **Save Changes**
+4. Use the key in your agent's MCP config as a Bearer token:
+   ```
+   Authorization: Bearer <your-api-key>
+   ```
+
+> See the [Vite + React + AI Agents guide](./Vite-React-Antigravity-Example.md) for full setup instructions.
 
 ---
 

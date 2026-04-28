@@ -20,7 +20,8 @@ Welcome to the FormCMS documentation wiki.
 | [Engagement Features](./Engagement-Features.md) | Likes, shares, bookmarks, views, toplist, tracking |
 | [Contributing](./Contributing.md) | Extending FormCMS with new components |
 | [Performance & Scalability](./Performance-Scalability.md) | Benchmarks, optimization strategies, and scaling guides |
-| [Vite, React, and AI](./Vite-React-Antigravity-Example.md) | Building frontends over FormCMS with AI agents |
+| [Docker Deployment](./Docker-Deployment.md) | Deploy FormCMS with Docker (includes MCP server) |
+| [Vite, React, and AI Agents](./Vite-React-Antigravity-Example.md) | Build full-stack apps with MCP tools and AI agents (Antigravity, Cursor, Codex) |
 
 ### 👤 Who Should Read What?
 
@@ -34,7 +35,8 @@ Welcome to the FormCMS documentation wiki.
 | Engagement Features | Full-Stack Devs, Product Managers |
 | Contributing | Contributors, Plugin Developers |
 | Performance & Scalability | DevOps, Performance Engineers |
-| Vite, React, and AI | Frontend Devs |
+| Docker Deployment | DevOps, System Admins |
+| Vite, React, and AI Agents | Frontend Devs, AI Agent Users |
 
 ## 🔗 Quick Links
 

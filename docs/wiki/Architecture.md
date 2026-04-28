@@ -5,9 +5,10 @@
 ```mermaid
 graph TD
     %% Users
-    U1[👨‍💻 Developer]
-    U2[👔 Admin]
-    U3[👤 End User]
+    U1["👨‍💻 Developer"]
+    U2["👔 Admin"]
+    U3["👤 End User"]
+    U4["🤖 AI Agent"]
 
     %% User Interfaces
     A[formmate - AI Schema Builder /mate]
@@ -18,12 +19,18 @@ graph TD
     %% Backend Services
     B[FormCMS Backend /api]
     E[AI<br>Gemini / OpenAI]
+    M[MCP Server /mcp]
+
+    %% Local agent context
+    SK[".agent/skills/\nSkills File"]
 
     %% User → UI
     U1 -->|Build Schema & UI| A
     U2 -->|Manage Content| C
     U3 -->|View & Engage| D
     U3 -->|Browse Content| P
+    U4 -->|MCP Tools| M
+    SK -->|API patterns & rules| U4
 
     %% UI → Backend
     A --> B
@@ -31,6 +38,7 @@ graph TD
     C --> B
     D --> B
     P --> B
+    M --> B
 ```
 
 
@@ -114,3 +122,41 @@ A personalized portal where users can manage their social engagement and content
 - **History**: View previously accessed content
 - **Liked Items**: Browse and manage liked content
 - **Bookmarked Items**: Organize saved content with folders
+
+---
+
+## 6. MCP Server + Skills File (AI Agent Integration)
+
+FormCMS provides two complementary artifacts that give AI coding agents full context to build, deploy, and manage apps.
+
+### 6a. MCP Server
+
+A dev-time [Model Context Protocol](https://modelcontextprotocol.io) server that lets AI agents (Antigravity, Cursor, Codex, Claude Desktop) interact with FormCMS programmatically.
+
+**Key Capabilities:**
+- **Schema Management**: Create and update entities, attributes, and relationships via `define_entity`
+- **Data Operations**: Seed and manage records via `insert_entity`, `update_entity`, `list_entities`
+- **Query Management**: Create named queries via `save_query`, inspect the GraphQL SDL via `get_graphql_sdl`
+- **SPA Deployment**: Deploy React/Vue/Svelte apps directly to FormCMS via `deploy_spa`
+- **System Info**: Discover the backend URL and server capabilities via `get_server_info`
+
+**How It Connects:**
+- Exposed at `/mcp/sse` (SSE transport) behind the same Nginx gateway on port 5000
+- Protected by an optional API key configured in **FormMate Settings → API Key Configuration**
+- Calls the FormCMS backend internally — agents never need direct access to the .NET service
+
+### 6b. Skills File
+
+A Markdown file (`SKILL.md`) that teaches the AI agent the FormCMS REST API patterns — authentication, entity CRUD, relationship endpoints, asset management, and SPA deployment — so you don't have to explain them in every prompt.
+
+**Where it lives:** In the developer's project, at `.agent/skills/formcms-react-app/SKILL.md`
+
+**What it covers:**
+- Vite proxy configuration (`/api` and `/files`)
+- Cookie-based auth patterns (axios + SWR)
+- Entity, relationship, and asset API patterns
+- SPA deployment workflow
+
+**How to get it:** Copy from the FormCMS repo at `packages/ai-skills/gemini/formcms-react-app/SKILL.md`, or follow the [Vite + React + AI Agents guide](./Vite-React-Antigravity-Example.md).
+
+> The MCP server handles **runtime tool calls** (creating schemas, deploying apps). The Skills file provides **static knowledge** (API patterns, code conventions). Together they give the agent full context to build a FormCMS-backed app from scratch.
