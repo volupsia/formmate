@@ -1,0 +1,11 @@
+**/node_modules
+# **/dist - Commented out to allow copying pre-built dist directories
+**/build
+.git
+.DS_Store
+*.db
+formmate/packages/*/node_modules
+# formmate/packages/*/dist - Commented out to allow copying pre-built formmate dist directories
+formcms/server/bin
+formcms/server/obj
+formcms/publish/wwwroot/files

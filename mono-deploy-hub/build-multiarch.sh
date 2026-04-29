@@ -17,9 +17,6 @@ cd "$REPO_ROOT/formmate"
 # Install deps if needed (fast if cached)
 npm install --silent
 
-# Build Shared
-npm run build:shared --silent
-
 # Build Frontend
 npm run build --workspace=@formmate/mate --silent
 npm run build --workspace=@formmate/admin --silent
@@ -30,6 +27,10 @@ npm run build --workspace=@formmate/stash --silent
 cd packages/mate-service
 npm install --silent # Ensure local backend deps are simpler to find
 npx prisma generate
+npm run build --silent
+
+# Build MCP Server
+cd "$REPO_ROOT/formmate/packages/mcp-server"
 npm run build --silent
 
 echo "🚀 Building FormCMS (.NET) locally..."

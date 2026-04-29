@@ -109,57 +109,17 @@ Antigravity automatically loads all skill files under `.agent/skills/` — no ex
 | `deploy_spa` | Deploy your built React app directly to FormCMS |
 | `list_spas` | List all deployed SPAs |
 
-## 3. Initialize your Vite + React Project
+## 3. Set Up the Project, Proxy, and Schema
 
-```bash
-npm create vite@latest my-app -- --template react-ts
-cd my-app
-npm install
-```
-
-## 4. Configure the API Proxy
-
-Ask your agent to call `get_server_info` — it returns the `formcmsBaseUrl` (e.g. `http://localhost:5000`). Use that value as the proxy target in `vite.config.ts`:
-
-```typescript
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    proxy: {
-      // Both /api and /files must point to the same FormCMS base URL.
-      // Use the value returned by the get_server_info MCP tool.
-      '/api': {
-        target: 'http://localhost:5000', // ← from get_server_info
-        changeOrigin: true,
-      },
-      '/files': {
-        target: 'http://localhost:5000', // ← from get_server_info
-        changeOrigin: true,
-      }
-    }
-  }
-})
-```
-
-## 5. Design your Schema with MCP Tools
-
-Instead of manually clicking through the FormMate UI, let your agent do it via MCP tools:
+Just prompt your agent:
 
 ```
-"Create a blog app with posts, authors, and categories.
- Posts have a title, body (rich text), and cover image.
- Each post belongs to one category (many-to-one) and
- can have multiple tags (many-to-many)."
+"Create a Vite + React + TypeScript app connected to FormCMS at http://localhost:5000
+ with a blog schema: posts (title, body, cover image), authors, categories (many-to-one),
+ and tags (many-to-many). Seed some sample data."
 ```
 
-Your agent will:
-1. Call `define_entity` for each entity with attributes and relationships
-2. Call `get_schema` to verify the schema was applied
-3. Call `get_graphql_sdl` + `save_query` to create named queries for data fetching
-4. Call `insert_entity` to seed sample data
+The agent will scaffold the project, configure the Vite proxy (calling `get_server_info` for the base URL), call `define_entity` for each entity, and seed sample data via `insert_entity`.
 
 ## 6. Build the React Frontend
 
@@ -197,15 +157,7 @@ You can also do it manually:
 
 Your entire full-stack application — frontend and backend APIs — is now served from a single FormCMS container.
 
-## 8. Enable CORS (If Running Frontend Separately)
-
-If you skip the Vite proxy and want your frontend (`http://localhost:5173`) to call FormCMS directly:
-
-1. Open FormMate at `http://localhost:5000/mate`
-2. Go to **Settings** → **CORS Configuration**
-3. Add `http://localhost:5173` to the allowed origins
-
-## 9. Iterate Rapidly
+## 8. Iterate Rapidly
 
 ```
 Need a new feature?
