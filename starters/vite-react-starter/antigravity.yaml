@@ -1,0 +1,8 @@
+# antigravity.yaml
+mcpServers:
+  formcms:
+    type: sse
+    url: http://localhost:5000/mcp/sse
+    # If your FormCMS instance has an API key, uncomment and set the header:
+    # headers:
+    #   Authorization: "Bearer <your-api-key>"

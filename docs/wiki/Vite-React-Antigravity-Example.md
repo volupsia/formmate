@@ -30,71 +30,61 @@ docker run -d \
 
 ## 2. Connect Antigravity to FormCMS
 
-> **This section is Antigravity-specific.** If you use **Cursor**, **Codex**, or **Claude Desktop**, the FormCMS MCP server still works — connect them to `http://localhost:5000/mcp/sse` using their own MCP config format. The skill file (Step 2b) can be added to any agent that supports context/rule files.
+> **This section is Antigravity-specific.** If you use **Cursor**, **Codex**, or **Claude Desktop**, the FormCMS MCP server still works — connect them to `http://localhost:5000/mcp/sse` using their own MCP config format.
 
-### 2a. Add the MCP Server
+### Use the starter template (recommended)
 
-Create (or edit) `antigravity.yaml` at the **root of your project** and add the FormCMS MCP server:
-
-```yaml
-# antigravity.yaml
-mcpServers:
-  formcms:
-    type: sse
-    url: http://localhost:5000/mcp/sse
-```
-
-If your FormCMS instance has an API key configured, add the `Authorization` header:
-
-```yaml
-mcpServers:
-  formcms:
-    type: sse
-    url: http://localhost:5000/mcp/sse
-    headers:
-      Authorization: "Bearer <your-api-key>"
-```
-
-To generate an API key:
-1. Open FormMate at `http://localhost:5000/mate`
-2. Go to **Settings** → **API Key Configuration**
-3. Click **Generate** to create a key, then **Save Changes**
-4. Copy the key and paste it into the `Authorization` header above
-
-Antigravity will pick up this config automatically when you open the project. Call `get_server_info` first to confirm the connection and retrieve the backend base URL.
-
-### 2b. Add the FormCMS React App Skill
-
-The FormCMS skill file teaches Antigravity the REST API patterns, authentication flow, relationship endpoints, and SPA deployment workflow — so you don't have to explain them in every prompt.
-
-Copy the skill file into your project:
+After creating your Vite React app, overlay the FormCMS config in one command:
 
 ```bash
-# From your project root
+# 1. Create your Vite React app
+npm create vite@latest my-app -- --template react-ts
+cd my-app
+
+# 2. Overlay the FormCMS config (antigravity.yaml + AI skill)
+npx degit formcms/formmate/starters/vite-react-starter .
+
+# 3. Install and start
+npm install
+npm run dev
+```
+
+This drops two files into your project:
+
+| File | Purpose |
+|------|---------|
+| `antigravity.yaml` | Pre-configured FormCMS MCP server connection |
+| `.agent/skills/formcms-react-app/SKILL.md` | Teaches the AI the FormCMS API patterns |
+
+Antigravity picks up both automatically when you open the project.
+
+### Manual setup (alternative)
+
+<details>
+<summary>Expand if you prefer to configure manually</summary>
+
+**`antigravity.yaml`** at your project root:
+
+```yaml
+mcpServers:
+  formcms:
+    type: sse
+    url: http://localhost:5000/mcp/sse
+    # headers:
+    #   Authorization: "Bearer <your-api-key>"
+```
+
+**Skill file:**
+
+```bash
 mkdir -p .agent/skills/formcms-react-app
 curl -o .agent/skills/formcms-react-app/SKILL.md \
   https://raw.githubusercontent.com/formcms/formmate/main/packages/ai-skills/gemini/formcms-react-app/SKILL.md
 ```
 
-Or copy it manually from the FormCMS repo:
-```
-packages/ai-skills/gemini/formcms-react-app/SKILL.md
-  → .agent/skills/formcms-react-app/SKILL.md
-```
+To generate an API key: open FormMate → **Settings** → **API Key Configuration** → **Generate**.
 
-Your project structure should look like:
-```
-my-app/
-├── antigravity.yaml          ← MCP server config
-├── .agent/
-│   └── skills/
-│       └── formcms-react-app/
-│           └── SKILL.md      ← FormCMS API patterns & rules
-├── src/
-└── ...
-```
-
-Antigravity automatically loads all skill files under `.agent/skills/` — no extra config needed.
+</details>
 
 ### Available MCP Tools
 
