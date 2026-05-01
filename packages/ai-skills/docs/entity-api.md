@@ -1,16 +1,22 @@
 ## Schema Introspection
 
-After entities are created (via `define_entity` or the admin UI), use the schemas endpoint to discover all entity definitions, their attributes, and relationship metadata.
+After entities are created (via `define_entity` or the admin UI), use the MCP tools `list_schemas` and `get_schema` to discover entity definitions, their attributes, and relationship metadata.
 
-### Endpoint
+### Dev-time: use MCP tools
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| `GET`  | `/api/schemas?type=entity` | List all entity schemas |
+```
+# Discover all entity schemas
+list_schemas
 
-### Response shape
+# Get full detail for a single entity
+get_schema  { "name": "post" }
+```
 
-The response is an array of schema objects. Each schema contains an `attributes` array describing every field:
+Call these tools while building the app to understand the attribute/relationship structure, then use that knowledge to write your TypeScript types and API calls — rather than fetching the schema at runtime.
+
+### Schema shape (for reference)
+
+When you call `list_schemas` or `get_schema`, each schema object looks like this:
 
 ```typescript
 interface SchemaResponse {
@@ -50,30 +56,7 @@ Scan `attributes` and check which relationship descriptor is non-null:
 | (varies) | `junction` | Many-to-Many | Full schema of the junction target entity |
 | (varies) | `collection` | One-to-Many | Full schema of the child entity |
 
-### Example: discovering a lookup relationship
-
-```typescript
-// Fetch all entity schemas
-const res = await axios.get('/api/schemas', { params: { type: 'entity' } });
-const schemas = res.data;
-
-// Find the "post" schema
-const postSchema = schemas.find((s: any) => s.name === 'post');
-
-// Find relationship attributes
-const lookupAttrs = postSchema.attributes.filter((a: any) => a.lookup !== null);
-// e.g. [{ field: "category", displayType: "lookup", lookup: { name: "category", attributes: [...], labelAttributeName: "categoryName", ... } }]
-
-const junctionAttrs = postSchema.attributes.filter((a: any) => a.junction !== null);
-const collectionAttrs = postSchema.attributes.filter((a: any) => a.collection !== null);
-
-// The lookup object tells you the related entity's fields — useful for building
-// autocomplete UIs (search by labelAttributeName) or displaying related data.
-const categorySchema = lookupAttrs[0].lookup;
-console.log(categorySchema.labelAttributeName); // "categoryName"
-```
-
-> **Tip:** Use schema introspection to dynamically build forms, discover which fields are relationships, and determine which relationship API endpoints to call.
+> **Tip:** Use schema introspection (via MCP tools) to discover which fields are relationships and determine which relationship API endpoints to call when building your app.
 
 ---
 

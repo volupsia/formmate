@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PORT=8001
+PORT=5000
 HOST="http://localhost:$PORT"
 
 # 1. Start the SSE stream in the background and save its output to a file
@@ -50,7 +50,7 @@ curl -s -X POST "$MESSAGE_URL" \
 echo -e "\nCalling get_server_info tool..."
 curl -s -X POST "$MESSAGE_URL" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer test-api-key" \
+  -H "Authorization: Bearer 7626a96ab163fbb9b84462270814eaa5bdd96606c2abd339" \
   -d '{
     "jsonrpc": "2.0",
     "id": 2,

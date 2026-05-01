@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Key, Save, RefreshCw, Wand2, Copy } from 'lucide-react';
+import { Key, RefreshCw, Wand2, Copy } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 export function ApiKeySettings() {
@@ -30,7 +30,8 @@ export function ApiKeySettings() {
         }
     };
 
-    const handleSave = async () => {
+    const handleSave = async (keyToSave?: string) => {
+        const value = keyToSave ?? apiKey;
         try {
             setSaving(true);
             const response = await fetch('/api/system/api-key', {
@@ -38,20 +39,14 @@ export function ApiKeySettings() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ apiKey }),
+                body: JSON.stringify({ apiKey: value }),
             });
 
             if (!response.ok) {
                 throw new Error('Failed to save API Key');
             }
-
-            toast.success('API Key saved. Server restarting...');
+            toast.success('API Key saved.');
             setError(null);
-
-            // Wait for restart
-            setTimeout(() => {
-                window.location.reload();
-            }, 3000);
 
         } catch (err: any) {
             console.error('Failed to save API Key:', err);
@@ -67,6 +62,7 @@ export function ApiKeySettings() {
             .map(b => b.toString(16).padStart(2, '0'))
             .join('');
         setApiKey(randomString);
+        handleSave(randomString);
     };
 
     const handleCopy = async () => {
@@ -95,14 +91,6 @@ export function ApiKeySettings() {
                         Manage the Global API Key used for integrations like MCP (Model Context Protocol).
                     </p>
                 </div>
-                <button
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-app rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-md active:scale-95"
-                >
-                    {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Save Changes
-                </button>
             </div>
 
             {error && (
@@ -120,14 +108,14 @@ export function ApiKeySettings() {
                         <input
                             type="password"
                             value={apiKey}
-                            onChange={(e) => setApiKey(e.target.value)}
-                            placeholder="Enter API Key"
-                            className="flex-1 px-3 py-2 bg-app-surface border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                            readOnly
+                            placeholder="Click Generate to create an API Key"
+                            className="flex-1 px-3 py-2 bg-app-surface border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all opacity-60 cursor-not-allowed"
                         />
                         <button
                             type="button"
                             onClick={handleCopy}
-                            disabled={!apiKey}
+                            disabled={!apiKey || saving}
                             className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors disabled:opacity-50 flex items-center gap-2 whitespace-nowrap font-medium"
                             title="Copy to Clipboard"
                         >
@@ -137,18 +125,16 @@ export function ApiKeySettings() {
                         <button
                             type="button"
                             onClick={handleGenerate}
-                            className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors flex items-center gap-2 whitespace-nowrap font-medium"
+                            disabled={saving}
+                            className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors disabled:opacity-50 flex items-center gap-2 whitespace-nowrap font-medium"
                         >
-                            <Wand2 className="w-4 h-4" />
-                            Generate
+                            {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                            {saving ? 'Generating...' : 'Generate'}
                         </button>
                     </div>
                 </div>
             </div>
 
-            <div className="text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 p-4 rounded-lg">
-                <strong>Note:</strong> Changes to the API Key will restart the server. It may take a few moments for the new settings to take effect.
-            </div>
         </div>
     );
 }

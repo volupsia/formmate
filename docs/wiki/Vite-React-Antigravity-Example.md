@@ -28,35 +28,44 @@ docker run -d \
 | REST API | `http://localhost:5000/api/` |
 | **MCP server (SSE)** | **`http://localhost:5000/mcp/sse`** |
 
+### Set the Super Admin Password
+
+On first run, open **http://localhost:5000/mate** and complete the account setup to set your super admin password.
+
+### Generate an API Key
+
+Open **http://localhost:5000/mate** → **Settings** → **API Key Configuration** → **Generate**.
+
+Copy the key — you will use it in Step 2 to authenticate the MCP server connection.
+
 ## 2. Connect Antigravity to FormCMS
 
 > **This section is Antigravity-specific.** If you use **Cursor**, **Codex**, or **Claude Desktop**, the FormCMS MCP server still works — connect them to `http://localhost:5000/mcp/sse` using their own MCP config format.
 
 ### Use the starter template (recommended)
 
-After creating your Vite React app, overlay the FormCMS config in one command:
+Create an empty project folder and drop in the FormCMS agent config in one command:
 
 ```bash
-# 1. Create your Vite React app
-npm create vite@latest my-app -- --template react-ts
-cd my-app
+# 1. Create an empty project folder
+mkdir my-app && cd my-app
 
-# 2. Overlay the FormCMS config (antigravity.yaml + AI skill)
-npx degit formcms/formmate/starters/vite-react-starter .
-
-# 3. Install and start
-npm install
-npm run dev
+# 2. Drop in the FormCMS agent config (antigravity.yaml + AI skill)
+#    The antigravity.yaml it drops in is pre-filled with the MCP server URL.
+#    Open it and paste the API key you generated in Step 1:
+#      headers:
+#        Authorization: "Bearer <your-api-key>"
+npx degit formcms/formmate/starters/vite-react-starter . --force
 ```
 
-This drops two files into your project:
+This drops two files into your folder:
 
 | File | Purpose |
 |------|---------|
 | `antigravity.yaml` | Pre-configured FormCMS MCP server connection |
 | `.agent/skills/formcms-react-app/SKILL.md` | Teaches the AI the FormCMS API patterns |
 
-Antigravity picks up both automatically when you open the project.
+Open the folder in your editor — Antigravity picks up both files automatically. The agent will scaffold the Vite + React project for you in the next step.
 
 ### Manual setup (alternative)
 
@@ -86,22 +95,11 @@ To generate an API key: open FormMate → **Settings** → **API Key Configurati
 
 </details>
 
-### Available MCP Tools
 
-| Tool | Purpose |
-|------|---------|
-| `get_server_info` | Get the FormCMS base URL — **call this first** |
-| `define_entity` | Create or update entity schemas (attributes + relationships) |
-| `list_schemas` / `get_schema` | Inspect existing schemas |
-| `get_graphql_sdl` | Fetch the GraphQL SDL before writing queries |
-| `save_query` / `run_query` | Create and execute named queries |
-| `insert_entity` / `update_entity` | Seed or manage data |
-| `deploy_spa` | Deploy your built React app directly to FormCMS |
-| `list_spas` | List all deployed SPAs |
 
-## 3. Set Up the Project, Proxy, and Schema
+## 3. Scaffold the Project and Schema
 
-Just prompt your agent:
+Just prompt your agent — it will create the entire Vite app from scratch:
 
 ```
 "Create a Vite + React + TypeScript app connected to FormCMS at http://localhost:5000
@@ -109,7 +107,12 @@ Just prompt your agent:
  and tags (many-to-many). Seed some sample data."
 ```
 
-The agent will scaffold the project, configure the Vite proxy (calling `get_server_info` for the base URL), call `define_entity` for each entity, and seed sample data via `insert_entity`.
+The agent will:
+- Run `npm create vite` to scaffold the project
+- Configure the Vite proxy (calling `get_server_info` for the base URL)
+- Call `define_entity` for each entity
+- Seed sample data via `insert_entity`
+- Run `npm install && npm run dev` to start the dev server
 
 ## 6. Build the React Frontend
 

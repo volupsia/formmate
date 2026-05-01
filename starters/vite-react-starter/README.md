@@ -19,7 +19,7 @@ This is a minimal config overlay for connecting any Vite + React + TypeScript pr
 
 2. **Overlay this config:**
    ```bash
-   npx degit formcms/formmate/starters/vite-react-starter .
+   npx degit formcms/formmate/starters/vite-react-starter . --force
    ```
 
 3. **Install dependencies and start:**

@@ -151,7 +151,7 @@ export function registerSchemaTools(server: McpServer, client: FormCmsApiClient,
             name: z.string().describe('Entity schema name (e.g. "post", "category")'),
         },
         async ({ name }) => {
-            const data = await client.getSchemaByName(name, 'entity');
+            const data = await client.getXEntity(name);
             return {
                 content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
             };
