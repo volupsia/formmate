@@ -10,7 +10,8 @@ export class McpFormCmsClientBuilder implements IFormCmsClientBuilder {
 
     constructor(
         private readonly baseUrl: string,
-        private readonly getKey: () => string | undefined
+        private readonly getApiKey: () => string | undefined,
+        private readonly getCookie: () => string | undefined,
     ) {
         const instance = axios.create({
             baseURL: this.baseUrl,
@@ -20,9 +21,14 @@ export class McpFormCmsClientBuilder implements IFormCmsClientBuilder {
         });
 
         instance.interceptors.request.use(config => {
-            const key = this.getKey();
-            if (key) {
-                config.headers['X-Api-Key'] = key;
+            const apiKey = this.getApiKey();
+            const cookie = this.getCookie();
+            if (apiKey) {
+                // API key mode — easy for testing and CI
+                config.headers['X-Api-Key'] = apiKey;
+            } else if (cookie) {
+                // Cookie mode — browser login flow
+                config.headers['Cookie'] = cookie;
             }
             return config;
         });

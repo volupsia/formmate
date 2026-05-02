@@ -30,13 +30,19 @@ docker run -d \
 
 ### Set the Super Admin Password
 
-On first run, open **http://localhost:5000/mate** and complete the account setup to set your super admin password.
+### Authentication (choose one)
 
-### Generate an API Key
+The MCP server supports two ways to authenticate:
+
+#### Option A — Browser login (no config needed)
+
+Connect your agent to the MCP server with no API key. When your agent first runs, call the `login_to_formcms` tool (or `get_login_url` to get the URL first). A local login page opens in your browser — enter your FormCMS credentials and you're done. The session is stored in memory for that MCP connection.
+
+#### Option B — API key (good for testing and CI)
 
 Open **http://localhost:5000/mate** → **Settings** → **API Key Configuration** → **Generate**.
 
-Copy the key — you will use it in Step 2 to authenticate the MCP server connection.
+Copy the key and add it to your MCP client config as `Authorization: Bearer <key>`. The MCP server forwards it to FormCMS automatically, so you never need to log in interactively.
 
 ## 2. Connect Antigravity to FormCMS
 
@@ -51,10 +57,6 @@ Create an empty project folder and drop in the FormCMS agent config in one comma
 mkdir my-app && cd my-app
 
 # 2. Drop in the FormCMS agent config (antigravity.yaml + AI skill)
-#    The antigravity.yaml it drops in is pre-filled with the MCP server URL.
-#    Open it and paste the API key you generated in Step 1:
-#      headers:
-#        Authorization: "Bearer <your-api-key>"
 npx degit formcms/formmate/starters/vite-react-starter . --force
 ```
 
@@ -65,7 +67,11 @@ This drops two files into your folder:
 | `antigravity.yaml` | Pre-configured FormCMS MCP server connection |
 | `.agent/skills/formcms-react-app/SKILL.md` | Teaches the AI the FormCMS API patterns |
 
-Open the folder in your editor — Antigravity picks up both files automatically. The agent will scaffold the Vite + React project for you in the next step.
+Open the folder in your editor — Antigravity picks up both files automatically.
+
+> **API key (optional):** If you prefer Option B from Step 1, open `antigravity.yaml` and uncomment the `headers` section, pasting your API key.
+
+The agent will scaffold the Vite + React project for you in the next step.
 
 ### Manual setup (alternative)
 
@@ -79,6 +85,7 @@ mcpServers:
   formcms:
     type: sse
     url: http://localhost:5000/mcp/sse
+    # Optional: add an API key header to skip browser login
     # headers:
     #   Authorization: "Bearer <your-api-key>"
 ```
@@ -108,6 +115,7 @@ Just prompt your agent — it will create the entire Vite app from scratch:
 ```
 
 The agent will:
+- **Authenticate** — call `get_login_url`, open the URL in your browser to log in *(skipped if you configured an API key)*
 - Run `npm create vite` to scaffold the project
 - Configure the Vite proxy (calling `get_server_info` for the base URL)
 - Call `define_entity` for each entity
