@@ -1,6 +1,6 @@
-## Named Queries
+## Named Queries (Runtime)
 
-Used for fetching specific data sets defined in FormCMS.
+Named queries are **created at dev-time** using MCP tools (`get_graphql_sdl` → `save_query`). At runtime, fetch query results via REST. Do not create queries from app code.
 
 Endpoint: `GET /api/queries/{queryName}?param=value`
 

@@ -18,6 +18,7 @@ const read = (name: string) => readFileSync(resolve(DOCS, name), 'utf-8').trim()
 // ── Load partials ──────────────────────────────────────────────────────────
 const config    = read('config.md');
 const mcp       = read('mcp.md');
+const schema    = read('schema.md');
 const auth      = read('auth.md');
 const entityApi = read('entity-api.md');
 const queries   = read('queries.md');
@@ -39,13 +40,22 @@ description: Guidelines and patterns for building React applications that integr
 
 # Building a React App with FormCMS
 
-This skill outlines the standard patterns for connecting a React frontend to a FormCMS backend.
+Follow these patterns when building a React frontend connected to a FormCMS backend.
+The instructions are split into two parts: **Part 1 — dev-time setup** (using MCP tools) and **Part 2 — runtime patterns** (REST API calls in your app code).
+
+# Part 1: Dev-time Setup (MCP Tools)
+
+${mcp}
+
+${schema}
+
+---
+
+# Part 2: Runtime (App Code — REST API)
 
 ${config}
 
 ---
-
-${mcp}
 
 ${auth}
 
@@ -63,6 +73,7 @@ ${ui}
 `;
 
 write('gemini/formcms-react-app/SKILL.md', geminiSkill);
+write('../../starters/vite-react-starter/.agent/skills/formcms-react-app/SKILL.md', geminiSkill);
 
 // ── 2. Cursor .mdc ─────────────────────────────────────────────────────────
 const cursorRule = `---
@@ -73,9 +84,19 @@ alwaysApply: false
 
 # FormCMS React App Patterns
 
-${config}
+# Part 1: Dev-time Setup (MCP Tools)
 
 ${mcp}
+
+${schema}
+
+---
+
+# Part 2: Runtime (App Code — REST API)
+
+${config}
+
+---
 
 ${auth}
 
@@ -102,9 +123,19 @@ Frontend apps are built with React + TypeScript + Vite, connected to the FormCMS
 - Shared: \`@formmate/shared\` (types, operators, API client)
 - MCP Server: Node.js + Express + \`@modelcontextprotocol/sdk\`
 
-${config}
+# Part 1: Dev-time Setup (MCP Tools)
 
 ${mcp}
+
+${schema}
+
+---
+
+# Part 2: Runtime (App Code — REST API)
+
+${config}
+
+---
 
 ${auth}
 
@@ -127,6 +158,7 @@ write('copilot/copilot-instructions.md', copilotInstructions);
 // ── 4. MCP Server prompt (auth.ts) ─────────────────────────────────────────
 // Escape backticks and ${} for embedding in a template literal
 const escapedAuth = auth.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+const escapedSchema = schema.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
 const escapedEntity = entityApi.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
 const escapedQueries = queries.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
 const escapedAssets = assets.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
@@ -135,6 +167,10 @@ const mcpPromptTs = `import type { McpServer } from '@modelcontextprotocol/sdk/s
 
 const API_REFERENCE = \`
 # FormCMS API Reference
+
+${escapedSchema}
+
+---
 
 ${escapedAuth}
 
