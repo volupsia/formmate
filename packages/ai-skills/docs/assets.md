@@ -1,11 +1,12 @@
 ## Assets API
 
-FormCMS provides a file/asset management system. Assets are uploaded via `multipart/form-data`.
+Use these endpoints for file uploads and asset management. Always use `multipart/form-data` with field name `files`.
 
 ### Endpoints
 
 | Method | Endpoint | Purpose |
-|--------|----------|---------|\n| `POST` | `/api/assets` | Upload new file(s) — `multipart/form-data`, field name `files` |
+|--------|----------|---------|
+| `POST` | `/api/assets` | Upload new file(s) — `multipart/form-data`, field name `files` |
 | `GET`  | `/api/assets` | List all assets |
 | `GET`  | `/api/assets/:id` | Get single asset by ID |
 | `POST` | `/api/assets/:id` | Replace an existing asset's file |
@@ -13,7 +14,7 @@ FormCMS provides a file/asset management system. Assets are uploaded via `multip
 | `POST` | `/api/assets/meta` | Update asset metadata |
 | `GET`  | `/api/assets/base` | Get the asset base URL (for resolving relative paths) |
 
-### Upload a file
+### Uploading a file
 
 ```typescript
 const formData = new FormData();
@@ -22,17 +23,13 @@ formData.append('files', file); // field name MUST be "files"
 const res = await axios.post('/api/assets', formData, {
   headers: { 'Content-Type': 'multipart/form-data' },
 });
-// res.data is the asset path string directly, e.g. "/files/2024/01/photo.jpg"
+// res.data is a plain string — the relative path, e.g. "/files/2024/01/photo.jpg"
+// Store this string directly. Do not parse or modify it.
 ```
 
-The upload response is a **plain string** — the relative path of the uploaded file.
+### Linking assets to entity fields
 
-### Using asset paths in entity fields (image / file fields)
-
-For entity fields of type `image` or `file`, you store the asset's **`path`** in the entity payload.
-After the entity is saved, the backend automatically creates a link between the record and the asset.
-
-**Full flow:**
+For entity fields of type `image` or `file`, store the asset's **`path`** (not the full URL) in the entity payload. The backend automatically creates a link between the record and the asset.
 
 ```typescript
 // Step 1 — Upload the asset, get back its path
@@ -43,29 +40,27 @@ const uploadRes = await axios.post('/api/assets', formData, {
 });
 const assetPath = uploadRes.data; // string, e.g. "/files/2024/01/photo.jpg"
 
-// Step 2 — Include the path in the entity insert/update payload
+// Step 2 — Include the path in the entity payload
 await axios.post('/api/entities/post/insert', {
   title: 'My Post',
   featured_image: assetPath, // ← store the path, not the full URL
 });
-// The backend links the post record with the uploaded asset automatically.
 ```
 
-**Or, if the user selects an existing asset** (e.g. from an asset picker), use its `path` in the same way:
+When using an existing asset (e.g. from an asset picker), use its `path` the same way:
 
 ```typescript
-// selectedAsset comes from GET /api/assets or an asset picker UI
 await axios.post('/api/entities/post/update', {
   id: postId,
   featured_image: selectedAsset.path,
 });
 ```
 
-> **Key rule:** Always store the asset **`path`** (not `url`) in entity fields. The backend uses the path to establish the asset–record link, enabling reference tracking and cleanup.
+> **Always store the asset `path`, never the full URL.** The backend uses the path to establish the asset–record link.
 
-### Displaying an asset
+### Displaying assets
 
-Asset paths may be relative. Use `/api/assets/base` to resolve them for display:
+Asset paths may be relative. Resolve them using `/api/assets/base`:
 
 ```typescript
 const baseRes = await axios.get('/api/assets/base');
@@ -76,6 +71,6 @@ function getFullAssetUrl(path: string) {
   return path.startsWith('http') ? path : `${assetBaseUrl}${path}`;
 }
 
-// Display
+// Use in JSX
 <img src={getFullAssetUrl(post.featured_image)} alt="Featured" />
 ```

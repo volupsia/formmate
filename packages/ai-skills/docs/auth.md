@@ -1,18 +1,20 @@
-## Authentication
+## App User Authentication (Runtime)
 
-FormCMS uses **cookie-based session authentication** via axios.
+This section covers how to implement **end-user login** in the React app. This is NOT the same as MCP session authentication (which you used in Part 1 to call dev-time tools).
 
-### Setup (`src/main.tsx` or `src/App.tsx`)
+You must use **cookie-based session authentication** via axios.
+
+### Setup — add this once in `src/main.tsx` or `src/App.tsx`
 
 ```typescript
 import axios from 'axios';
-// Must be set globally — ensures cookies are sent on every request
+// You MUST set this globally — ensures cookies are sent on every request
 axios.defaults.withCredentials = true;
 ```
 
-### Auth service (`src/services/auth.ts`)
+### Auth service — create `src/services/auth.ts`
 
-Use axios directly and wrap calls with `catchClient` to return `{ data } | { error, errorDetail }` instead of throwing:
+Wrap all auth calls with `catchClient` so they return `{ data } | { error, errorDetail }` instead of throwing. Follow this pattern exactly:
 
 ```typescript
 import axios from 'axios';
@@ -47,7 +49,7 @@ export const logout   = () =>
   catchClient(() => axios.get('/api/logout'));
 ```
 
-### Consuming in a component
+### Using auth in a component
 
 ```tsx
 import { useUserInfo, login, logout } from '../services/auth';
@@ -79,15 +81,15 @@ export function App() {
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `GET`  | `/api/me` | Get current session user (401 if not logged in) |
+| `GET`  | `/api/me` | Get current session user (returns 401 if not logged in) |
 | `POST` | `/api/login` | Login — body: `{ usernameOrEmail, password }` |
 | `POST` | `/api/register` | Register — body: `{ email, password, userName }` |
 | `GET`  | `/api/logout` | Clear session cookie |
 | `POST` | `/api/profile/password` | Change password — body: `{ oldPassword, password }` |
 | `POST` | `/api/profile/avatar` | Upload avatar — `multipart/form-data`, field name `file` |
 
-### Key Rules
-- Set `axios.defaults.withCredentials = true` **once** at app startup — applies to all requests.
-- Auth calls return `{ data } | { error, errorDetail }` — always check `res.error`, never rely on thrown exceptions.
-- Use SWR's `mutate()` after login/logout to sync the cached session without a full page reload.
-- `userInfo.roles` controls access (e.g. `'admin'`).
+### Rules you must follow
+- Set `axios.defaults.withCredentials = true` **once** at app startup. Do not skip this.
+- Always check `res.error` on auth calls — never rely on thrown exceptions.
+- Call SWR's `mutate()` after login/logout to sync the cached session without a full page reload.
+- Use `userInfo.roles` for access control (e.g. `'admin'`).

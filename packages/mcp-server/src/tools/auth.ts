@@ -1,5 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-
+import { requestContext } from '../context.js';
 /**
  * Registers auth tools:
  *  - login_to_formcms:  returns a login URL; resolves when the user completes the browser flow
@@ -22,19 +22,17 @@ export function registerAuthTools(
         'login_to_formcms',
         [
             'Returns a URL for the user to open in their browser to log in to FormCMS.',
-            'The tool waits (up to 120 s) for the user to complete the login.',
+            'The tool waits (up to 1200 s) for the user to complete the login.',
             'Once logged in, the session cookie is stored in memory for this MCP session.',
             'Call this tool first if other tools return 401 Unauthorized.',
         ].join(' '),
         {},
         async () => {
-            const loginUrl = `http://localhost:${port}/mcp/login?sessionId=${sessionId}`;
-
             const cookie = await new Promise<string | null>(resolve => {
                 const timer = setTimeout(() => {
                     pendingLogins.delete(sessionId);
                     resolve(null);
-                }, 120_000);
+                }, 1200_000);
 
                 pendingLogins.set(sessionId, (capturedCookie: string) => {
                     clearTimeout(timer);
@@ -67,7 +65,8 @@ export function registerAuthTools(
         'Returns the FormCMS MCP login URL for the current session. Open this URL in a browser to authenticate.',
         {},
         async () => {
-            const loginUrl = `http://localhost:${port}/mcp/login?sessionId=${sessionId}`;
+            const baseUrl = requestContext.getStore()?.baseUrl;
+            const loginUrl = `${baseUrl}/mcp/login?sessionId=${sessionId}`;
             return {
                 content: [{
                     type: 'text' as const,
