@@ -39,7 +39,7 @@ MCP tools are only available to you during development. They cannot be called fr
 
 | Tool | Category | Purpose |
 |------|----------|---------|
-| `login_to_formcms` | Auth | **Authenticate your MCP session** — opens a browser login page; waits up to 120 s for the user to complete login. Call this first if tools return 401. |
+| `login_to_formcms` | Auth | **Authenticate your MCP session** — opens a browser login page; waits up to 1200 s for the user to complete login. Call this first if tools return 401. |
 | `get_login_url` | Auth | Returns the login URL immediately without waiting — use this when you want to display the URL to the user before blocking |
 | `logout_from_formcms` | Auth | Clears the session cookie for the current MCP connection |
 | `get_server_info` | System | **Get the FormCMS base URL** — call this first before writing any config. Also describes the SPA hosting feature. |
@@ -61,7 +61,7 @@ MCP tools are only available to you during development. They cannot be called fr
 
 When starting a new FormCMS-backed app, follow this order:
 
-1. **Authenticate** — call `get_login_url` to get the login URL, share it with the user, then call `login_to_formcms` and wait for them to log in. *(Skip if using an API key.)*
+1. **Authenticate** — call `get_login_url`, print the returned URL in your reply so the user can see it, then immediately call `login_to_formcms` and wait (up to 1200 s) for the user to log in **manually in their own browser**. Do NOT open a browser yourself or enter credentials. *(Skip this step only if an API key is already configured.)*
 2. **Call `get_server_info`** — get the `formcmsBaseUrl` (e.g. `http://localhost:5000`), use it as the proxy target in `vite.config.ts`
 3. **Call `define_entity`** — design entities and relationships (the tool guides the payload shape)
 4. **Call `get_schema`** or `list_schemas` — verify the schema was applied correctly
@@ -106,6 +106,12 @@ Each MCP client session authenticates independently. The session cookie is store
 ```
 
 > If the server is remote, the user opens the URL on their own machine.
+
+> [!CAUTION]
+> **Never attempt login via browser automation, credential guessing, or any method other than the flow above.**
+> - Do NOT open a browser and type usernames or passwords yourself.
+> - Do NOT try default, example, or random credentials.
+> - The ONLY correct action is: call `get_login_url`, show the URL to the user in your reply, then call `login_to_formcms` and wait. The user must complete login manually in their own browser.
 
 #### API key (for testing and CI)
 

@@ -109,7 +109,7 @@ To generate an API key: open FormMate → **Settings** → **API Key Configurati
 Just prompt your agent — it will create the entire Vite app from scratch:
 
 ```
-"Create a Vite + React + TypeScript app connected to FormCMS at http://localhost:5000
+"Create a Vite + React + TypeScript app connected to FormCMS 
  with a blog schema: posts (title, body, cover image), authors, categories (many-to-one),
  and tags (many-to-many). Seed some sample data."
 ```
