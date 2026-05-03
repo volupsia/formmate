@@ -38,11 +38,14 @@ The MCP server supports two ways to authenticate:
 
 Connect your agent to the MCP server with no API key. When your agent first runs, call the `login_to_formcms` tool (or `get_login_url` to get the URL first). A local login page opens in your browser — enter your FormCMS credentials and you're done. The session is stored in memory for that MCP connection.
 
-#### Option B — API key (good for testing and CI)
+#### Option B — API key ✅ Preferred
 
 Open **http://localhost:5000/mate** → **Settings** → **API Key Configuration** → **Generate**.
 
 Copy the key and add it to your MCP client config as `Authorization: Bearer <key>`. The MCP server forwards it to FormCMS automatically, so you never need to log in interactively.
+
+> **Important:** After adding the API key to `antigravity.yaml`, reload the VS Code window so Antigravity re-reads the config and reconnects to the MCP server:
+> **Command Palette (`Cmd+Shift+P`) → `Developer: Reload Window`**
 
 ## 2. Connect Antigravity to FormCMS
 
@@ -69,7 +72,7 @@ This drops two files into your folder:
 
 Open the folder in your editor — Antigravity picks up both files automatically.
 
-> **API key (optional):** If you prefer Option B from Step 1, open `antigravity.yaml` and uncomment the `headers` section, pasting your API key.
+> **API key (recommended):** To use Option B from Step 1, open `antigravity.yaml` and uncomment the `headers` section, pasting your API key. Then reload the VS Code window (**`Cmd+Shift+P` → `Developer: Reload Window`**) so the updated MCP server config takes effect.
 
 The agent will scaffold the Vite + React project for you in the next step.
 
@@ -115,7 +118,7 @@ Just prompt your agent — it will create the entire Vite app from scratch:
 ```
 
 The agent will:
-- **Authenticate** — call `get_login_url`, open the URL in your browser to log in *(skipped if you configured an API key)*
+- **Authenticate** — call `get_login_url`, open the URL in your browser to log in *(skipped if you configured an API key — the recommended approach)*
 - Run `npm create vite` to scaffold the project
 - Configure the Vite proxy (calling `get_server_info` for the base URL)
 - Call `define_entity` for each entity

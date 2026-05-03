@@ -49,7 +49,7 @@ MCP tools are only available to you during development. They cannot be called fr
 
 When starting a new FormCMS-backed app, follow this order:
 
-1. **Authenticate** — call `get_login_url`, print the returned URL in your reply so the user can see it, then immediately call `login_to_formcms` and wait (up to 1200 s) for the user to log in **manually in their own browser**. Do NOT open a browser yourself or enter credentials. *(Skip this step only if an API key is already configured.)*
+1. **Authenticate** — if an API key is configured in the MCP client config, skip this step. Otherwise call `get_login_url`, print the returned URL in your reply so the user can see it, then immediately call `login_to_formcms` and wait (up to 1200 s) for the user to log in **manually in their own browser**. Do NOT open a browser yourself or enter credentials. *(Using an API key is the recommended approach — see "MCP Session Authentication" below.)*
 2. **Call `get_server_info`** — get the `formcmsBaseUrl` (e.g. `http://localhost:5000`), use it as the proxy target in `vite.config.ts`
 3. **Call `define_entity`** — design entities and relationships (the tool guides the payload shape)
 4. **Call `get_schema`** or `list_schemas` — verify the schema was applied correctly
@@ -82,7 +82,34 @@ This section is about authenticating **your MCP session** so you can call dev-ti
 
 The MCP server supports two authentication modes:
 
-#### Browser login (recommended for interactive use)
+#### API key ✅ Preferred
+
+Pass an API key as a standard Bearer token in the MCP client configuration. This takes priority over a session cookie and requires no interactive browser login.
+
+Generate a key: **FormMate → Settings → API Key Configuration → Generate**.
+
+```json
+// Example: Claude Desktop config (claude_desktop_config.json)
+{
+  "mcpServers": {
+    "formcms": {
+      "url": "http://localhost:3002/mcp/sse",
+      "headers": {
+        "Authorization": "Bearer <your-api-key>"
+      }
+    }
+  }
+}
+```
+
+The API key is forwarded to FormCMS as the `X-Api-Key` header on every request.
+
+> **Important:** After adding the API key to your MCP client config, you must reload the client for the change to take effect:
+> - **Antigravity (VS Code):** `Cmd+Shift+P` → `Developer: Reload Window`
+> - **Cursor:** `Cmd+Shift+P` → `Developer: Reload Window`
+> - **Claude Desktop:** Quit and relaunch the app
+
+#### Browser login (fallback for interactive use)
 
 Each MCP client session authenticates independently. The session cookie is stored in memory only — it is cleared when the MCP server restarts or the client disconnects.
 
@@ -100,25 +127,5 @@ Each MCP client session authenticates independently. The session cookie is store
 > - Do NOT open a browser and type usernames or passwords yourself.
 > - Do NOT try default, example, or random credentials.
 > - The ONLY correct action is: call `get_login_url`, show the URL to the user in your reply, then call `login_to_formcms` and wait. The user must complete login manually in their own browser.
-
-#### API key (for testing and CI)
-
-Pass an API key as a standard Bearer token in the MCP client configuration. This takes priority over a session cookie.
-
-```json
-// Example: Claude Desktop config (claude_desktop_config.json)
-{
-  "mcpServers": {
-    "formcms": {
-      "url": "http://localhost:3002/mcp/sse",
-      "headers": {
-        "Authorization": "Bearer <your-api-key>"
-      }
-    }
-  }
-}
-```
-
-The API key is forwarded to FormCMS as the `X-Api-Key` header on every request.
 
 ---
