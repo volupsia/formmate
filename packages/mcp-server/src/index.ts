@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { Readable } from 'node:stream';
+import crypto from 'node:crypto';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { config } from './config.js';
 import { McpFormCmsClientBuilder } from './infrastructure/formcms-client.js';
@@ -52,7 +53,36 @@ async function start() {
         const transports = new Map<string, SSEServerTransport>();
 
         app.get('/mcp/sse', async (req, res) => {
-            const transport = new SSEServerTransport('/mcp/messages', res);
+            // Include sessionId in both the path and query parameters
+            // - The path prevents issues with clients that strip query parameters
+            // - The query parameter prevents issues with clients that strictly parse it from the query
+            const sessionId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7);
+            const absoluteEndpoint = `http://${req.get('host')}/mcp/messages/${sessionId}?sessionId=${sessionId}&session_id=${sessionId}`;
+            const transport = new SSEServerTransport(absoluteEndpoint, res);
+            // Override the generated sessionId with our own since SSEServerTransport doesn't accept one
+            (transport as any)._sessionId = sessionId;
+            
+            // PATCH: Override start() to force sending an absolute URL
+            // because the Antigravity Go client drops relative URLs and falls back to POSTing to /mcp/sse.
+            const originalStart = transport.start.bind(transport);
+            transport.start = async () => {
+                if ((transport as any)._sseResponse) {
+                    throw new Error('SSEServerTransport already started!');
+                }
+                res.writeHead(200, {
+                    'Content-Type': 'text/event-stream',
+                    'Cache-Control': 'no-cache, no-transform',
+                    Connection: 'keep-alive'
+                });
+                res.write(`event: endpoint\ndata: ${absoluteEndpoint}\n\n`);
+                (transport as any)._sseResponse = res;
+                res.on('close', () => {
+                    (transport as any)._sseResponse = undefined;
+                    transport.onclose?.();
+                });
+            };
+
+            
             transports.set(transport.sessionId, transport);
             // Register an empty cookie slot for this session
             sessionCookies.set(transport.sessionId, '');
@@ -148,10 +178,12 @@ async function start() {
 
         // Use express.raw() to buffer the body so we can log it AND still pass
         // it to handlePostMessage (which reads the stream internally)
-        app.post('/mcp/messages', express.raw({ type: 'application/json', limit: config.FORMCMS_MAX_REQUEST_SIZE }), async (req, res) => {
-            const sessionId = req.query.sessionId as string;
+        app.post(['/mcp/messages', '/mcp/messages/:sessionId'], express.raw({ type: 'application/json', limit: config.FORMCMS_MAX_REQUEST_SIZE }), async (req, res) => {
+            console.log(`[messages] req.url=${req.url}, req.originalUrl=${req.originalUrl}, req.params.sessionId=${req.params.sessionId}, req.query.sessionId=${req.query.sessionId}`);
+            const sessionId = req.params.sessionId || req.query.sessionId as string;
             const transport = transports.get(sessionId);
             if (!transport) {
+                console.error(`Session not found for sessionId: "${sessionId}"`);
                 res.status(404).send('Session not found');
                 return;
             }
