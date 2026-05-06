@@ -147,9 +147,9 @@ A dev-time [Model Context Protocol](https://modelcontextprotocol.io) server that
 
 ### 6b. Skills File
 
-A Markdown file (`SKILL.md`) that teaches the AI agent the FormCMS REST API patterns — authentication, entity CRUD, relationship endpoints, asset management, and SPA deployment — so you don't have to explain them in every prompt.
+A single Markdown file (`skill.md`) that teaches the AI agent the FormCMS REST API patterns — authentication, entity CRUD, relationship endpoints, asset management, and SPA deployment — so you don't have to explain them in every prompt. The same file works with all AI agents (Antigravity, Cursor, Copilot, Claude).
 
-**Where it lives:** In the developer's project, at `.agent/skills/formcms-react-app/SKILL.md`
+**Where it lives:** Copy it into your project at the location your agent expects (e.g. `.agent/skills/formcms-react-app/SKILL.md` for Antigravity)
 
 **What it covers:**
 - Vite proxy configuration (`/api` and `/files`)
@@ -157,6 +157,6 @@ A Markdown file (`SKILL.md`) that teaches the AI agent the FormCMS REST API patt
 - Entity, relationship, and asset API patterns
 - SPA deployment workflow
 
-**How to get it:** Copy from the FormCMS repo at `packages/ai-skills/gemini/formcms-react-app/SKILL.md`, or follow the [Vite + React + AI Agents guide](./Vite-React-Antigravity-Example.md).
+**How to get it:** Copy from the FormCMS repo at `packages/ai-skills/skill.md`, or follow the [Vite + React + AI Agents guide](./Vite-React-Antigravity-Example.md).
 
 > The MCP server handles **runtime tool calls** (creating schemas, deploying apps). The Skills file provides **static knowledge** (API patterns, code conventions). Together they give the agent full context to build a FormCMS-backed app from scratch.

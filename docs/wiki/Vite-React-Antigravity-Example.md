@@ -30,84 +30,105 @@ docker run -d \
 
 ### Set the Super Admin Password
 
-### Authentication (choose one)
+Open **http://localhost:5000/mate** and follow the initial setup wizard to create your admin account.
 
-The MCP server supports two ways to authenticate:
-
-#### Option A — Browser login (no config needed)
-
-Connect your agent to the MCP server with no API key. When your agent first runs, call the `login_to_formcms` tool (or `get_login_url` to get the URL first). A local login page opens in your browser — enter your FormCMS credentials and you're done. The session is stored in memory for that MCP connection.
-
-#### Option B — API key ✅ Preferred
+### Generate an API Key
 
 Open **http://localhost:5000/mate** → **Settings** → **API Key Configuration** → **Generate**.
 
-Copy the key and add it to your MCP client config as `Authorization: Bearer <key>`. The MCP server forwards it to FormCMS automatically, so you never need to log in interactively.
+Copy the key — you'll use it in the next step.
 
-> **Important:** After adding the API key to `antigravity.yaml`, reload the VS Code window so Antigravity re-reads the config and reconnects to the MCP server:
-> **Command Palette (`Cmd+Shift+P`) → `Developer: Reload Window`**
+## 2. Connect Your Agent to FormCMS
 
-## 2. Connect Antigravity to FormCMS
+### Antigravity (VS Code)
 
-> **This section is Antigravity-specific.** If you use **Cursor**, **Codex**, or **Claude Desktop**, the FormCMS MCP server still works — connect them to `http://localhost:5000/mcp/sse` using their own MCP config format.
+Antigravity cannot connect to SSE endpoints directly, so we use [`supergateway`](https://github.com/supercorp-ai/supergateway) as a local STDIO↔SSE bridge.
 
-### Use the starter template (recommended)
+Edit `~/.gemini/antigravity/mcp_config.json`:
 
-Create an empty project folder and drop in the FormCMS agent config in one command:
-
-```bash
-# 1. Create an empty project folder
-mkdir my-app && cd my-app
-
-# 2. Drop in the FormCMS agent config (antigravity.yaml + AI skill)
-npx degit formcms/formmate/starters/vite-react-starter . --force
+```json
+{
+  "mcpServers": {
+    "formcms": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "supergateway",
+        "--sse",
+        "http://localhost:5000/mcp/sse",
+        "--header",
+        "Authorization: Bearer <your-api-key>"
+      ]
+    }
+  }
+}
 ```
 
-This drops two files into your folder:
+Then reload the VS Code window: **`Cmd+Shift+P` → `Developer: Reload Window`**
 
-| File | Purpose |
-|------|---------|
-| `antigravity.yaml` | Pre-configured FormCMS MCP server connection |
-| `.agent/skills/formcms-react-app/SKILL.md` | Teaches the AI the FormCMS API patterns |
+### Cursor
 
-Open the folder in your editor — Antigravity picks up both files automatically.
+Add to `.cursor/mcp.json` in your project root:
 
-> **API key (recommended):** To use Option B from Step 1, open `antigravity.yaml` and uncomment the `headers` section, pasting your API key. Then reload the VS Code window (**`Cmd+Shift+P` → `Developer: Reload Window`**) so the updated MCP server config takes effect.
-
-The agent will scaffold the Vite + React project for you in the next step.
-
-### Manual setup (alternative)
-
-<details>
-<summary>Expand if you prefer to configure manually</summary>
-
-**`antigravity.yaml`** at your project root:
-
-```yaml
-mcpServers:
-  formcms:
-    type: sse
-    url: http://localhost:5000/mcp/sse
-    # Optional: add an API key header to skip browser login
-    # headers:
-    #   Authorization: "Bearer <your-api-key>"
+```json
+{
+  "mcpServers": {
+    "formcms": {
+      "url": "http://localhost:5000/mcp/sse",
+      "headers": {
+        "Authorization": "Bearer <your-api-key>"
+      }
+    }
+  }
+}
 ```
 
-**Skill file:**
+### Claude Desktop
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "formcms": {
+      "url": "http://localhost:5000/mcp/sse",
+      "headers": {
+        "Authorization": "Bearer <your-api-key>"
+      }
+    }
+  }
+}
+```
+
+## 3. Add the AI Skill File
+
+The skill file teaches the agent how to use FormCMS APIs. It's a single file — just copy it to the right location for your agent:
+
+### Antigravity / Gemini
 
 ```bash
 mkdir -p .agent/skills/formcms-react-app
 curl -o .agent/skills/formcms-react-app/SKILL.md \
-  https://raw.githubusercontent.com/formcms/formmate/main/packages/ai-skills/gemini/formcms-react-app/SKILL.md
+  https://raw.githubusercontent.com/formcms/formmate/main/packages/ai-skills/skill.md
 ```
 
-To generate an API key: open FormMate → **Settings** → **API Key Configuration** → **Generate**.
+### Cursor
 
-</details>
+```bash
+mkdir -p .cursor/rules
+curl -o .cursor/rules/formcms-react-app.md \
+  https://raw.githubusercontent.com/formcms/formmate/main/packages/ai-skills/skill.md
+```
 
+### VS Code Copilot
 
+```bash
+mkdir -p .github
+curl -o .github/copilot-instructions.md \
+  https://raw.githubusercontent.com/formcms/formmate/main/packages/ai-skills/skill.md
+```
 
-## 3. Scaffold the Project and Schema
+## 4. Scaffold the Project and Schema
 
 Just prompt your agent — it will create the entire Vite app from scratch:
 
@@ -118,14 +139,13 @@ Just prompt your agent — it will create the entire Vite app from scratch:
 ```
 
 The agent will:
-- **Authenticate** — call `get_login_url`, open the URL in your browser to log in *(skipped if you configured an API key — the recommended approach)*
 - Run `npm create vite` to scaffold the project
 - Configure the Vite proxy (calling `get_server_info` for the base URL)
 - Call `define_entity` for each entity
 - Seed sample data via `insert_entity`
 - Run `npm install && npm run dev` to start the dev server
 
-## 6. Build the React Frontend
+## 5. Build the React Frontend
 
 With the backend schema in place, start the dev server and ask your agent to build the UI:
 
@@ -140,7 +160,7 @@ Example prompts:
 
 > **Tip:** The agent already knows your schema from the MCP tools — it can build components with the correct field names and relationship structures without you having to describe them.
 
-## 7. Deploy your React App via MCP
+## 6. Deploy your React App via MCP
 
 When you're ready to publish, ask your agent to deploy:
 
@@ -161,7 +181,7 @@ You can also do it manually:
 
 Your entire full-stack application — frontend and backend APIs — is now served from a single FormCMS container.
 
-## 8. Iterate Rapidly
+## 7. Iterate Rapidly
 
 ```
 Need a new feature?

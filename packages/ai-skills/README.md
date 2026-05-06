@@ -1,48 +1,47 @@
-# FormCMS AI Skills & Templates
+# FormCMS AI Skill File
 
-This directory contains AI instructions and skill files that developers can copy into their own frontend projects when building applications with FormCMS.
+This directory contains a single AI skill file (`skill.md`) that developers copy into their frontend projects when building applications with FormCMS.
 
-By copying these rules into your project, your AI tools (Cursor, Copilot, Gemini/Antigravity, Windsurf) will automatically understand the FormCMS API patterns, such as cookie-based authentication, entity APIs, and named queries.
-
-## Architecture — Single Source of Truth
-
-All API reference content lives in **`docs/`** as shared markdown partials:
-
-```
-docs/
-├── config.md        ← Vite proxy setup
-├── auth.md          ← Authentication (endpoints + axios/SWR pattern)
-├── entity-api.md    ← Entity CRUD endpoints
-├── queries.md       ← Named queries
-└── ui.md            ← UI conventions (icons, animations)
-```
-
-The **`build.ts`** script assembles these partials into consumer-specific files:
-
-| Consumer | Generated file | Format |
-|----------|----------------|--------|
-| Gemini / Antigravity | `gemini/formcms-react-app/SKILL.md` | Gemini skill with frontmatter |
-| Cursor | `cursor/formcms-react-app.mdc` | Cursor rule with globs |
-| VS Code Copilot | `copilot/copilot-instructions.md` | Copilot instructions |
-| MCP Server | `../mcp-server/src/prompts/auth.ts` | TS prompt registration |
-
-### Editing content
-
-1. Edit the relevant file in `docs/`
-2. Run `npm run build:skills` (or `npx tsx packages/ai-skills/build.ts` from the monorepo root)
-3. All consumer files are regenerated automatically
-
-> ⚠️ **Do not edit the generated files directly** — your changes will be overwritten on next build.
+By copying this file into your project, your AI tools (Antigravity, Cursor, Copilot, Claude, Windsurf) will automatically understand the FormCMS API patterns — cookie-based authentication, entity APIs, named queries, relationships, and asset management.
 
 ## Usage
 
-Depending on which AI assistant you use, copy the relevant file into your frontend project's root directory:
+Copy `skill.md` into the location your AI agent expects:
 
-### Cursor
-Copy `cursor/formcms-react-app.mdc` to `.cursor/rules/formcms-react-app.mdc`
+| Agent | Destination |
+|-------|-------------|
+| **Antigravity / Gemini** | `.agent/skills/formcms-react-app/SKILL.md` |
+| **Cursor** | `.cursor/rules/formcms-react-app.md` |
+| **VS Code Copilot** | `.github/copilot-instructions.md` |
+| **Claude** | Project knowledge or paste into context |
 
-### VS Code GitHub Copilot
-Copy `copilot/copilot-instructions.md` to `.github/copilot-instructions.md` (or to `.github/instructions/formcms.instructions.md`)
+Or use `curl`:
 
-### Gemini CLI / Antigravity / Agent
-Copy the `gemini/formcms-react-app` folder to `.agent/skills/formcms-react-app` (or `.gemini/skills/formcms-react-app`)
+```bash
+# Antigravity / Gemini
+mkdir -p .agent/skills/formcms-react-app
+curl -o .agent/skills/formcms-react-app/SKILL.md \
+  https://raw.githubusercontent.com/formcms/formmate/main/packages/ai-skills/skill.md
+
+# Cursor
+mkdir -p .cursor/rules
+curl -o .cursor/rules/formcms-react-app.md \
+  https://raw.githubusercontent.com/formcms/formmate/main/packages/ai-skills/skill.md
+
+# VS Code Copilot
+mkdir -p .github
+curl -o .github/copilot-instructions.md \
+  https://raw.githubusercontent.com/formcms/formmate/main/packages/ai-skills/skill.md
+```
+
+## MCP prompt generation
+
+The `build.ts` script extracts the runtime API reference from `skill.md` and generates `../mcp-server/src/prompts/auth.ts` — a TypeScript module that registers the API reference as an MCP prompt.
+
+```bash
+npm run build:skills   # from the monorepo root
+# or
+npx tsx build.ts       # from this directory
+```
+
+> ⚠️ **Do not edit `../mcp-server/src/prompts/auth.ts` directly** — it is regenerated from `skill.md` on each build.
