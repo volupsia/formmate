@@ -1,0 +1,3 @@
+event: endpoint
+data: http://localhost:5000/mcp/messages/b9f880cf-0d99-47eb-b1c4-caf7173155c9?sessionId=b9f880cf-0d99-47eb-b1c4-caf7173155c9&session_id=b9f880cf-0d99-47eb-b1c4-caf7173155c9
+

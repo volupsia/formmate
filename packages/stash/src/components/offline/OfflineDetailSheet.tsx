@@ -17,12 +17,13 @@ interface OfflineDetailSheetProps {
   playbackProgress: number
   onPlayToggle: () => void
   onSeek: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onSeekTo: (time: number) => void
   formatTime: (s: number) => string
 }
 
 const OfflineDetailSheet: React.FC<OfflineDetailSheetProps> = ({
   file, isOpen, onClose, onUpdateFile,
-  isAudio, isPlaying, currentTime, duration, playbackProgress, onPlayToggle, onSeek, formatTime
+  isAudio, isPlaying, currentTime, duration, playbackProgress, onPlayToggle, onSeek, onSeekTo, formatTime
 }) => {
   // --- Inline-edit: Title ---
   const [editingTitle, setEditingTitle] = useState(false)
@@ -121,9 +122,9 @@ const OfflineDetailSheet: React.FC<OfflineDetailSheetProps> = ({
   const progress = Math.min(playbackProgress || 0, 100)
 
   const sheet = (
-    <div className="fixed inset-0 z-[100] flex flex-col zen-gradient-bg animate-[slideUpFullScreen_0.4s_cubic-bezier(0.16,1,0.3,1)]">
+    <div className="fixed top-0 bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[600px] z-[100] flex flex-col zen-gradient-bg animate-[slideUpFullScreen_0.4s_cubic-bezier(0.16,1,0.3,1)] sm:shadow-2xl sm:border-x sm:border-white/20">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-glass-border bg-glass backdrop-blur-zen sticky top-0 z-20 shadow-sm">
+      <div className="flex items-center justify-between px-4 py-4 border-b border-glass-border bg-glass backdrop-blur-zen sticky top-0 z-20 shadow-sm">
         <h2 className="text-lg font-bold text-sage-dark line-clamp-1 flex-1 pr-4">
           File Details
         </h2>
@@ -138,7 +139,7 @@ const OfflineDetailSheet: React.FC<OfflineDetailSheetProps> = ({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden py-8 pb-36 scroll-smooth">
-        <div className="max-w-2xl mx-auto px-6 sm:px-10 w-full space-y-8">
+        <div className="w-full mx-auto px-4 space-y-6">
 
           {/* Icon + File meta */}
           <div className="flex items-center gap-4">
@@ -155,19 +156,29 @@ const OfflineDetailSheet: React.FC<OfflineDetailSheetProps> = ({
 
           {/* --- Title --- */}
           <div className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl p-5 shadow-sm">
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Title</label>
+            <label className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3 block">Title</label>
             {editingTitle ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <input
                   ref={titleInputRef}
                   type="text"
                   value={titleDraft}
                   onChange={e => setTitleDraft(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') { setEditingTitle(false); setTitleDraft(file.title || file.filename) } }}
-                  className="flex-1 text-lg font-semibold text-sage-dark bg-white/70 border border-sage-medium/30 rounded-xl px-3 py-2 outline-none focus:border-sage-dark transition-colors"
+                  className="flex-1 text-lg font-semibold text-sage-dark bg-white/70 border border-sage-medium/30 rounded-xl px-4 py-3 outline-none focus:border-sage-dark transition-colors"
+                  style={{ fontSize: '16px' }}
                 />
-                <button onClick={saveTitle} className="w-9 h-9 flex items-center justify-center rounded-full bg-sage-dark text-white shadow-md active:scale-95 transition-transform">
-                  <Check size={16} />
+                <button 
+                  onClick={() => { setEditingTitle(false); setTitleDraft(file.title || file.filename); }} 
+                  className="w-11 h-11 flex shrink-0 items-center justify-center rounded-full bg-gray-200 text-gray-500 hover:bg-gray-400 shadow-sm active:scale-95 transition-all"
+                >
+                  <X size={18} />
+                </button>
+                <button 
+                  onClick={saveTitle} 
+                  className="w-11 h-11 flex shrink-0 items-center justify-center rounded-full bg-sage-dark text-white shadow-md active:scale-95 transition-all"
+                >
+                  <Check size={18} />
                 </button>
               </div>
             ) : (
@@ -180,7 +191,7 @@ const OfflineDetailSheet: React.FC<OfflineDetailSheetProps> = ({
 
           {/* --- Play Progress --- */}
           <div className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl p-5 shadow-sm">
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">Play Progress</label>
+            <label className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 block">Play Progress</label>
             <div className="flex items-center gap-4">
               <button
                 onClick={onPlayToggle}
@@ -222,8 +233,8 @@ const OfflineDetailSheet: React.FC<OfflineDetailSheetProps> = ({
 
           {/* --- Notes --- */}
           <div className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <div className="flex items-center justify-between mb-5">
+              <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">
                 Notes {notes.length > 0 && <span className="text-sage-dark">({notes.length})</span>}
               </label>
               <button
@@ -231,17 +242,17 @@ const OfflineDetailSheet: React.FC<OfflineDetailSheetProps> = ({
                   setNewNoteDraft('')
                   setAddingNote(true)
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[0.7rem] font-bold bg-sage-dark text-white rounded-xl shadow-sm active:scale-95 transition-all"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-bold bg-sage-dark text-white rounded-xl shadow-sm active:scale-95 transition-all whitespace-nowrap"
               >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Add Note at {formatTime(currentTime)}
               </button>
             </div>
 
             {/* New note input */}
             {addingNote && (
-              <div className="mb-4 space-y-2 bg-sage-light/20 border border-sage-medium/20 rounded-xl p-3">
-                <div className="flex items-center gap-2 mb-1">
+              <div className="mb-4 space-y-3 bg-sage-light/20 border border-sage-medium/20 rounded-xl p-4">
+                <div className="flex items-center gap-2">
                   <span className="text-[0.65rem] font-bold text-sage-dark bg-sage-light/60 px-2 py-0.5 rounded-full border border-sage-medium/20">
                     @ {formatTime(currentTime)}
                   </span>
@@ -252,21 +263,23 @@ const OfflineDetailSheet: React.FC<OfflineDetailSheetProps> = ({
                   onChange={e => setNewNoteDraft(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Escape') { setAddingNote(false) } }}
                   rows={3}
-                  className="w-full text-sm text-sage-dark bg-white/80 border border-sage-medium/20 rounded-xl px-3 py-2 outline-none focus:border-sage-dark transition-colors resize-none leading-relaxed"
+                  className="w-full text-base text-sage-dark bg-white/80 border border-sage-medium/20 rounded-xl px-3 py-2.5 outline-none focus:border-sage-dark transition-colors resize-none leading-relaxed"
                   placeholder="Write your note…"
                 />
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-3 pt-1">
                   <button
                     onClick={() => setAddingNote(false)}
-                    className="px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-gray-600 rounded-xl transition-colors"
+                    className="w-10 h-10 flex shrink-0 items-center justify-center rounded-full bg-gray-200 text-gray-500 hover:bg-gray-400 shadow-sm active:scale-95 transition-all"
+                    title="Cancel"
                   >
-                    Cancel
+                    <X size={18} />
                   </button>
                   <button
                     onClick={handleAddNote}
-                    className="px-4 py-1.5 text-xs font-bold bg-sage-dark text-white rounded-xl shadow-sm active:scale-95 transition-transform"
+                    className="w-10 h-10 flex shrink-0 items-center justify-center rounded-full bg-sage-dark text-white shadow-md active:scale-95 transition-all"
+                    title="Save"
                   >
-                    Save
+                    <Check size={18} />
                   </button>
                 </div>
               </div>
@@ -276,52 +289,54 @@ const OfflineDetailSheet: React.FC<OfflineDetailSheetProps> = ({
             {notes.length === 0 && !addingNote ? (
               <p className="text-sm text-gray-300 italic text-center py-4">No notes yet. Click "Add Note" to capture a thought at the current position.</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {notes.map(note => (
-                  <div key={note.id} className="bg-white/70 border border-white/90 rounded-xl p-3 shadow-sm">
+                  <div key={note.id} className="bg-white/70 border border-white/90 rounded-2xl p-5 shadow-sm cursor-pointer hover:bg-white/90 transition-colors" onClick={() => onSeekTo(note.position)}>
                     {/* Position badge */}
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[0.65rem] font-bold text-sage-dark bg-sage-light/60 px-2 py-0.5 rounded-full border border-sage-medium/20">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-xs font-bold text-sage-dark bg-sage-light/60 px-3 py-1 rounded-full border border-sage-medium/20">
                         @ {formatTime(note.position)}
                       </span>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
                         <button
-                          onClick={() => startEditNote(note)}
-                          className="w-7 h-7 flex items-center justify-center rounded-full text-gray-300 hover:text-sage-dark hover:bg-sage-light/40 transition-all"
+                          onClick={(e) => { e.stopPropagation(); startEditNote(note); }}
+                          className="w-10 h-10 flex items-center justify-center rounded-full text-gray-400 hover:text-sage-dark hover:bg-sage-light/40 transition-all active:scale-95"
                         >
-                          <Pencil size={12} />
+                          <Pencil size={18} />
                         </button>
                         <button
-                          onClick={() => handleDeleteNote(note.id)}
-                          className="w-7 h-7 flex items-center justify-center rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                          onClick={(e) => { e.stopPropagation(); handleDeleteNote(note.id); }}
+                          className="w-10 h-10 flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all active:scale-95"
                         >
-                          <Trash2 size={12} />
+                          <Trash2 size={18} />
                         </button>
                       </div>
                     </div>
 
                     {editingNoteId === note.id ? (
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <textarea
                           ref={noteTextareaRef}
                           value={noteDraft}
                           onChange={e => setNoteDraft(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Escape') setEditingNoteId(null) }}
                           rows={3}
-                          className="w-full text-sm text-sage-dark bg-white/80 border border-sage-medium/30 rounded-xl px-3 py-2 outline-none focus:border-sage-dark transition-colors resize-none leading-relaxed"
+                          className="w-full text-base text-sage-dark bg-white/80 border border-sage-medium/30 rounded-xl px-3 py-2.5 outline-none focus:border-sage-dark transition-colors resize-none leading-relaxed"
                         />
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-3 pt-1">
                           <button
-                            onClick={() => setEditingNoteId(null)}
-                            className="px-3 py-1 text-xs font-bold text-gray-400 hover:text-gray-600 rounded-xl transition-colors"
+                            onClick={(e) => { e.stopPropagation(); setEditingNoteId(null); }}
+                            className="w-10 h-10 flex shrink-0 items-center justify-center rounded-full bg-gray-200 text-gray-500 hover:bg-gray-400 shadow-sm active:scale-95 transition-all"
+                            title="Cancel"
                           >
-                            Cancel
+                            <X size={18} />
                           </button>
                           <button
-                            onClick={() => saveEditNote(note.id)}
-                            className="px-4 py-1 text-xs font-bold bg-sage-dark text-white rounded-xl shadow-sm active:scale-95 transition-transform"
+                            onClick={(e) => { e.stopPropagation(); saveEditNote(note.id); }}
+                            className="w-10 h-10 flex shrink-0 items-center justify-center rounded-full bg-sage-dark text-white shadow-md active:scale-95 transition-all"
+                            title="Save"
                           >
-                            Save
+                            <Check size={18} />
                           </button>
                         </div>
                       </div>

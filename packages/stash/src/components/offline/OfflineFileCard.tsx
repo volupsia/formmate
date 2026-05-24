@@ -195,6 +195,13 @@ const OfflineFileCard: React.FC<OfflineFileCardProps> = ({ file, onPlay, onDelet
     }
   }
 
+  const handleSeekTo = (time: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = time
+      setCurrentTime(time)
+    }
+  }
+
   const formatTime = (s: number) => {
     if (isNaN(s)) return '0:00'
     const m = Math.floor(s / 60)
@@ -323,6 +330,7 @@ const OfflineFileCard: React.FC<OfflineFileCardProps> = ({ file, onPlay, onDelet
           playbackProgress={playbackProgress}
           onPlayToggle={isAudio ? handleAudioPlay : () => onPlay(file)}
           onSeek={handleSeek}
+          onSeekTo={handleSeekTo}
           formatTime={formatTime}
         />
       )}
