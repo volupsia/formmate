@@ -19,7 +19,6 @@ MCP tools are only available to you during development. They cannot be called fr
 
 | Task | Dev-time (MCP tools) | Runtime (app code — REST API) |
 |------|---------------------|-------------------------------|
-| **Authentication** | `login_to_formcms` / `get_login_url` (authenticates your MCP session) | `POST /api/login`, `GET /api/me`, cookie-based sessions |
 | **Define schemas** | `define_entity` | ❌ Not available — schemas are set up once during development |
 | **Inspect schemas** | `list_schemas`, `get_schema` | ❌ Do not fetch schemas at runtime — bake the knowledge into TypeScript types |
 | **Create named queries** | `get_graphql_sdl` → `save_query` | ❌ Queries are defined at dev-time only |
@@ -36,9 +35,6 @@ MCP tools are only available to you during development. They cannot be called fr
 
 | Tool | Category | Purpose |
 |------|----------|---------|
-| `login_to_formcms` | Auth | **Authenticate your MCP session** — opens a browser login page; waits up to 1200 s for the user to complete login. Call this first if tools return 401. |
-| `get_login_url` | Auth | Returns the login URL immediately without waiting — use this when you want to display the URL to the user before blocking |
-| `logout_from_formcms` | Auth | Clears the session cookie for the current MCP connection |
 | `get_server_info` | System | **Get the FormCMS base URL** — call this first before writing any config. Also describes the SPA hosting feature. |
 | `deploy_spa` | System | **Deploy a Single Page App** — uploads a base64-encoded ZIP of your build output (e.g. `dist/`) and serves it at a custom URL path |
 | `list_spas` | System | List all currently installed SPAs and their URL paths |
@@ -58,13 +54,12 @@ MCP tools are only available to you during development. They cannot be called fr
 
 When starting a new FormCMS-backed app, follow this order:
 
-1. **Authenticate** — if an API key is configured in the MCP client config, skip this step. Otherwise call `get_login_url`, print the returned URL in your reply so the user can see it, then immediately call `login_to_formcms` and wait (up to 1200 s) for the user to log in **manually in their own browser**. Do NOT open a browser yourself or enter credentials.
-2. **Call `get_server_info`** — get the `formcmsBaseUrl` (e.g. `http://localhost:5000`), use it as the proxy target in `vite.config.ts`
-3. **Call `define_entity`** — design entities and relationships (the tool guides the payload shape)
-4. **Call `get_schema`** or `list_schemas` — verify the schema was applied correctly
-5. **Call `get_graphql_sdl`** then **`save_query`** — create named queries for data-fetching
-6. **Call `insert_entity`** — seed initial/demo data if needed
-7. **Write the React app** — using the runtime API patterns in Part 2
+1. **Call `get_server_info`** — get the `formcmsBaseUrl` (e.g. `http://localhost:5000`), use it as the proxy target in `vite.config.ts`
+2. **Call `define_entity`** — design entities and relationships (the tool guides the payload shape)
+3. **Call `get_schema`** or `list_schemas` — verify the schema was applied correctly
+4. **Call `get_graphql_sdl`** then **`save_query`** — create named queries for data-fetching
+5. **Call `insert_entity`** — seed initial/demo data if needed
+6. **Write the React app** — using the runtime API patterns in Part 2
 
 ### SPA hosting workflow
 
@@ -87,13 +82,7 @@ http://localhost:<Port>/mcp/sse
 
 ### MCP Session Authentication
 
-This section is about authenticating **your MCP session** so you can call dev-time tools. This is NOT about end-user login — see "App User Authentication (Runtime)" in Part 2.
-
-The MCP server supports two authentication modes:
-
-#### API key ✅ Preferred
-
-Pass an API key as a standard Bearer token in the MCP client configuration. This takes priority over a session cookie and requires no interactive browser login.
+The MCP server authenticates via an API key passed as a Bearer token in the MCP client configuration.
 
 Generate a key: **FormMate → Settings → API Key Configuration → Generate**.
 
@@ -103,25 +92,6 @@ The API key is forwarded to FormCMS as the `X-Api-Key` header on every request.
 > - **Antigravity (VS Code):** `Cmd+Shift+P` → `Developer: Reload Window`
 > - **Cursor:** `Cmd+Shift+P` → `Developer: Reload Window`
 > - **Claude Desktop:** Quit and relaunch the app
-
-#### Browser login (fallback for interactive use)
-
-Each MCP client session authenticates independently. The session cookie is stored in memory only — it is cleared when the MCP server restarts or the client disconnects.
-
-```
-1. Call get_login_url  → returns http://localhost:<Port>/mcp/login?sessionId=<id>
-2. Share the URL with the user — they open it in their browser
-3. Call login_to_formcms → blocks until the user completes login (up to 120 s)
-4. All subsequent tool calls in this session are authenticated automatically
-```
-
-> If the server is remote, the user opens the URL on their own machine.
-
-> [!CAUTION]
-> **Never attempt login via browser automation, credential guessing, or any method other than the flow above.**
-> - Do NOT open a browser and type usernames or passwords yourself.
-> - Do NOT try default, example, or random credentials.
-> - The ONLY correct action is: call `get_login_url`, show the URL to the user in your reply, then call `login_to_formcms` and wait. The user must complete login manually in their own browser.
 
 ---
 

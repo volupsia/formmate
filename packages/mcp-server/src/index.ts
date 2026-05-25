@@ -9,15 +9,8 @@ import { createMcpServer } from './mcp-server.js';
 import { requestContext } from './context.js';
 import { EventEmitter } from 'events';
 import { adminHtml } from './ui/admin-ui.js';
-import { loginHtml } from './ui/login-ui.js';
 import { insertLog, getRecentLogs, clearAllLogs } from './infrastructure/db.js';
-import axios from 'axios';
 
-// ── Per-session auth state (in-memory only, cleared on server restart) ────────
-// Each SSE session gets its own cookie slot. The login browser flow resolves the
-// pendingLogins promise and writes the captured cookie into sessionCookies.
-const sessionCookies = new Map<string, string>();
-const pendingLogins  = new Map<string, (cookie: string) => void>();
 
 const logEmitter = new EventEmitter();
 
@@ -29,15 +22,12 @@ app.use(cors({
 }));
 
 // Populate per-request context:
-//  - apiKey: from Authorization: Bearer header (for testing/CI — takes priority)
-//  - cookie: from the in-memory per-session map (browser login flow)
+//  - apiKey: from Authorization: Bearer header (for testing/CI)
 app.use((req, res, next) => {
     const auth    = req.headers.authorization ?? '';
     const apiKey  = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-    const sessionId = (req.query.sessionId as string) ?? '';
-    const cookie  = sessionCookies.get(sessionId) ?? '';
     const baseUrl = `${req.protocol}://${req.get('host')}`;
-    requestContext.run({ apiKey, cookie, baseUrl }, next);
+    requestContext.run({ apiKey, cookie: '', baseUrl }, next);
 });
 
 async function start() {
@@ -84,23 +74,14 @@ async function start() {
 
             
             transports.set(transport.sessionId, transport);
-            // Register an empty cookie slot for this session
-            sessionCookies.set(transport.sessionId, '');
             console.log(`📡 New SSE session: ${transport.sessionId}`);
 
-            const mcpServer = createMcpServer(
-                formcmsClientBuilder,
-                transport.sessionId,
-                sessionCookies,
-                pendingLogins,
-            );
+            const mcpServer = createMcpServer(formcmsClientBuilder);
 
             // Clean up when the client disconnects
             res.on('close', async () => {
                 console.log(`🔌 SSE session closed: ${transport.sessionId}`);
                 transports.delete(transport.sessionId);
-                sessionCookies.delete(transport.sessionId);
-                pendingLogins.delete(transport.sessionId);
                 try {
                     await mcpServer.close();
                 } catch (err) {
@@ -120,61 +101,6 @@ async function start() {
             await mcpServer.connect(transport);
         });
 
-        // ── Login UI ──────────────────────────────────────────────────────────
-        app.get('/mcp/login', (req, res) => {
-            const sessionId = (req.query.sessionId as string) ?? '';
-            const short = sessionId.slice(0, 8);
-            res.send(
-                loginHtml
-                    .replace(/\{\{SESSION_ID\}\}/g, sessionId)
-                    .replace(/\{\{SESSION_ID_SHORT\}\}/g, short)
-            );
-        });
-
-        // ── Login handler: capture FormCMS cookie, resolve the waiting tool ───
-        app.post('/mcp/login', express.json(), async (req, res) => {
-            const { usernameOrEmail, password, sessionId } = req.body ?? {};
-
-            if (!usernameOrEmail || !password || !sessionId) {
-                res.status(400).json({ error: 'Missing usernameOrEmail, password, or sessionId.' });
-                return;
-            }
-
-            if (!sessionCookies.has(sessionId)) {
-                res.status(400).json({ error: 'Unknown or expired session ID. Please call login_to_formcms again.' });
-                return;
-            }
-
-            try {
-                const upstream = await axios.post(
-                    `${config.FORMCMS_BASE_URL}/api/login`,
-                    { usernameOrEmail, password },
-                    { validateStatus: s => s < 400 }
-                );
-
-                const rawCookies: string[] = (upstream.headers['set-cookie'] as string[] | undefined) ?? [];
-                if (!rawCookies.length) {
-                    res.json({ error: 'FormCMS did not return a session cookie. Check your credentials.' });
-                    return;
-                }
-
-                // Store the captured cookie in this session's slot
-                const cookie = rawCookies.map(c => c.split(';')[0]).join('; ');
-                sessionCookies.set(sessionId, cookie);
-
-                // Resolve the waiting login_to_formcms tool call
-                const resolver = pendingLogins.get(sessionId);
-                if (resolver) {
-                    resolver(cookie);
-                    pendingLogins.delete(sessionId);
-                }
-
-                res.json({ success: true });
-            } catch (err: any) {
-                const message = err.response?.data?.title ?? err.response?.data?.message ?? 'Login failed.';
-                res.json({ error: message });
-            }
-        });
 
         // Use express.raw() to buffer the body so we can log it AND still pass
         // it to handlePostMessage (which reads the stream internally)
@@ -250,7 +176,6 @@ async function start() {
             console.log(`   Legacy SSE      : http://localhost:${config.PORT}/mcp/sse`);
             console.log(`   Messages        : http://localhost:${config.PORT}/mcp/messages`);
             console.log(`   Health          : http://localhost:${config.PORT}/mcp/health`);
-            console.log(`   Login UI        : http://localhost:${config.PORT}/mcp/login`);
             console.log(`   Live Logs UI    : http://localhost:${config.PORT}/mcp/admin`);
             console.log(`   Upstream        : ${config.FORMCMS_BASE_URL}`);
         });
