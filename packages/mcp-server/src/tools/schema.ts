@@ -27,10 +27,14 @@ const displayTypeEnum = z.enum(
     displayTypeValues as unknown as [string, ...string[]]
 );
 
+const camelCaseRegex = /^[a-z][a-zA-Z0-9]*$/;
+const camelCaseMsg = 'Must be camelCase (e.g. "coverImage", not "cover_image")';
+
 const AttributeSchema = z.object({
     field: z
         .string()
         .min(ATTRIBUTE_JSON_SCHEMA.properties.field.minLength)
+        .regex(camelCaseRegex, camelCaseMsg)
         .describe(ATTRIBUTE_JSON_SCHEMA.properties.field.description),
     header: z
         .string()
@@ -72,6 +76,7 @@ const RelationshipSchema = z.object({
         .describe(RELATIONSHIP_JSON_SCHEMA.properties.targetEntity.description),
     fieldName: z
         .string()
+        .regex(camelCaseRegex, camelCaseMsg)
         .describe(
             RELATIONSHIP_JSON_SCHEMA.properties.fieldName.description +
             ' Do NOT create a matching attribute — relationships must NOT be modelled as attributes.'
