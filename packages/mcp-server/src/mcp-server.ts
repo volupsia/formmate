@@ -5,7 +5,6 @@ import { registerEntityTools } from './tools/entity.js';
 import { registerQueryTools } from './tools/query.js';
 import { registerSystemTools } from './tools/system.js';
 import { registerAuthPrompts } from './prompts/auth.js';
-import { config } from './config.js';
 
 export function createMcpServer(
     clientBuilder: IFormCmsClientBuilder,

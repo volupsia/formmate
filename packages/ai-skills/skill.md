@@ -25,7 +25,7 @@ MCP tools are only available to you during development. They cannot be called fr
 | **Execute named queries** | `run_query` (to verify results) | `GET /api/queries/{queryName}` |
 | **Seed / test data** | `insert_entity`, `update_entity`, `list_entities` | `POST /api/entities/{entity}/insert`, etc. |
 | **CRUD operations** | (available, but use mainly for seeding) | Entity API endpoints — this is what the app uses |
-| **Deploy SPA** | `deploy_spa`, `list_spas` | ❌ Not available at runtime |
+| **Deploy SPA** | Direct REST API with `Authorization: Bearer` (see SPA hosting workflow below) | ❌ Not available at runtime |
 | **File uploads** | ❌ Use the REST API | `POST /api/assets` (multipart) |
 
 > [!IMPORTANT]
@@ -35,9 +35,7 @@ MCP tools are only available to you during development. They cannot be called fr
 
 | Tool | Category | Purpose |
 |------|----------|---------|
-| `get_server_info` | System | **Get the FormCMS base URL** — call this first before writing any config. Also describes the SPA hosting feature. |
-| `deploy_spa` | System | **Deploy a Single Page App** — uploads a base64-encoded ZIP of your build output (e.g. `dist/`) and serves it at a custom URL path |
-| `list_spas` | System | List all currently installed SPAs and their URL paths |
+| `get_server_info` | System | **Get the FormCMS base URL and API key** — call this first before writing any config. Returns the API key for direct REST calls and documents SPA hosting endpoints. |
 | `define_entity` | Schema | Create or update entity schemas (attributes + relationships) |
 | `list_schemas` | Schema | List all entity schemas |
 | `get_schema` | Schema | Get a single entity schema by name |
@@ -63,13 +61,28 @@ When starting a new FormCMS-backed app, follow this order:
 
 ### SPA hosting workflow
 
-You can deploy the built React app directly to FormCMS so it serves the SPA at a custom URL path. Follow these steps:
+You can deploy the built React app directly to FormCMS so it serves the SPA at a custom URL path.
+
+SPA deployment uses the FormCMS REST API directly (not MCP tools) because it requires a multipart file upload. The API key is returned by `get_server_info`.
 
 1. **Build the app** — run `npm run build` to produce the `dist/` directory
-2. **Zip the output** — create a ZIP of the build folder contents (not the folder itself)
-3. **Base64-encode the ZIP** — convert the ZIP bytes to a base64 string
-4. **Call `deploy_spa`** — pass `zipBase64`, `zipFilename`, `urlPath` (e.g. `/blog`), and `directory` (a unique server-side folder name)
-5. **Verify** — call `list_spas` to confirm the SPA is registered and accessible
+2. **Zip the output** — `cd dist && zip -r ../app.zip .` (zip the contents, not the folder itself)
+3. **Deploy via curl** — call the FormCMS REST API directly with the API key:
+   ```bash
+   curl -X POST http://<formcmsBaseUrl>/api/system/add-spa \
+     -H "Authorization: Bearer <apiKey>" \
+     -F "file=@app.zip" \
+     -F "path=/blog" \
+     -F "dir=blog_v1"
+   ```
+4. **Verify** — list installed SPAs:
+   ```bash
+   curl http://<formcmsBaseUrl>/api/system/spas -H "Authorization: Bearer <apiKey>"
+   ```
+
+Other SPA management endpoints:
+- **Delete**: `DELETE /api/system/spas?path=<urlPath>`
+- **Rename**: `PUT /api/system/spas?oldPath=<old>&newPath=<new>`
 
 > Deep-link routes (HTML5 history mode) are handled automatically — all sub-paths fall back to `index.html`.
 
@@ -86,7 +99,7 @@ The MCP server authenticates via an API key passed as a Bearer token in the MCP 
 
 Generate a key: **FormMate → Settings → API Key Configuration → Generate**.
 
-The API key is forwarded to FormCMS as the `X-Api-Key` header on every request.
+The API key is forwarded to FormCMS as a standard `Authorization: Bearer <key>` header on every request.
 
 > **Important:** After adding the API key to your MCP client config, you must reload the client for the change to take effect:
 > - **Antigravity (VS Code):** `Cmd+Shift+P` → `Developer: Reload Window`
