@@ -1,8 +1,10 @@
 import json
 import os
+import sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips
+import textwrap
 
 def add_ken_burns_and_subtitle(image_path, text, duration, resolution=(1920, 1080)):
     # Create the base image clip
@@ -25,24 +27,34 @@ def add_ken_burns_and_subtitle(image_path, text, duration, resolution=(1920, 108
         
     img = img.resize(resolution, Image.Resampling.LANCZOS)
     
-    # Draw subtitle background bar
-    draw = ImageDraw.Draw(img, 'RGBA')
-    bar_height = 80
-    bar_top = resolution[1] - bar_height
-    draw.rectangle([(0, bar_top), (resolution[0], resolution[1])], fill=(0, 0, 0, 180))
-    
     # Try to load a reasonable font, fallback to default
     try:
-        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 40)
+        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 36)
     except:
         font = ImageFont.load_default()
-        
-    # Draw text
-    text_bbox = draw.textbbox((0, 0), text, font=font)
-    text_width = text_bbox[2] - text_bbox[0]
-    text_x = (resolution[0] - text_width) / 2
-    text_y = bar_top + (bar_height - (text_bbox[3] - text_bbox[1])) / 2
-    draw.text((text_x, text_y), text, font=font, fill=(255, 255, 255, 255))
+
+    # Wrap text
+    lines = textwrap.wrap(text, width=80)
+    
+    # Calculate text height to draw the background bar
+    line_spacing = 10
+    total_text_height = sum(font.getbbox(line)[3] - font.getbbox(line)[1] for line in lines) + (len(lines) - 1) * line_spacing
+    
+    bar_height = total_text_height + 40 # 20px padding top/bottom
+    bar_top = resolution[1] - bar_height - 30 # 30px margin from bottom
+    
+    # Draw subtitle background bar
+    draw = ImageDraw.Draw(img, 'RGBA')
+    draw.rectangle([(0, bar_top), (resolution[0], bar_top + bar_height)], fill=(0, 0, 0, 200))
+    
+    # Draw text lines
+    current_y = bar_top + 20
+    for line in lines:
+        bbox = draw.textbbox((0, 0), line, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_x = (resolution[0] - text_width) / 2
+        draw.text((text_x, current_y), line, font=font, fill=(255, 255, 255, 255))
+        current_y += (bbox[3] - bbox[1]) + line_spacing
     
     # Convert PIL Image to numpy array for moviepy
     img_array = np.array(img)
@@ -51,21 +63,21 @@ def add_ken_burns_and_subtitle(image_path, text, duration, resolution=(1920, 108
     clip = ImageClip(img_array).set_duration(duration)
     return clip
 
-def assemble_video():
-    with open('narration.json', 'r') as f:
+def assemble_video(video_dir):
+    with open(os.path.join(video_dir, 'narration.json'), 'r') as f:
         narrations = json.load(f)
         
-    with open('timing.json', 'r') as f:
+    with open(os.path.join(video_dir, 'timing.json'), 'r') as f:
         timing = json.load(f)
         
     clips = []
     
     for segment in narrations:
         segment_id = segment['id']
-        screenshot_path = segment['screenshot']
-        audio_path = f"audio/{segment_id}.mp3"
+        screenshot_path = os.path.join(video_dir, segment['screenshot'])
+        audio_path = os.path.join(video_dir, 'audio', f"{segment_id}.mp3")
         duration = timing.get(segment_id, segment['duration'])
-        title = segment.get('title', '')
+        text = segment.get('text', '')
         
         print(f"Processing segment {segment_id}...")
         
@@ -75,7 +87,7 @@ def assemble_video():
             continue
             
         # Create image clip with subtitle
-        img_clip = add_ken_burns_and_subtitle(screenshot_path, title, duration)
+        img_clip = add_ken_burns_and_subtitle(screenshot_path, text, duration)
         
         # Load audio clip
         audio_clip = AudioFileClip(audio_path)
@@ -94,8 +106,9 @@ def assemble_video():
     # Add fade in/out
     final_video = final_video.fadein(0.5).fadeout(0.5)
     
-    os.makedirs('output', exist_ok=True)
-    output_path = "output/tutorial.mp4"
+    output_dir = os.path.join(video_dir, 'output')
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, 'tutorial.mp4')
     print(f"Exporting to {output_path}...")
     final_video.write_videofile(
         output_path, 
@@ -107,4 +120,5 @@ def assemble_video():
     print("Video export complete!")
 
 if __name__ == "__main__":
-    assemble_video()
+    video_dir = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
+    assemble_video(video_dir)

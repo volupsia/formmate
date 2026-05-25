@@ -1,22 +1,32 @@
 #!/bin/bash
 set -e
 
-cd "$(dirname "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+VIDEO="${1:-antigravity}"
+VIDEO_DIR="$SCRIPT_DIR/$VIDEO"
+COMMON_DIR="$SCRIPT_DIR/common"
 
-# Check dependencies
-echo "=== Checking dependencies ==="
-pip install -q openai moviepy pillow mutagen
-
-if [ -z "$OPENAI_API_KEY" ]; then
-    echo "ERROR: OPENAI_API_KEY environment variable is not set."
-    echo "Please set it using: export OPENAI_API_KEY=your_key_here"
+if [ ! -d "$VIDEO_DIR" ]; then
+    echo "ERROR: Video folder '$VIDEO_DIR' does not exist."
+    echo "Usage: bash run_all.sh <video-name>   (default: antigravity)"
     exit 1
 fi
 
+echo "=== Building video: $VIDEO ==="
+
+# Setup virtual environment (shared at the video/ root)
+echo "=== Setting up virtual environment ==="
+python3 -m venv "$SCRIPT_DIR/venv"
+source "$SCRIPT_DIR/venv/bin/activate"
+
+# Check dependencies
+echo "=== Checking dependencies ==="
+pip install -q edge-tts "moviepy<2.0.0" pillow mutagen
+
 echo "=== Generating TTS audio ==="
-python generate_audio.py
+python "$COMMON_DIR/generate_audio.py" "$VIDEO_DIR"
 
 echo "=== Assembling video ==="
-python assemble_video.py
+python "$COMMON_DIR/assemble_video.py" "$VIDEO_DIR"
 
-echo "=== Done! Output: output/tutorial.mp4 ==="
+echo "=== Done! Output: $VIDEO/output/tutorial.mp4 ==="

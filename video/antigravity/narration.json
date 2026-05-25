@@ -32,7 +32,7 @@
     "screenshot": "screenshots/s05_mcp_config.png",
     "duration": 11,
     "title": "Step 2: MCP Config",
-    "text": "Step 2: Connect your AI agent to FormCMS. For Antigravity in VS Code, edit mcp_config.json and add the FormCMS MCP server using supergateway as a local bridge. Paste your API key where shown."
+    "text": "Step 2: Connect your AI agent to FormCMS. For Antigravity IDE, edit mcp_config.json and add the FormCMS MCP server using supergateway as a local bridge. Paste your API key where shown."
   },
   {
     "id": "s06",
