@@ -66,6 +66,21 @@ Edit `~/.gemini/antigravity/mcp_config.json`:
 
 Then reload the VS Code window: **`Cmd+Shift+P` → `Developer: Reload Window`**
 
+### Codex
+
+Codex uses TOML configuration — not the JSON format used by other MCP clients.
+
+Add to `~/.codex/config.toml` (global) or `.codex/config.toml` (project root, requires trusted project):
+
+```toml
+[mcp_servers.formcms]
+url = "http://localhost:5000/mcp/sse"
+[mcp_servers.formcms.http_headers]
+Authorization = "Bearer <your-api-key>"
+```
+
+Verify the connection inside a Codex session with `/mcp`, or from the terminal with `codex mcp list`.
+
 ### Cursor
 
 Add to `.cursor/mcp.json` in your project root:
@@ -109,6 +124,14 @@ The skill file teaches the agent how to use FormCMS APIs. It's a single file —
 ```bash
 mkdir -p .agent/skills/formcms-react-app
 curl -o .agent/skills/formcms-react-app/SKILL.md \
+  https://raw.githubusercontent.com/formcms/formmate/main/packages/ai-skills/skill.md
+```
+
+### VS Code + Codex
+
+```bash
+mkdir -p .codex
+curl -o .codex/AGENTS.md \
   https://raw.githubusercontent.com/formcms/formmate/main/packages/ai-skills/skill.md
 ```
 

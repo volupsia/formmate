@@ -32,7 +32,7 @@
     "screenshot": "screenshots/s05_mcp_config.png",
     "duration": 12,
     "title": "Step 2: MCP Config",
-    "text": "Step 2: Connect Codex to FormCMS. In VS Code, create a dot vscode slash mcp dot json file. Add the FormCMS MCP server entry using supergateway as a local bridge. Paste your API key where shown."
+    "text": "Step 2: Connect Codex to FormCMS. Open or create the file tilde slash dot codex slash config dot toml. Add the FormCMS MCP server entry with its URL and an Authorization header. Paste your API key as the Bearer token value."
   },
   {
     "id": "s06",

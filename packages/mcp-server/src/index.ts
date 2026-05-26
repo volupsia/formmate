@@ -3,6 +3,7 @@ import cors from 'cors';
 import { Readable } from 'node:stream';
 import crypto from 'node:crypto';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { config } from './config.js';
 import { McpFormCmsClientBuilder } from './infrastructure/formcms-client.js';
 import { createMcpServer } from './mcp-server.js';
@@ -133,6 +134,39 @@ async function start() {
             await transport.handlePostMessage(fakeReq as any, res);
         });
 
+        // ── Streamable HTTP transport (modern) ─────────────────────────
+        // Single endpoint for clients that speak Streamable HTTP (Codex, etc.)
+        // Runs in stateless mode — each request gets its own server instance.
+        app.post('/mcp', express.json(), async (req, res) => {
+            try {
+                const transport = new StreamableHTTPServerTransport() as any;
+                const mcpServer = createMcpServer(formcmsClientBuilder);
+
+                res.on('close', async () => {
+                    try {
+                        await transport.close();
+                        await mcpServer.close();
+                    } catch { /* ignore cleanup errors */ }
+                });
+
+                await mcpServer.connect(transport);
+                await transport.handleRequest(req, res, req.body);
+            } catch (err) {
+                console.error('Streamable HTTP error:', err);
+                if (!res.headersSent) {
+                    res.status(500).json({ error: 'Internal server error' });
+                }
+            }
+        });
+
+        // GET and DELETE on /mcp are not used in stateless mode
+        app.get('/mcp', (_req, res) => {
+            res.status(405).set('Allow', 'POST').send('Method Not Allowed');
+        });
+        app.delete('/mcp', (_req, res) => {
+            res.status(405).set('Allow', 'POST').send('Method Not Allowed');
+        });
+
         app.get('/mcp/health', (req, res) => {
             res.json({ status: 'ok', service: 'formcms-mcp-server' });
         });
@@ -173,6 +207,7 @@ async function start() {
 
         app.listen(config.PORT, () => {
             console.log(`🤖 FormCMS MCP Server ready`);
+            console.log(`   Streamable HTTP : http://localhost:${config.PORT}/mcp`);
             console.log(`   Legacy SSE      : http://localhost:${config.PORT}/mcp/sse`);
             console.log(`   Messages        : http://localhost:${config.PORT}/mcp/messages`);
             console.log(`   Health          : http://localhost:${config.PORT}/mcp/health`);
