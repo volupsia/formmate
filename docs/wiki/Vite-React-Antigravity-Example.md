@@ -98,14 +98,15 @@ Add to `.cursor/mcp.json` in your project root:
 }
 ```
 
-### Claude Desktop
+### VS Code + Claude Code
 
-Add to `claude_desktop_config.json`:
+Create `.mcp.json` in your project root (Claude Code picks this up automatically):
 
 ```json
 {
   "mcpServers": {
     "formcms": {
+      "type": "sse",
       "url": "http://localhost:5000/mcp/sse",
       "headers": {
         "Authorization": "Bearer <your-api-key>"
@@ -114,6 +115,8 @@ Add to `claude_desktop_config.json`:
   }
 }
 ```
+
+Verify the connection by typing `/mcp` in the Claude Code chat panel.
 
 ## 3. Add the AI Skill File
 
@@ -143,11 +146,12 @@ curl -o .cursor/rules/formcms-react-app.md \
   https://raw.githubusercontent.com/formcms/formmate/main/packages/ai-skills/skill.md
 ```
 
-### VS Code Copilot
+### VS Code + Claude Code
+
+Claude Code automatically reads `CLAUDE.md` from your project root:
 
 ```bash
-mkdir -p .github
-curl -o .github/copilot-instructions.md \
+curl -o CLAUDE.md \
   https://raw.githubusercontent.com/formcms/formmate/main/packages/ai-skills/skill.md
 ```
 
