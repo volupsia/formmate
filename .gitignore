@@ -40,3 +40,7 @@ myapp.tar.gz
 # Video Processing
 /docs/videos/output/
 
+# YouTube / Google API Upload Credentials and Logs
+video/client_secrets.json
+video/*.pickle
+video/*.log

@@ -44,6 +44,7 @@ RUN mkdir -p packages/mate packages/admin packages/portal packages/stash && \
     echo '{"name":"@formmate/stash","version":"0.0.0","dependencies":{}}' > packages/stash/package.json
 
 # 2. Install backend production dependencies only
+COPY formmate/scripts ./scripts
 RUN npm install --omit=dev
 
 # 3. Copy pre-built backend artifacts

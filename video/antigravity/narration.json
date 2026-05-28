@@ -1,0 +1,72 @@
+[
+  {
+    "id": "s01",
+    "screenshot": "screenshots/s01_intro.png",
+    "duration": 8,
+    "title": "Introduction",
+    "text": "In this tutorial, you will build a full-stack React app using FormCMS and an AI agent — without writing a single line of backend code."
+  },
+  {
+    "id": "s02",
+    "screenshot": "screenshots/s02_docker_run.png",
+    "duration": 10,
+    "title": "Step 1: Start Backend",
+    "text": "Step 1: Start the FormCMS backend. Run this Docker command. It exposes port 5000 for the REST API, the admin portal, and the built-in MCP server."
+  },
+  {
+    "id": "s03",
+    "screenshot": "screenshots/s03_admin_portal.png",
+    "duration": 9,
+    "title": "Step 1: Admin Setup",
+    "text": "Open localhost 5000 slash mate. Follow the setup wizard to create your super admin account."
+  },
+  {
+    "id": "s04",
+    "screenshot": "screenshots/s04_api_key.png",
+    "duration": 8,
+    "title": "Step 1: API Key",
+    "text": "Next, go to Settings, then API Key Configuration, and click Generate. Copy this key — you will need it in the next step."
+  },
+  {
+    "id": "s05",
+    "screenshot": "screenshots/s05_mcp_config.png",
+    "duration": 11,
+    "title": "Step 2: MCP Config",
+    "text": "Step 2: Connect your AI agent to FormCMS. For Antigravity IDE, edit mcp_config.json and add the FormCMS MCP server using supergateway as a local bridge. Paste your API key where shown."
+  },
+  {
+    "id": "s06",
+    "screenshot": "screenshots/s06_skill_file.png",
+    "duration": 10,
+    "title": "Step 3: AI Skill",
+    "text": "Step 3: Add the AI skill file. Run this curl command to download it. This teaches the agent how to use FormCMS APIs — schema design, data seeding, and deployment."
+  },
+  {
+    "id": "s07",
+    "screenshot": "screenshots/s07_agent_prompt.png",
+    "duration": 12,
+    "title": "Step 4: Scaffold",
+    "text": "Step 4: Scaffold the project. Simply type this prompt into your agent. It will create a Vite plus React app, configure the proxy, define your schema entities, seed sample data, and start the dev server — all automatically."
+  },
+  {
+    "id": "s08",
+    "screenshot": "screenshots/s08_running_app.png",
+    "duration": 10,
+    "title": "Step 5: Frontend",
+    "text": "Step 5: Build the frontend. Ask the agent to build components like PostList and PostDetail. Because the agent already knows your schema from the MCP tools, it uses the correct field names automatically."
+  },
+  {
+    "id": "s09",
+    "screenshot": "screenshots/s09_deploy_prompt.png",
+    "duration": 10,
+    "title": "Step 6: Deploy",
+    "text": "Step 6: Deploy. Tell the agent to build and deploy as the home page. It runs npm run build, zips the output, and calls the deploy_spa MCP tool. Your full-stack app is now live from a single container."
+  },
+  {
+    "id": "s10",
+    "screenshot": "screenshots/s10_live_app.png",
+    "duration": 8,
+    "title": "Conclusion",
+    "text": "That is it. You now have a full-stack React application — schema, data, frontend, and deployment — built entirely through AI agent tool calls. No manual backend work required."
+  }
+]

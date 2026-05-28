@@ -50,7 +50,7 @@ The simplest and most reliable fix is to use the third-party [`supergateway`](ht
 
 ### Why It Works
 1. **No session ID issues:** `supergateway` correctly performs the SSE handshake and extracts the `sessionId` before forwarding any messages.
-2. **API key auth:** The `--header` flag passes `Authorization: Bearer <key>` on every request. The MCP server extracts the key and forwards it to FormCMS as `X-Api-Key`.
+2. **API key auth:** The `--header` flag passes `Authorization: Bearer <key>` on every request. FormCMS authenticates using the standard Bearer token directly.
 3. **Zero install:** `npx -y` downloads `supergateway` on first run automatically.
 4. **No Docker dependency:** Works directly against the Nginx endpoint (`localhost:5000`) — no `docker exec` needed.
 

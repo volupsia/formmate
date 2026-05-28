@@ -5,7 +5,7 @@ async function main() {
   // Test with trailing slash, and without trailing slash
   const transport = new SSEClientTransport(new URL("http://localhost:5000/mcp/sse"), {
     headers: {
-      "Authorization": "Bearer f3400e0ac65e11770f5c13d94fc24c76d244368814eefcbd"
+      "Authorization": "Bearer 2fd5e1f82c542d870b848338174bc0b23c38e2aebd824eae"
     }
   });
   const client = new Client({ name: "test", version: "1.0.0" }, { capabilities: {} });

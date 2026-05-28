@@ -24,8 +24,8 @@ export class McpFormCmsClientBuilder implements IFormCmsClientBuilder {
             const apiKey = this.getApiKey();
             const cookie = this.getCookie();
             if (apiKey) {
-                // API key mode — easy for testing and CI
-                config.headers['X-Api-Key'] = apiKey;
+                // API key mode — standard Bearer token
+                config.headers['Authorization'] = `Bearer ${apiKey}`;
             } else if (cookie) {
                 // Cookie mode — browser login flow
                 config.headers['Cookie'] = cookie;
